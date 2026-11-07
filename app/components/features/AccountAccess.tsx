@@ -166,8 +166,8 @@ export const AccountAccess = ({
       </header>
 
       {email ? (
-        <div className="stack-6">
-          <div className="stack-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+          <div className="stack-2 min-w-0">
             <span className="font-mono text-data-label text-text-200 uppercase">
               Cuenta
             </span>

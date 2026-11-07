@@ -12,6 +12,10 @@ import type { AccountState } from "~/lib/finance-access";
 import { SUBSCRIPTION_ANCHOR } from "~/lib/finance-tabs";
 import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
+/** A status line with its action beside it. */
+const actionRowClassName =
+  "flex flex-wrap items-center justify-between gap-x-6 gap-y-3";
+
 const SUBSCRIPTION_LOAD_ERROR = "No fue posible consultar la suscripción.";
 const SUBSCRIPTION_UPDATE_ERROR =
   "No fue posible actualizar la suscripción. Intente nuevamente.";
@@ -233,10 +237,23 @@ export const BillingPanel = ({
         </p>
       ) : null}
       {billing?.entitled && accessUntil ? (
-        <p className="text-body-sm text-text-200">
-          Acceso completo hasta{" "}
-          {new Date(accessUntil).toLocaleDateString("es-AR")}.
-        </p>
+        <div className={actionRowClassName}>
+          <p className="text-body-sm text-text-200">
+            Acceso completo hasta{" "}
+            {new Date(accessUntil).toLocaleDateString("es-AR")}.
+          </p>
+          {billing.status === "authorized" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => change("DELETE")}
+            >
+              Cancelar renovación
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {canSubscribe ? (
         <>
@@ -284,21 +301,18 @@ export const BillingPanel = ({
         </>
       ) : null}
       {billing?.status === "pending" ? (
-        <p className="text-body-sm text-text-300">
-          {billing.checkoutURL
-            ? "Mercado Pago todavía no confirmó la inscripción. Si no llegó a completarla, puede retomarla desde el mismo enlace."
-            : "Estamos esperando la confirmación de Mercado Pago."}
-        </p>
-      ) : null}
-      {billing?.status === "pending" && billing.checkoutURL ? (
-        <Button
-          href={billing.checkoutURL}
-          variant="outline"
-          size="sm"
-          className="w-fit"
-        >
-          Retomar en Mercado Pago
-        </Button>
+        <div className={actionRowClassName}>
+          <p className="text-body-sm text-text-300">
+            {billing.checkoutURL
+              ? "Mercado Pago todavía no confirmó la inscripción. Si no llegó a completarla, puede retomarla desde el mismo enlace."
+              : "Estamos esperando la confirmación de Mercado Pago."}
+          </p>
+          {billing.checkoutURL ? (
+            <Button href={billing.checkoutURL} variant="outline" size="sm">
+              Retomar en Mercado Pago
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {awaitingActivation ? (
         <p className="text-body-sm text-text-300">
@@ -311,18 +325,6 @@ export const BillingPanel = ({
           No se pudo confirmar la inscripción con Mercado Pago. Contacte a
           soporte antes de volver a intentar.
         </p>
-      ) : null}
-      {billing?.status === "authorized" && billing.entitled ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-fit"
-          disabled={pending}
-          onClick={() => change("DELETE")}
-        >
-          Cancelar renovación
-        </Button>
       ) : null}
       {billing?.status === "canceled" ? (
         <p className="text-body-sm text-text-300">
