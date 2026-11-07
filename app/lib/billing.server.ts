@@ -699,6 +699,25 @@ async function validSignature(request: Request, secret: string) {
   return difference === 0;
 }
 
+/** Stores a verified subscription on the account that owns its plan; false when no current plan matches, such as a replaced one. */
+async function linkSubscription(
+  db: D1Database,
+  subscription: Awaited<ReturnType<typeof getSubscription>>,
+) {
+  const owner = await db
+    .prepare(
+      "SELECT user_id, plan_id, checkout_url, subscription_id, provider_status, trial_ends_at, paid_until, canceled_at, account_deleted_at, last_verified_at FROM billing_subscriptions WHERE plan_id = ? AND account_deleted_at IS NULL",
+    )
+    .bind(subscription.preapproval_plan_id)
+    .first<BillingRecord>();
+
+  if (!owner) return false;
+
+  await storeSubscription(db, owner, subscription);
+
+  return true;
+}
+
 /** Signed notifications are hints; every entitlement change uses a fresh provider GET. */
 export async function handleBillingWebhook(
   request: Request,
@@ -727,17 +746,9 @@ export async function handleBillingWebhook(
       if (subscription.id !== id)
         return privateJSON({ error: "Provider identity mismatch" }, 502);
 
-      const owner = await env.DB.prepare(
-        "SELECT user_id, plan_id, checkout_url, subscription_id, provider_status, trial_ends_at, paid_until, canceled_at, account_deleted_at, last_verified_at FROM billing_subscriptions WHERE plan_id = ? AND account_deleted_at IS NULL",
-      )
-        .bind(subscription.preapproval_plan_id)
-        .first<BillingRecord>();
-
-      if (!owner) return privateJSON({ ignored: true });
-
-      await storeSubscription(env.DB, owner, subscription);
-
-      return privateJSON({ received: true });
+      return (await linkSubscription(env.DB, subscription))
+        ? privateJSON({ received: true })
+        : privateJSON({ ignored: true });
     }
 
     if (event.data.type === "subscription_authorized_payment") {
@@ -745,8 +756,29 @@ export async function handleBillingWebhook(
       if (payment.id !== id)
         return privateJSON({ error: "Provider identity mismatch" }, 502);
 
-      if (!(await storeAuthorizedPayment(env.DB, payment)))
+      if (await storeAuthorizedPayment(env.DB, payment))
+        return privateJSON({ received: true });
+
+      // Mercado Pago sends the subscription and its first payments together, so a payment can arrive before its subscription is linked. Link it from the provider record instead of dropping the payment.
+      const subscription = await getSubscription(
+        env,
+        payment.preapproval_id,
+        providerFetch,
+      );
+
+      if (subscription.id !== payment.preapproval_id)
+        return privateJSON({ error: "Provider identity mismatch" }, 502);
+
+      if (
+        !(await linkSubscription(env.DB, subscription)) ||
+        !(await storeAuthorizedPayment(env.DB, payment))
+      ) {
+        console.warn(
+          "billing notification: authorized payment ignored, its subscription belongs to no current plan",
+        );
+
         return privateJSON({ ignored: true });
+      }
 
       return privateJSON({ received: true });
     }

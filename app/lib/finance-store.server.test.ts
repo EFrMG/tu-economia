@@ -1527,6 +1527,93 @@ describe("subscription entitlement", () => {
     ).toBe(409);
   });
 
+  it("links the subscription when its first payment notification arrives before it", async ({
+    onTestFinished,
+  }) => {
+    const { env, signIn, database } = await setup(onTestFinished);
+    const { userId } = await signIn("payment-first@example.test");
+
+    database
+      .prepare("DELETE FROM billing_subscriptions WHERE user_id = ?")
+      .run(userId);
+
+    database
+      .prepare(
+        "INSERT INTO billing_subscriptions (user_id, plan_id, provider_status, created_at, updated_at) VALUES (?, 'plan-replacement', 'pending', ?, ?)",
+      )
+      .run(userId, "2026-01-01T00:00:00.000Z", "2026-01-01T00:00:00.000Z");
+
+    const live = {
+      ...env,
+      MP_ACCESS_TOKEN: "synthetic-token",
+      MP_WEBHOOK_SECRET: "synthetic-webhook-secret",
+    };
+
+    const providerFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/authorized_payments/pay-first"))
+        return Response.json({
+          id: "pay-first",
+          preapproval_id: "sub-replacement",
+          debit_date: "2026-03-10T12:00:00.000Z",
+          currency_id: "ARS",
+          transaction_amount: 5000,
+          payment: { status: "approved" },
+        });
+
+      if (url.endsWith("/preapproval/sub-replacement"))
+        return Response.json({
+          id: "sub-replacement",
+          preapproval_plan_id: "plan-replacement",
+          payer_email: "",
+          status: "authorized",
+          date_created: "2026-03-10T11:59:00.000Z",
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 5000,
+            currency_id: "ARS",
+          },
+        });
+
+      throw new Error(`Unexpected mock request ${url}`);
+    }) as typeof fetch;
+
+    const response = await handleBillingWebhook(
+      await signedBillingEvent(
+        live.MP_WEBHOOK_SECRET,
+        "subscription_authorized_payment",
+        "pay-first",
+      ),
+      live,
+      providerFetch,
+    );
+
+    expect(await response.json()).toEqual({ received: true });
+
+    expect(
+      database
+        .prepare(
+          "SELECT subscription_id, provider_status, trial_ends_at, paid_until FROM billing_subscriptions WHERE user_id = ?",
+        )
+        .get(userId),
+    ).toEqual({
+      subscription_id: "sub-replacement",
+      provider_status: "authorized",
+      trial_ends_at: null,
+      paid_until: "2026-04-10T12:00:00.000Z",
+    });
+
+    expect(
+      database
+        .prepare(
+          "SELECT status FROM billing_payments WHERE provider_payment_id = 'pay-first'",
+        )
+        .get(),
+    ).toEqual({ status: "approved" });
+  });
+
   it("recovers a lost subscription notification before status, cancellation, and deletion", async ({
     onTestFinished,
   }) => {

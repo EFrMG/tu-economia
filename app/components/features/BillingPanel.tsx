@@ -146,13 +146,8 @@ export const BillingPanel = ({
           : previous,
       );
 
+      // The cancelled-status block below announces the outcome, so no separate notice repeats it.
       setReconciliationRequired(Boolean(result.reconciliationRequired));
-
-      setNotice(
-        result.reconciliationRequired
-          ? "Se canceló la suscripción identificada, pero no se pudo verificar si hay otras. Contacte a soporte."
-          : "La renovación se canceló. Conserve el acceso hasta el fin del período vigente.",
-      );
     } catch (error) {
       setNotice(
         error instanceof Error
@@ -327,11 +322,25 @@ export const BillingPanel = ({
         </p>
       ) : null}
       {billing?.status === "canceled" ? (
-        <p className="text-body-sm text-text-300">
-          {reconciliationRequired
-            ? "Cancelamos la suscripción identificada, pero falta verificar si hay otras. Contacte a soporte."
-            : "La renovación está cancelada."}
-        </p>
+        <div role="status" className="stack-2 text-body-sm">
+          {reconciliationRequired ? (
+            <p className="text-tertiary-text-200">
+              Cancelamos la suscripción identificada, pero falta verificar si
+              hay otras. Contacte a soporte.
+            </p>
+          ) : (
+            <>
+              <p className="text-tertiary-text-200">
+                La renovación se canceló.
+              </p>
+              {billing.entitled ? (
+                <p className="text-secondary-text-100">
+                  Conserva su acceso hasta el fin del período vigente.
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
       ) : null}
       {notice ? (
         <p role="status" className="text-body-sm text-tertiary-text-100">
