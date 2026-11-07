@@ -1,0 +1,6 @@
+build
+.react-router
+node_modules
+DOCS
+CLAUDE.md
+app/lib/*.generated.json

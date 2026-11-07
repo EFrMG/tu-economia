@@ -1,0 +1,63 @@
+name: Refresh prices
+
+# Rebuilds the Precios basket from the newest SEPA archive and commits the result straight to master as github-actions[bot]. See "Refreshing" in docs/product-price-feed.md.
+#
+# The archive is about 320 MB and is only ever parsed, never committed; the work directory lives in the runner's temp folder. A push made with the default token does not start the Tests workflow, so this job runs `pnpm test` itself and commits only if it passes.
+on:
+  schedule:
+    - cron: "0 9 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-prices
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22.23.3
+      - uses: jdx/mise-action@v4.3.0
+      - run: pnpm install --frozen-lockfile
+
+      - name: Require Python 3.11 or later
+        run: python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
+
+      - name: Download and aggregate the newest archive
+        env:
+          WORK: ${{ runner.temp }}/sepa
+        run: |
+          python3 -I scripts/build-price-basket.py download --work "$WORK"
+          python3 -I scripts/build-price-basket.py aggregate --archive "$(ls "$WORK"/sepa_*.zip)" --work "$WORK"
+
+      - name: Build the basket
+        env:
+          WORK: ${{ runner.temp }}/sepa
+        run: python3 -I scripts/build-price-basket.py build --work "$WORK"
+
+      - name: Verify
+        run: |
+          pnpm test
+          pnpm exec wrangler deploy --dry-run
+
+      - name: Commit and push
+        run: |
+          git add -A app/lib/price-basket.generated.json app/lib/price-basket-server.generated.json public/precios
+
+          if git diff --cached --quiet; then
+            echo "The basket is already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Refresh price basket from the SEPA archive"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

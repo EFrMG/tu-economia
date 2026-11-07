@@ -1,0 +1,278 @@
+@theme {
+  /* Project-owned theme tokens. Tailwind supplies its default scales. */
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --font-heading: "Geist Variable", var(--font-sans);
+  --font-extra: var(--font-mono);
+
+  --leading-base: 1.6;
+  --leading-heading: 1.15;
+
+  --body-max-width: 80ch;
+  --container-terminal: 75rem;
+  --breakpoint-compact: 25rem;
+
+  /* Terminal type scale */
+
+  --text-headline-lg: 2rem;
+  --text-headline-lg--line-height: 1.2;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-md: 1.5rem;
+  --text-headline-md--line-height: 1.3;
+  --text-headline-md--font-weight: 600;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.6;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.5;
+  --text-data-display: 1.25rem;
+  --text-data-display--line-height: 1.2;
+  --text-data-display--letter-spacing: -0.01em;
+  --text-data-display--font-weight: 500;
+  --text-data-label: 0.75rem;
+  --text-data-label--line-height: 1;
+  --text-data-label--letter-spacing: 0.05em;
+  --text-label-caps: 0.625rem;
+  --text-label-caps--line-height: 1.5;
+  --text-label-caps--letter-spacing: 0.1em;
+  --text-label-caps--font-weight: 600;
+
+  /* Marketing uses the same type roles at an editorial scale. */
+  --text-marketing-display: clamp(3.5rem, 8vw, 6rem);
+  --text-marketing-display--line-height: 0.95;
+  --text-marketing-display--letter-spacing: -0.05em;
+  --text-marketing-display--font-weight: 700;
+  --text-marketing-feature: clamp(3rem, 6vw, 4.5rem);
+  --text-marketing-feature--line-height: 1;
+  --text-marketing-feature--letter-spacing: -0.04em;
+  --text-marketing-feature--font-weight: 700;
+  --text-marketing-section: clamp(2.5rem, 4vw, 3.5rem);
+  --text-marketing-section--line-height: 1.1;
+  --text-marketing-section--letter-spacing: -0.03em;
+  --text-marketing-section--font-weight: 700;
+  --text-marketing-lead: 1.5rem;
+  --text-marketing-lead--line-height: 1.5;
+
+  /*
+   * The semantic `--bkg-clr` / `--text-clr*` aliases are NOT declared here on purpose: `--text-*` is Tailwind's font-size namespace, so `--text-clr` would emit a broken `text-clr` size utility and still give no colour utility. They live in `@layer base` in tailwind-general.css instead; use the palette utilities (`text-text-100`, `text-text-200`, `bg-base-950`) in JSX.
+   */
+
+  --ease-in-swift: cubic-bezier(0.11, 0, 0.5, 0);
+  --ease-out-swift: cubic-bezier(0.5, 1, 0.89, 1);
+  --ease-back-in: linear(
+    0,
+    -0.004 6.9%,
+    -0.019 13.8%,
+    -0.11 37.6%,
+    -0.131 46.7%,
+    -0.13 51.8%,
+    -0.118 56.5%,
+    -0.095 60.9%,
+    -0.06 65.1%,
+    0.002 70.1%,
+    0.081 74.8%,
+    0.301 83.7%,
+    0.607 92.1%,
+    1
+  );
+  --ease-back-in-out: linear(
+    0,
+    -0.004 4.8%,
+    -0.02 9.3%,
+    -0.124 26.1%,
+    -0.126 30.3%,
+    -0.104 33.9%,
+    -0.026 38.7%,
+    0.111 43.1%,
+    0.301 47%,
+    0.819 55.3%,
+    0.969 59.2%,
+    1.07 63.5%,
+    1.118 67.8%,
+    1.127 72.8%,
+    1.108 77.4%,
+    1.019 90.9%,
+    1.004 95.3%,
+    1
+  );
+  --ease-back-out: cubic-bezier(0.7, 1.6, 0.63, 1);
+  --ease-bounce: linear(
+    0,
+    0.269 10.8%,
+    0.531 23.9%,
+    0.793 39.6%,
+    0.953 52.2%,
+    1 57.7%,
+    0.966 64.3%,
+    0.955 71%,
+    0.994 91.1%,
+    1
+  );
+
+  /* Color palette */
+
+  --color-base-50: hsl(240 0% 94.5%);
+  --color-base-100: hsl(240 1.8% 88.8%);
+  --color-base-200: hsl(240 0.9% 77.8%);
+  --color-base-300: hsl(240 0.6% 67.3%);
+  --color-base-400: hsl(240 0.9% 56.9%);
+  --color-base-500: hsl(240 0.8% 47.1%);
+  --color-base-600: hsl(240 1.5% 38.2%);
+  --color-base-700: hsl(240 1.4% 29%);
+  --color-base-800: hsl(240 2% 20%);
+  --color-base-900: hsl(240 3.3% 11.8%);
+  --color-base-950: hsl(240 2.6% 7.6%);
+
+  --color-surface-50: hsl(300 3.4% 94.3%);
+  --color-surface-100: hsl(240 2% 90%);
+  --color-surface-200: hsl(270 2% 80.4%);
+  --color-surface-300: hsl(260 2% 70.8%);
+  --color-surface-400: hsl(270 2% 60.4%);
+  --color-surface-500: hsl(276 2% 51.2%);
+  --color-surface-600: hsl(264 2.3% 42.5%);
+  --color-surface-700: hsl(270 2.3% 33.7%);
+  --color-surface-800: hsl(280 2.3% 25.3%);
+  --color-surface-900: hsl(270 2.9% 13.3%);
+  --color-surface-950: hsl(240 4.3% 9%);
+
+  --color-overlay-50: hsl(300 4.3% 95.5%);
+  --color-overlay-100: hsl(300 2% 90%);
+  --color-overlay-200: hsl(280 3% 80.2%);
+  --color-overlay-300: hsl(276 3.4% 70.8%);
+  --color-overlay-400: hsl(280 3.1% 61.6%);
+  --color-overlay-500: hsl(277.5 3.3% 52.5%);
+  --color-overlay-600: hsl(277.5 3.6% 43.5%);
+  --color-overlay-700: hsl(280 3.4% 34.9%);
+  --color-overlay-800: hsl(276 3.7% 26.5%);
+  --color-overlay-900: hsl(285 4.3% 18.4%);
+  --color-overlay-950: hsl(280 4% 14.7%);
+
+  /* 100 */
+  --color-text-50: hsl(330 7.1% 94.5%);
+  --color-text-100: hsl(340 5.5% 89.2%);
+  --color-text-200: hsl(340 5.5% 78.4%);
+  --color-text-300: hsl(342 6.2% 68.2%);
+  --color-text-400: hsl(340 7% 58.2%);
+  --color-text-500: hsl(341.3 6.5% 48.2%);
+  --color-text-600: hsl(341.5 6.7% 38.2%);
+  --color-text-700: hsl(336 6.8% 28.6%);
+  --color-text-800: hsl(337.5 8% 19.6%);
+  --color-text-900: hsl(336 8.8% 11.2%);
+  --color-text-950: hsl(345 11.1% 7.1%);
+
+  --color-primary-50: hsl(200 100% 97.6%);
+  --color-primary-100: hsl(201.6 100% 95.1%);
+  --color-primary-200: hsl(200 100% 88.2%);
+  --color-primary-300: hsl(198.3 100% 82%);
+  --color-primary-400: hsl(195.8 100% 71.8%);
+  --color-primary-500: hsl(190.8 100% 50%);
+  --color-primary-600: hsl(191.1 100% 39.2%);
+  --color-primary-700: hsl(191.2 100% 29.4%);
+  --color-primary-800: hsl(191.5 100% 19.4%);
+  --color-primary-900: hsl(192.9 100% 11%);
+  --color-primary-950: hsl(193.7 100% 6.9%);
+
+  /* 900 */
+  --color-primary-text-50: hsl(201.6 100% 95.1%);
+  --color-primary-text-100: hsl(200 100% 88.2%);
+  --color-primary-text-200: hsl(195.9 100% 72%);
+  --color-primary-text-300: hsl(190.8 100% 46.7%);
+  --color-primary-text-400: hsl(191 100% 40.6%);
+  --color-primary-text-500: hsl(191.3 100% 34.5%);
+  --color-primary-text-600: hsl(191.2 100% 29.4%);
+  --color-primary-text-700: hsl(191.4 100% 23.7%);
+  --color-primary-text-800: hsl(192.1 100% 18.4%);
+  --color-primary-text-900: hsl(192.5 100% 13.1%);
+  --color-primary-text-950: hsl(193.5 100% 7.8%);
+
+  --color-secondary-50: hsl(150 100% 97.6%);
+  --color-secondary-100: hsl(153.6 100% 95.1%);
+  --color-secondary-200: hsl(154.6 100% 89.8%);
+  --color-secondary-300: hsl(156 100% 83.3%);
+  --color-secondary-400: hsl(158.3 100% 75.1%);
+  --color-secondary-500: hsl(162.4 100% 60.6%);
+  --color-secondary-600: hsl(165.3 100% 39.2%);
+  --color-secondary-700: hsl(164.9 100% 28.8%);
+  --color-secondary-800: hsl(164.5 100% 19%);
+  --color-secondary-900: hsl(162.4 100% 10%);
+  --color-secondary-950: hsl(160 100% 5.9%);
+
+  /* 900 */
+  --color-secondary-text-50: hsl(154.6 100% 89.8%);
+  --color-secondary-text-100: hsl(160 100% 69.4%);
+  --color-secondary-text-200: hsl(165.5 100% 45.3%);
+  --color-secondary-text-300: hsl(165.5 100% 39.8%);
+  --color-secondary-text-400: hsl(165.3 100% 34.5%);
+  --color-secondary-text-500: hsl(165.1 100% 30%);
+  --color-secondary-text-600: hsl(164.9 100% 24.9%);
+  --color-secondary-text-700: hsl(164.7 100% 20%);
+  --color-secondary-text-800: hsl(163.3 100% 15.5%);
+  --color-secondary-text-900: hsl(162.9 100% 11%);
+  --color-secondary-text-950: hsl(160 100% 6.5%);
+
+  --color-tertiary-50: hsl(25 100% 97.6%);
+  --color-tertiary-100: hsl(25 100% 95.3%);
+  --color-tertiary-200: hsl(27.3 96.5% 88.8%);
+  --color-tertiary-300: hsl(28.6 97.7% 83.1%);
+  --color-tertiary-400: hsl(31.2 96.9% 74.3%);
+  --color-tertiary-500: hsl(35.2 97.9% 63.1%);
+  --color-tertiary-600: hsl(37.6 75.7% 45.1%);
+  --color-tertiary-700: hsl(37.4 78.7% 33.1%);
+  --color-tertiary-800: hsl(37.8 85.2% 21.2%);
+  --color-tertiary-900: hsl(35.6 90% 11.8%);
+  --color-tertiary-950: hsl(35.3 94.4% 7.1%);
+
+  /* 900 */
+  --color-tertiary-text-50: hsl(23.5 100% 95.5%);
+  --color-tertiary-text-100: hsl(24.4 100% 89.4%);
+  --color-tertiary-text-200: hsl(28.8 100% 75.9%);
+  --color-tertiary-text-300: hsl(38.7 100% 48.6%);
+  --color-tertiary-text-400: hsl(38.8 100% 42.2%);
+  --color-tertiary-text-500: hsl(38.4 100% 35.9%);
+  --color-tertiary-text-600: hsl(38.1 100% 30.6%);
+  --color-tertiary-text-700: hsl(37.6 100% 24.7%);
+  --color-tertiary-text-800: hsl(36.7 100% 19.2%);
+  --color-tertiary-text-900: hsl(36 100% 13.7%);
+  --color-tertiary-text-950: hsl(32.9 100% 8.2%);
+
+  --color-red-50: hsl(0 100% 94.9%);
+  --color-red-100: hsl(358.9 100% 89.6%);
+  --color-red-200: hsl(358.9 100% 78.4%);
+  --color-red-300: hsl(358.4 100% 63.5%);
+  --color-red-400: hsl(354.6 100% 41.4%);
+  --color-red-500: hsl(355.9 100% 28.8%);
+  --color-red-600: hsl(356.5 100% 23.7%);
+  --color-red-700: hsl(357.5 100% 18.8%);
+  --color-red-800: hsl(358.4 100% 14.3%);
+  --color-red-900: hsl(358.8 100% 9.6%);
+  --color-red-950: hsl(358.2 100% 6.5%);
+
+  /* 900 */
+  --color-red-text-50: hsl(0 100% 97.1%);
+  --color-red-text-100: hsl(358.2 100% 93.3%);
+  --color-red-text-200: hsl(359.1 100% 86.7%);
+  --color-red-text-300: hsl(359.4 100% 79.4%);
+  --color-red-text-400: hsl(358.8 100% 71%);
+  --color-red-text-500: hsl(357.6 100% 60%);
+  --color-red-text-600: hsl(354.1 100% 44.1%);
+  --color-red-text-700: hsl(354.8 100% 35.9%);
+  --color-red-text-800: hsl(355.8 100% 28%);
+  --color-red-text-900: hsl(357.1 100% 20.6%);
+  --color-red-text-950: hsl(358.2 100% 12.7%);
+
+  /* Route-transition progress is the only indeterminate animation. */
+  --animate-scan: scan 1.2s ease-in-out infinite;
+
+  @keyframes scan {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(400%);
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "tu-economia",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-10-04",
+  "compatibility_flags": ["nodejs_compat"],
+  // The code reads this binding as env.DB. Local development uses Miniflare's simulated D1 instead of this database.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tu-economia",
+      "database_id": "63bdef65-144e-45ed-8cb6-df2d880f49cf",
+    },
+  ],
+  // Per client IP on /resources/prices, which forwards product ids to the unofficial Precios Claros API. The limit is per Cloudflare location and approximate; without the binding (local development) nothing is limited.
+  "ratelimits": [
+    {
+      "name": "PRICES_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 30, "period": 60 },
+    },
+  ],
+  // Daily cleanup of lapsed Mi economía records; it does nothing until FINANCE_STORAGE_ENABLED is set.
+  "triggers": { "crons": ["0 6 * * *"] },
+}

@@ -1,0 +1,325 @@
+@layer base {
+  /*
+   * Semantic roles consumed by the reset. Kept out of `@theme` because their names collide with Tailwind's `--text-*` (font-size) namespace; JSX should reach for the palette utilities rather than these.
+   */
+  :root {
+    --bkg-clr: var(--color-base-950);
+    --text-clr: var(--color-text-100);
+    --text-clr-dimish: var(--color-text-200);
+    --text-clr-dim: var(--color-text-300);
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  nav {
+    font-family: var(--font-extra);
+  }
+
+  /* The reset opts into native smooth scrolling; Lenis must own it instead. */
+  html.lenis.lenis-smooth {
+    scroll-behavior: auto;
+  }
+
+  label {
+    cursor: pointer;
+  }
+
+  /* Soft fallback for focusable elements without their own hover/focus
+   * treatment. Elements that style `hocus:` (hover + focus) opt out with
+   * `focus-visible:outline-none` and surface their own focus state instead. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 1px solid
+      color-mix(in oklab, var(--color-primary-500) 50%, transparent);
+    outline-offset: 1px;
+  }
+}
+
+@custom-variant hocus {
+  &:hover,
+  &:focus {
+    @slot;
+  }
+}
+
+@utility opacity-less {
+  opacity: 0.7;
+}
+
+@utility stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+@utility stack-* {
+  display: flex;
+  flex-direction: column;
+  gap: --spacing(--value(number));
+}
+
+@utility terminal-grid {
+  background-image:
+    linear-gradient(to right, var(--color-surface-900) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-surface-900) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@utility marketing-grid-mask {
+  mask-image: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    var(--color-base-950) 30%,
+    transparent 100%
+  );
+}
+
+@utility marketing-terminal-watermark {
+  font-size: 37.5rem;
+}
+
+@utility glass {
+  @apply border border-base-700 bg-surface-900/75 backdrop-blur-lg;
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-terminal px-4 md:px-8;
+  }
+
+  .card {
+    @apply rounded-sm glass p-4 shadow-lg shadow-primary-500/10;
+  }
+
+  .marketing-scroll-contours {
+    opacity: 0.45;
+    mask-image:
+      linear-gradient(to right, transparent, var(--color-base-950) 45%),
+      linear-gradient(
+        to bottom,
+        transparent,
+        var(--color-base-950) 18%,
+        var(--color-base-950) 82%,
+        transparent
+      );
+    mask-composite: intersect;
+  }
+
+  .marketing-scroll-contours--reverse {
+    mask-image:
+      linear-gradient(to left, transparent, var(--color-base-950) 45%),
+      linear-gradient(
+        to bottom,
+        transparent,
+        var(--color-base-950) 18%,
+        var(--color-base-950) 82%,
+        transparent
+      );
+  }
+
+  @media (max-width: 47.999rem) {
+    .marketing-scroll-contours,
+    .marketing-scroll-contours--reverse {
+      opacity: 0.22;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marketing-scroll-contours svg {
+      transform: none !important;
+      translate: none !important;
+    }
+  }
+
+  .btn-click-soft {
+    @apply transition-transform duration-85 ease-in active:scale-98;
+  }
+
+  .themed-select {
+    color-scheme: dark;
+  }
+
+  .themed-select option {
+    background-color: var(--color-overlay-950);
+    color: var(--color-text-100);
+  }
+
+  /* Keep the direction control between two equal amount fields, with the quote selector alongside on wide screens. */
+  @media (min-width: 48rem) {
+    .currency-converter-grid {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .currency-converter-grid {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  @supports (appearance: base-select) and selector(::picker(select)) {
+    .themed-select,
+    .themed-select::picker(select) {
+      appearance: base-select;
+    }
+
+    .themed-select {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .themed-select::picker-icon {
+      margin-inline-start: auto;
+      color: var(--color-primary-text-100);
+    }
+
+    .themed-select option::checkmark {
+      order: 1;
+      margin-inline-start: auto;
+      color: var(--color-primary-text-100);
+    }
+
+    .themed-select::picker(select) {
+      min-width: anchor-size(width);
+      margin-top: 4px;
+      padding: 4px;
+      border: 1px solid var(--color-base-700);
+      border-radius: 0;
+      background-color: var(--color-overlay-950);
+    }
+
+    .themed-select option {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 0;
+    }
+
+    .themed-select option:checked {
+      color: var(--color-primary-text-100);
+    }
+
+    .themed-select option:hover,
+    .themed-select option:focus,
+    .themed-select option:active {
+      background-color: var(--color-primary-900);
+      color: var(--color-primary-text-100);
+    }
+  }
+
+  /* Roomy desktops get 200px of pinning; smaller screens and reduced-motion preferences keep normal document flow. */
+  @media (min-width: 64rem) and (min-height: 42rem) and (prefers-reduced-motion: no-preference) {
+    .marketing-scroll-feature {
+      min-height: calc(60svh + 12.5rem);
+    }
+
+    .marketing-scroll-feature__content {
+      position: sticky;
+      top: 20svh;
+      min-height: 60svh;
+    }
+  }
+
+  @media (max-width: 63.999rem),
+    (max-height: 41.999rem),
+    (prefers-reduced-motion: reduce) {
+    .marketing-scroll-feature__scale {
+      transform: none !important;
+      scale: 1 !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Keep both hero actions within the first viewport on short phones. */
+  @media (max-width: 39.999rem) and (max-height: 47rem) {
+    .marketing-hero-content.page-container {
+      padding-top: 5rem;
+      gap: 2rem;
+    }
+
+    .marketing-hero-actions.flex {
+      padding-top: 1rem;
+      gap: 0.75rem;
+    }
+  }
+
+  @media (max-width: 39.999rem) and (max-height: 40rem) {
+    .marketing-hero-content.page-container {
+      padding-top: 3rem;
+      gap: 1.5rem;
+    }
+
+    .marketing-hero-actions.flex {
+      gap: 0.5rem;
+    }
+  }
+
+  @media (max-width: 39.999rem) and (max-height: 38rem) {
+    .marketing-navbar.page-container {
+      padding-block: 1rem;
+    }
+
+    .marketing-hero-content.page-container {
+      padding-top: 2rem;
+      gap: 1rem;
+    }
+
+    .marketing-hero-actions a {
+      height: 3.5rem;
+    }
+  }
+
+  @media (max-width: 22rem) and (max-height: 40rem) {
+    .marketing-navbar.page-container {
+      padding-block: 1rem;
+    }
+
+    .marketing-wordmark.font-heading {
+      font-size: 1.125rem;
+    }
+
+    .marketing-hero-content.page-container {
+      padding-top: 2.5rem;
+      gap: 1.25rem;
+    }
+
+    .marketing-hero-content .stack-6 {
+      gap: 0.75rem;
+    }
+
+    .marketing-hero-title.text-marketing-display {
+      font-size: 2.75rem;
+    }
+
+    .marketing-hero-actions.flex {
+      padding-top: 0;
+    }
+
+    .marketing-hero-actions a {
+      height: 3rem;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Keep the license, the CLA and its enforcement mechanism under Maintainer review.
+/.github/CODEOWNERS @EFrMG
+/.github/cla-exempt.json @EFrMG
+/.github/workflows/cla-check.yml @EFrMG
+/.gitattributes @EFrMG
+/LICENSE @EFrMG
+/CLA.md @EFrMG
+/CONTRIBUTING.md @EFrMG
+/cla/ @EFrMG
+/scripts/accept-cla.py @EFrMG
+/scripts/verify-cla.py @EFrMG
+/scripts/cla.py @EFrMG
+/scripts/test_cla.py @EFrMG

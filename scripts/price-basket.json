@@ -1,0 +1,85 @@
+{
+  "defaults": ["7790742348302", "pan-lactal", "huevos", "7793704000928"],
+  "categories": [
+    { "id": "leche-entera", "section": "Almacén", "kind": "product", "gtin": "7790742348302", "name": "Leche entera La Serenísima, sachet 1 l" },
+    { "id": "yogur", "section": "Almacén", "kind": "product", "gtin": "7791337007864", "name": "Yogur firme Ser frutilla, 190 g" },
+    { "id": "manteca", "section": "Almacén", "kind": "product", "gtin": "7793940054006", "name": "Manteca La Serenísima, 200 g" },
+    { "id": "queso-crema", "section": "Almacén", "kind": "product", "gtin": "7794990879656", "name": "Queso crema La Paulina, 290 g" },
+    { "id": "dulce-de-leche", "section": "Almacén", "kind": "product", "gtin": "7790742625304", "name": "Dulce de leche clásico La Serenísima, 400 g" },
+    { "id": "harina", "section": "Almacén", "kind": "product", "gtin": "7792180004871", "name": "Harina de trigo 0000 Pureza, 1 kg" },
+    { "id": "arroz", "section": "Almacén", "kind": "product", "gtin": "7790070431486", "name": "Arroz largo fino Lucchetti, 1 kg" },
+    { "id": "fideos", "section": "Almacén", "kind": "product", "gtin": "7790070320285", "name": "Fideos spaghetti Favorita, 500 g" },
+    { "id": "aceite-girasol", "section": "Almacén", "kind": "product", "gtin": "7790060023684", "name": "Aceite de girasol Cocinero, 1,5 l" },
+    { "id": "sal", "section": "Almacén", "kind": "product", "gtin": "7790072002080", "name": "Sal fina Celusal, 500 g" },
+    { "id": "yerba", "section": "Almacén", "kind": "product", "gtin": "7793704000928", "name": "Yerba mate Playadito, 1 kg" },
+    { "id": "cafe", "section": "Almacén", "kind": "product", "gtin": "7790150006320", "name": "Café molido La Virginia, 250 g" },
+    { "id": "te", "section": "Almacén", "kind": "product", "gtin": "7790387800142", "name": "Té Taragüí, 50 saquitos" },
+    { "id": "pure-tomate", "section": "Almacén", "kind": "product", "gtin": "7790580138868", "name": "Puré de tomate La Campagnola, 530 g" },
+    { "id": "galletitas-agua", "section": "Almacén", "kind": "product", "gtin": "7790040377806", "name": "Galletitas Criollitas, 300 g" },
+    { "id": "galletitas-dulces", "section": "Almacén", "kind": "product", "gtin": "7790040133471", "name": "Galletitas Sonrisas, 324 g" },
+    { "id": "gaseosa-cola", "section": "Almacén", "kind": "product", "gtin": "7790895000430", "name": "Coca-Cola, 1,5 l" },
+    { "id": "agua-mineral", "section": "Almacén", "kind": "product", "gtin": "7799155000197", "name": "Agua mineral Villavicencio sin gas, 2 l" },
+    {
+      "id": "huevos",
+      "section": "Almacén",
+      "kind": "group",
+      "name": "Huevos blancos",
+      "unit": "docena",
+      "members": [
+        { "gtin": "7798092352055", "per": 1, "note": "Coto, 12 u" },
+        { "gtin": "7798108347105", "per": 2.5, "note": "Carrefour, 30 u" },
+        { "gtin": "7798158704774", "per": 1, "note": "La Anónima, 12 u" },
+        { "gtin": "7799120006087", "per": 1, "note": "Changomas, 12 u" },
+        { "gtin": "7798064180143", "per": 1, "note": "DIA, 12 u" },
+        { "gtin": "7795282000482", "per": 2.5, "note": "Toledo, 30 u" },
+        { "gtin": "7790147548086", "per": 1, "note": "Vea, Disco y Jumbo, 12 u" },
+        { "gtin": "7798074870737", "per": 0.5, "note": "Mariano Max, 6 u" }
+      ]
+    },
+    {
+      "id": "pan-lactal",
+      "section": "Almacén",
+      "kind": "group",
+      "name": "Pan lactal blanco",
+      "unit": "kg",
+      "members": [
+        { "gtin": "7793890258769", "per": 0.315, "note": "Lactal 315 g: Coto, Carrefour, Coop. Obrera, Vea" },
+        { "gtin": "7798164190578", "per": 0.36, "note": "DIA, 360 g" },
+        { "gtin": "7794840010628", "per": 0.39, "note": "Toledo, 390 g" },
+        { "gtin": "7798151481900", "per": 0.6, "note": "Mariano Max, 600 g" },
+        { "gtin": "7791708001514", "per": 0.6, "note": "Veneziana 600 g, La Agrícola" }
+      ]
+    },
+    {
+      "id": "azucar",
+      "section": "Almacén",
+      "kind": "group",
+      "name": "Azúcar común",
+      "unit": "kg",
+      "members": [
+        { "gtin": "7798174970016", "per": 1, "note": "Azucel 1 kg" },
+        { "gtin": "7792540250450", "per": 1, "note": "Ledesma Superior 1 kg" },
+        { "gtin": "7799086000389", "per": 1, "note": "Domino 1 kg" },
+        { "gtin": "7792540260138", "per": 1, "note": "Ledesma Clásica 1 kg" },
+        { "gtin": "0659525879112", "per": 1, "note": "La Campechana 1 kg" },
+        { "gtin": "7790220000531", "per": 1, "note": "Fronterita 1 kg" }
+      ]
+    },
+    { "id": "pan-frances", "section": "Frescos", "kind": "fresh", "name": "Pan francés", "unit": "kg" },
+    { "id": "carne-picada", "section": "Frescos", "kind": "fresh", "name": "Carne picada", "unit": "kg" },
+    { "id": "asado", "section": "Frescos", "kind": "fresh", "name": "Asado", "unit": "kg" },
+    { "id": "pollo", "section": "Frescos", "kind": "fresh", "name": "Pollo entero", "unit": "kg" },
+    { "id": "papa", "section": "Frescos", "kind": "fresh", "name": "Papa", "unit": "kg" },
+    { "id": "cebolla", "section": "Frescos", "kind": "fresh", "name": "Cebolla", "unit": "kg" },
+    { "id": "tomate", "section": "Frescos", "kind": "fresh", "name": "Tomate", "unit": "kg" },
+    { "id": "banana", "section": "Frescos", "kind": "fresh", "name": "Banana", "unit": "kg" },
+    { "id": "manzana", "section": "Frescos", "kind": "fresh", "name": "Manzana", "unit": "kg" },
+    { "id": "detergente", "section": "Limpieza e higiene", "kind": "product", "gtin": "7790990003039", "name": "Detergente Magistral limón, 500 ml" },
+    { "id": "jabon-ropa", "section": "Limpieza e higiene", "kind": "product", "gtin": "7791290792814", "name": "Jabón líquido para ropa Skip, 800 ml" },
+    { "id": "lavandina", "section": "Limpieza e higiene", "kind": "product", "gtin": "7790132098459", "name": "Lavandina Ayudín, 1 l" },
+    { "id": "papel-higienico", "section": "Limpieza e higiene", "kind": "product", "gtin": "7790250016182", "name": "Papel higiénico Higienol, 4 rollos" },
+    { "id": "pasta-dental", "section": "Limpieza e higiene", "kind": "product", "gtin": "7793100111891", "name": "Pasta dental Colgate, 90 g" },
+    { "id": "jabon-tocador", "section": "Limpieza e higiene", "kind": "product", "gtin": "7791293050843", "name": "Jabón de tocador Lux, 120 g" },
+    { "id": "shampoo", "section": "Limpieza e higiene", "kind": "product", "gtin": "7791293045740", "name": "Shampoo Sedal, 340 ml" }
+  ]
+}

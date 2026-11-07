@@ -1,0 +1,13 @@
+.DS_Store
+.env
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+/.wrangler/
+.dev.vars*
+
+# Python
+__pycache__/
+*.pyc

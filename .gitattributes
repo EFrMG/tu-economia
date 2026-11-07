@@ -1,0 +1,3 @@
+# The CLA acceptance check hashes the CLA and its records; LF endings keep the digest identical on every platform.
+CLA.md text eol=lf
+cla/** text eol=lf
