@@ -27,7 +27,7 @@ const searchSchema = z.object({
 export const subscriptionSchema = z.object({
   id: z.string().min(1),
   preapproval_plan_id: z.string().min(1),
-  payer_email: z.email(),
+  // `payer_email` is not read: the plan ID identifies the account, and a subscription made through a plan's hosted checkout can carry an empty one.
   status: z.string(),
   date_created: z.iso.datetime({ offset: true }),
   next_payment_date: z.iso.datetime({ offset: true }).nullable().optional(),

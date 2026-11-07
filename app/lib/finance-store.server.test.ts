@@ -1569,7 +1569,8 @@ describe("subscription entitlement", () => {
         return Response.json({
           id: "sub-recovered",
           preapproval_plan_id: "plan-recovered",
-          payer_email: "recovered@example.test",
+          // A plan's hosted checkout can leave the payer email empty; it must not block the subscription.
+          payer_email: "",
           status,
           date_created: new Date().toISOString(),
           auto_recurring: {
