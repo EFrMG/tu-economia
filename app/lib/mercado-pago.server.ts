@@ -8,6 +8,15 @@ const api = "https://api.mercadopago.com";
 /** Provider calls sit on interactive paths (status, checkout, cancellation and account deletion), so none may outlive this. */
 const PROVIDER_TIMEOUT_MS = 10_000;
 
+/**
+ * The subscription API rejects the documented `canceled` ("Invalid preapproval status param: canceled") and takes `cancelled`. Statuses read back are normalized to `canceled`, the spelling stored and compared everywhere else, whichever one the provider returns.
+ */
+const PROVIDER_CANCELLED = "cancelled";
+
+const providerStatus = z
+  .string()
+  .transform((status) => (status === PROVIDER_CANCELLED ? "canceled" : status));
+
 const planSchema = z.object({ id: z.string().min(1), init_point: z.url() });
 
 const amountSchema = z
@@ -28,7 +37,7 @@ export const subscriptionSchema = z.object({
   id: z.string().min(1),
   preapproval_plan_id: z.string().min(1),
   // `payer_email` is not read: the plan ID identifies the account, and a subscription made through a plan's hosted checkout can carry an empty one.
-  status: z.string(),
+  status: providerStatus,
   date_created: z.iso.datetime({ offset: true }),
   next_payment_date: z.iso.datetime({ offset: true }).nullable().optional(),
   auto_recurring: z.object({
@@ -165,7 +174,7 @@ export const getSubscriptionStatus = async (
   providerFetch: typeof fetch = fetch,
 ) =>
   z
-    .object({ id: z.string().min(1), status: z.string() })
+    .object({ id: z.string().min(1), status: providerStatus })
     .parse(
       await callProvider(
         env,
@@ -232,7 +241,7 @@ export const cancelSubscription = async (
     env,
     `/preapproval/${encodeURIComponent(id)}`,
     "PUT",
-    { status: "canceled" },
+    { status: PROVIDER_CANCELLED },
     providerFetch,
   );
 

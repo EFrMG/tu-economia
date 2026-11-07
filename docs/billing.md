@@ -47,7 +47,7 @@ Account deletion cancels an active subscription first; see [cloud-finance-setup.
 - **Access** lasts until the later of the trial end and the paid-through date. Cancelling keeps the stored dates, and a verified payment keeps its paid period even if a later renewal fails.
 - **Late or missing notifications**: a refund whose notification never arrives keeps counting until its paid period ends. Payments are found through the current subscription ID, so a notification for a replaced subscription is ignored and its `billing_payments` row keeps the last verified status.
 
-[Subscription management](https://www.mercadopago.com.ar/developers/es/docs/subscriptions/subscription-management) documents cancelling renewal by setting the subscription status to `canceled`, which is why the app stores its own access end dates instead of relying on the provider status.
+[Subscription management](https://www.mercadopago.com.ar/developers/es/docs/subscriptions/subscription-management) documents cancelling renewal by setting the subscription status to `canceled`, but the API rejects that value and takes `cancelled`; the client sends `cancelled` and normalizes either spelling it reads back to `canceled`. Cancellation is final at the provider, which is why the app stores its own access end dates instead of relying on the provider status.
 
 ### When it stops instead of guessing
 

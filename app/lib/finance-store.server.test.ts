@@ -2817,8 +2817,12 @@ describe("subscription entitlement", () => {
 
       if (url.endsWith("/preapproval/sub-1")) {
         if (init?.method === "PUT") {
-          expect(JSON.parse(String(init.body))).toEqual({ status: "canceled" });
-          providerStatus = "canceled";
+          // The live API rejects the documented `canceled`; its reads may use either spelling.
+          expect(JSON.parse(String(init.body))).toEqual({
+            status: "cancelled",
+          });
+
+          providerStatus = "cancelled";
         }
 
         return Response.json({
