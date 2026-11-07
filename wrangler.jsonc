@@ -23,6 +23,8 @@
   // A deploy replaces variables set in the dashboard with these.
   "vars": {
     "AUTH_BASE_URL": "https://tu-economia.macias-francisco-355237995.workers.dev",
+    "AUTH_ACCOUNTS_ENABLED": "true",
+    "FINANCE_STORAGE_ENABLED": "true",
   },
   // Workers Logs, matching the dashboard setting so a deploy does not switch them off. Invocation logs record each request's URL and metadata; Cloudflare keeps them for its plan's retention window.
   "observability": {
