@@ -42,6 +42,6 @@ On a deployed URL, check `/dashboard`, `/indicadores`, `/noticias`, `/privacy` a
 
 ## Deploying your own copy
 
-`wrangler.jsonc` binds the project's D1 database as `DB` by ID, which another Cloudflare account cannot use. On a different account, run `wrangler d1 create tu-economia`, replace `database_id` in `wrangler.jsonc` and apply the migrations as described in [cloud-finance-setup.md](cloud-finance-setup.md). Accounts, storage and billing stay off until their flags are set, so the public pages need no further setup.
+`wrangler.jsonc` binds the project's D1 database as `DB` by ID, which another Cloudflare account cannot use. On a different account, run `wrangler d1 create tu-economia`, replace `database_id` and `vars.AUTH_BASE_URL` in `wrangler.jsonc` and apply the migrations as described in [cloud-finance-setup.md](cloud-finance-setup.md). Accounts, storage and billing stay off until their flags are set, so the public pages need no further setup.
 
 `wrangler.jsonc` also declares a `PRICES_LIMITER` rate-limit binding for `/resources/prices` (30 requests per minute per client IP). `namespace_id` is only an identifier, unique among the account's limiters; there is no resource to create. The limit is approximate and per Cloudflare location, and the route works unchanged without the binding.
