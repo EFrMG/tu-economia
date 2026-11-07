@@ -35,6 +35,8 @@ interface BillingStatus {
   trialEndsAt: string | null;
   paidUntil: string | null;
   canceledAt: string | null;
+  /** The hosted checkout of a started enrollment that has no subscription yet, so it can be resumed. */
+  checkoutURL: string | null;
 }
 
 interface BillingPanelProps {
@@ -283,8 +285,20 @@ export const BillingPanel = ({
       ) : null}
       {billing?.status === "pending" ? (
         <p className="text-body-sm text-text-300">
-          Estamos esperando la confirmación de Mercado Pago.
+          {billing.checkoutURL
+            ? "Mercado Pago todavía no confirmó la inscripción. Si no llegó a completarla, puede retomarla desde el mismo enlace."
+            : "Estamos esperando la confirmación de Mercado Pago."}
         </p>
+      ) : null}
+      {billing?.status === "pending" && billing.checkoutURL ? (
+        <Button
+          href={billing.checkoutURL}
+          variant="outline"
+          size="sm"
+          className="w-fit"
+        >
+          Retomar en Mercado Pago
+        </Button>
       ) : null}
       {awaitingActivation ? (
         <p className="text-body-sm text-text-300">

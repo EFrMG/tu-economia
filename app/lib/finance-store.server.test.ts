@@ -1476,18 +1476,30 @@ describe("subscription entitlement", () => {
       return Response.json({ paging: { total: 0 }, results: [] });
     }) as typeof fetch;
 
-    expect(
-      (
-        await handleBilling(
-          request("POST", cookie, {
-            expectedUserId: userId,
-            acceptedTerms: true,
-          }),
-          { ...env, MP_ACCESS_TOKEN: "synthetic-token" },
-          pendingFetch,
-        )
-      ).status,
-    ).toBe(409);
+    // A checkout that produced no subscription resumes on its own plan instead of creating another one.
+    const retried = await handleBilling(
+      request("POST", cookie, {
+        expectedUserId: userId,
+        acceptedTerms: true,
+      }),
+      { ...env, MP_ACCESS_TOKEN: "synthetic-token" },
+      pendingFetch,
+    );
+
+    expect(retried.status).toBe(200);
+    expect(await retried.json()).toEqual({ checkoutURL: checkout });
+
+    const status = await handleBilling(
+      request("GET", cookie),
+      { ...env, MP_ACCESS_TOKEN: "synthetic-token" },
+      pendingFetch,
+    );
+
+    expect(await status.json()).toMatchObject({
+      status: "pending",
+      entitled: false,
+      checkoutURL: checkout,
+    });
 
     expect((await save(env, cookie, edit)).ok).toBe(false);
 
@@ -1744,7 +1756,7 @@ describe("subscription entitlement", () => {
       canceled_at: null,
     });
 
-    // The replacement checkout keeps the same pending guard until it is reconciled.
+    // Until it is reconciled, the replacement checkout resumes its own plan instead of creating another.
     const pendingFetch = (async (input: RequestInfo | URL) => {
       expect(String(input)).toBe(
         "https://api.mercadopago.com/preapproval/search?preapproval_plan_id=plan-new",
@@ -1753,10 +1765,9 @@ describe("subscription entitlement", () => {
       return Response.json({ paging: { total: 0 }, results: [] });
     }) as typeof fetch;
 
-    expect(
-      (await handleBilling(checkoutRequest(), live, pendingFetch)).status,
-    ).toBe(409);
+    const resumed = await handleBilling(checkoutRequest(), live, pendingFetch);
 
+    expect(await resumed.json()).toEqual({ checkoutURL: checkout });
     expect(planRequests).toBe(1);
   });
 

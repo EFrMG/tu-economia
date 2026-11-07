@@ -31,6 +31,28 @@ const authenticationMessages: AuthenticationMessages = {
   unauthenticated: "Su sesión terminó. Inicie sesión nuevamente.",
 };
 
+/**
+ * Records why a billing call failed in Workers Logs. A provider response that fails validation reports only each issue's path, code and message, never the payload, so payer data stays out of the logs.
+ */
+const logFailure = (context: string, error: unknown) => {
+  if (error instanceof z.ZodError) {
+    console.error(
+      `${context}: provider response failed validation`,
+      error.issues.map(({ path, code, message }) => ({
+        path: path.join("."),
+        code,
+        message,
+      })),
+    );
+
+    return;
+  }
+
+  console.error(
+    `${context}: ${error instanceof Error ? error.message : "unknown error"}`,
+  );
+};
+
 /** Keeps the technical `error` for logs and API clients, with user-facing Spanish copy beside it. */
 const failure = (error: string, status: number, message: string) =>
   privateJSON({ error, message }, status);
@@ -53,6 +75,17 @@ export async function billingRecord(
     .bind(userId)
     .first<BillingRecord>();
 }
+
+/**
+ * The stored hosted checkout of a plan that reconciliation found no subscription for, typically an abandoned or failed checkout. Offering it again resumes the checkout the account already started; a new plan would cost the account its free month and leave the first plan unresolved.
+ */
+const resumableCheckout = (row: BillingRecord | null) =>
+  row?.provider_status === "pending" &&
+  row.plan_id &&
+  !row.subscription_id &&
+  !row.account_deleted_at
+    ? row.checkout_url
+    : null;
 
 export async function hasActiveBilling(db: D1Database, userId: string) {
   return hasCloudEntitlement(await billingRecord(db, userId));
@@ -364,12 +397,14 @@ export async function handleBilling(
         await recoverPayments(db, row, env, providerFetch);
 
       const current = await billingRecord(db, userId);
+
       return privateJSON({
         entitled: hasCloudEntitlement(current),
         status: current?.provider_status ?? "none",
         trialEndsAt: current?.trial_ends_at ?? null,
         paidUntil: current?.paid_until ?? null,
         canceledAt: current?.canceled_at ?? null,
+        checkoutURL: billingEnabled ? resumableCheckout(current) : null,
       });
     }
 
@@ -449,6 +484,9 @@ export async function handleBilling(
             409,
             "La activación de su suscripción todavía se está verificando. Intente nuevamente en unos minutos.",
           );
+
+        const resumable = resumableCheckout(existing);
+        if (resumable) return privateJSON({ checkoutURL: resumable });
 
         if (!existing.subscription_id)
           return failure(
@@ -614,6 +652,8 @@ export async function handleBilling(
   } catch (error) {
     if (error instanceof Response) return error;
 
+    logFailure("billing request", error);
+
     return privateJSON({ error: "Billing request failed" }, 502);
   }
 }
@@ -714,6 +754,8 @@ export async function handleBillingWebhook(
     return privateJSON({ ignored: true });
   } catch (error) {
     if (error instanceof Response) return error;
+
+    logFailure("billing notification", error);
 
     return privateJSON({ error: "Billing notification failed" }, 502);
   }
