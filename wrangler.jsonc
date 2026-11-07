@@ -20,6 +20,14 @@
       "simple": { "limit": 30, "period": 60 },
     },
   ],
+  // Workers Logs, matching the dashboard setting so a deploy does not switch them off. Invocation logs record each request's URL and metadata; Cloudflare keeps them for its plan's retention window.
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true,
+    },
+  },
   // Daily cleanup of lapsed Mi economía records; it does nothing until FINANCE_STORAGE_ENABLED is set.
   "triggers": { "crons": ["0 6 * * *"] },
 }
