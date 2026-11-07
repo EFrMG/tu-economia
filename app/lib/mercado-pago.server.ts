@@ -54,6 +54,25 @@ export const paymentSchema = z.object({
   payment: z.object({ status: z.string() }),
 });
 
+/** Mercado Pago's own short error description, for the logs. Only its `error` and `message` strings are kept, never the rest of the body. */
+async function providerReason(response: Response) {
+  try {
+    const body = (await response.json()) as {
+      error?: unknown;
+      message?: unknown;
+    };
+
+    const reason = [body.error, body.message]
+      .filter((value): value is string => typeof value === "string")
+      .join(": ")
+      .slice(0, 200);
+
+    return reason ? `: ${reason}` : "";
+  } catch {
+    return "";
+  }
+}
+
 async function callProvider(
   env: CloudflareEnvironment,
   path: string,
@@ -76,7 +95,9 @@ async function callProvider(
     });
 
     if (!response.ok)
-      throw new Error(`Mercado Pago request failed (${response.status})`);
+      throw new Error(
+        `Mercado Pago request failed (${method} ${path.split("?")[0]}, ${response.status})${await providerReason(response)}`,
+      );
 
     // The deadline also covers the body read: a provider that stalls mid-response must not hold the request.
     return response.json() as Promise<unknown>;
