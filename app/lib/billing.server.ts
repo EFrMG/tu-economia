@@ -96,11 +96,20 @@ async function storeSubscription(
   row: BillingRecord,
   subscription: Awaited<ReturnType<typeof getSubscription>>,
 ) {
+  // A buyer can re-subscribe from their own Mercado Pago account, which adds a new subscription to the cancelled one's plan.
+  const resubscribed =
+    row.subscription_id !== null &&
+    row.subscription_id !== subscription.id &&
+    row.provider_status === "canceled" &&
+    subscription.status === "authorized";
+
   // The plan is unique per account
   if (
     !row.plan_id ||
     subscription.preapproval_plan_id !== row.plan_id ||
-    (row.subscription_id && row.subscription_id !== subscription.id)
+    (row.subscription_id &&
+      row.subscription_id !== subscription.id &&
+      !resubscribed)
   )
     throw privateJSON(
       { error: "Provider subscription does not match this account" },
@@ -108,6 +117,25 @@ async function storeSubscription(
     );
 
   const now = new Date().toISOString();
+
+  // The stored dates stay until the new subscription's first payment is verified.
+  if (resubscribed) {
+    const adopted = await db
+      .prepare(
+        "UPDATE billing_subscriptions SET subscription_id = ?, provider_status = 'authorized', checkout_url = NULL, canceled_at = NULL, last_verified_at = ?, updated_at = ? WHERE user_id = ? AND subscription_id = ? AND provider_status = 'canceled' AND account_deleted_at IS NULL",
+      )
+      .bind(subscription.id, now, now, row.user_id, row.subscription_id)
+      .run();
+
+    if (!adopted.meta.changes)
+      throw failure(
+        "Subscription changed during verification",
+        409,
+        "La suscripción cambió mientras se verificaba. Actualice la página e intente nuevamente.",
+      );
+
+    return;
+  }
 
   const trialEnd =
     subscription.status === "authorized" &&
@@ -182,9 +210,13 @@ async function currentPlanSubscription(
 
     const live = statuses.filter((status) => status.status !== "canceled");
 
+    // The live one is either the stored subscription or a re-subscription that replaced its cancelled one.
     if (
       live.length === 1 &&
-      (!row.subscription_id || live[0].id === row.subscription_id)
+      (!row.subscription_id ||
+        live[0].id === row.subscription_id ||
+        (row.provider_status === "canceled" &&
+          statuses.some((status) => status.id === row.subscription_id)))
     )
       return live[0].id;
 
@@ -780,6 +812,25 @@ async function linkSubscription(
   return true;
 }
 
+/**
+ * A subscription on a plan no account owns can never grant access: typically a buyer re-subscribed from Mercado Pago to a plan that a later checkout replaced. It is cancelled so it stops charging; a charge already taken needs a manual refund. This assumes the Mercado Pago application serves only this app.
+ */
+async function cancelOrphan(
+  env: CloudflareEnvironment,
+  subscription: Awaited<ReturnType<typeof getSubscription>>,
+  providerFetch: typeof fetch,
+) {
+  if (subscription.status !== "canceled") {
+    await cancelSubscription(env, subscription.id, providerFetch);
+
+    console.warn(
+      "billing notification: cancelled a subscription whose plan belongs to no account",
+    );
+  }
+
+  return privateJSON({ ignored: true });
+}
+
 /** Signed notifications are hints; every entitlement change uses a fresh provider GET. */
 export async function handleBillingWebhook(
   request: Request,
@@ -810,7 +861,7 @@ export async function handleBillingWebhook(
 
       return (await linkSubscription(env.DB, subscription))
         ? privateJSON({ received: true })
-        : privateJSON({ ignored: true });
+        : cancelOrphan(env, subscription, providerFetch);
     }
 
     if (event.data.type === "subscription_authorized_payment") {
@@ -831,12 +882,12 @@ export async function handleBillingWebhook(
       if (subscription.id !== payment.preapproval_id)
         return privateJSON({ error: "Provider identity mismatch" }, 502);
 
-      if (
-        !(await linkSubscription(env.DB, subscription)) ||
-        !(await storeAuthorizedPayment(env.DB, payment))
-      ) {
+      if (!(await linkSubscription(env.DB, subscription)))
+        return cancelOrphan(env, subscription, providerFetch);
+
+      if (!(await storeAuthorizedPayment(env.DB, payment))) {
         console.warn(
-          "billing notification: authorized payment ignored, its subscription belongs to no current plan",
+          "billing notification: authorized payment ignored, its subscription is not the account's current one",
         );
 
         return privateJSON({ ignored: true });

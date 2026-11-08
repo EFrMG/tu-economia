@@ -1626,6 +1626,146 @@ describe("subscription entitlement", () => {
     ).toEqual({ status: "approved" });
   });
 
+  it("adopts a re-subscription the buyer made from Mercado Pago on the cancelled subscription's plan", async ({
+    onTestFinished,
+  }) => {
+    const { env, signIn, database } = await setup(onTestFinished);
+    const { cookie, userId } = await signIn("buyer-resubscribed@example.test");
+
+    database
+      .prepare(
+        "UPDATE billing_subscriptions SET plan_id = 'plan-current', subscription_id = 'sub-cancelled', provider_status = 'canceled', trial_ends_at = NULL, paid_until = NULL, canceled_at = '2026-01-01T00:00:00.000Z' WHERE user_id = ?",
+      )
+      .run(userId);
+
+    const live = {
+      ...env,
+      MP_ACCESS_TOKEN: "synthetic-token",
+      MP_WEBHOOK_SECRET: "synthetic-webhook-secret",
+    };
+
+    const providerFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/preapproval/search?preapproval_plan_id=plan-current"))
+        return Response.json({
+          paging: { total: 2 },
+          results: [{ id: "sub-cancelled" }, { id: "sub-again" }],
+        });
+
+      if (url.endsWith("/preapproval/sub-cancelled"))
+        return Response.json({ id: "sub-cancelled", status: "cancelled" });
+
+      if (url.endsWith("/preapproval/sub-again"))
+        return Response.json({
+          id: "sub-again",
+          preapproval_plan_id: "plan-current",
+          status: "authorized",
+          date_created: "2026-03-10T11:59:00.000Z",
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 5000,
+            currency_id: "ARS",
+          },
+        });
+
+      if (url.includes("/authorized_payments/search?"))
+        return Response.json({ paging: { total: 0 }, results: [] });
+
+      throw new Error(`Unexpected mock request ${url}`);
+    }) as typeof fetch;
+
+    const notified = await handleBillingWebhook(
+      await signedBillingEvent(
+        live.MP_WEBHOOK_SECRET,
+        "subscription_preapproval",
+        "sub-again",
+      ),
+      live,
+      providerFetch,
+    );
+
+    expect(await notified.json()).toEqual({ received: true });
+
+    expect(
+      database
+        .prepare(
+          "SELECT subscription_id, provider_status, canceled_at FROM billing_subscriptions WHERE user_id = ?",
+        )
+        .get(userId),
+    ).toEqual({
+      subscription_id: "sub-again",
+      provider_status: "authorized",
+      canceled_at: null,
+    });
+
+    // The status check now finds the adopted subscription live and the old one cancelled.
+    const status = await handleBilling(
+      request("GET", cookie),
+      live,
+      providerFetch,
+    );
+
+    expect(status.status).toBe(200);
+    expect(await status.json()).toMatchObject({ status: "authorized" });
+  });
+
+  it("cancels a subscription whose plan belongs to no account", async ({
+    onTestFinished,
+  }) => {
+    const { env } = await setup(onTestFinished);
+    const cancellations: string[] = [];
+
+    const live = {
+      ...env,
+      MP_ACCESS_TOKEN: "synthetic-token",
+      MP_WEBHOOK_SECRET: "synthetic-webhook-secret",
+    };
+
+    const providerFetch = (async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      const url = String(input);
+      if (url.endsWith("/preapproval/sub-orphan")) {
+        if (init?.method === "PUT") {
+          cancellations.push(String(init.body));
+
+          return Response.json({ id: "sub-orphan", status: "cancelled" });
+        }
+
+        return Response.json({
+          id: "sub-orphan",
+          preapproval_plan_id: "plan-replaced",
+          status: cancellations.length ? "cancelled" : "authorized",
+          date_created: "2026-03-10T11:59:00.000Z",
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 5000,
+            currency_id: "ARS",
+            free_trial: { frequency: 1, frequency_type: "months" },
+          },
+        });
+      }
+
+      throw new Error(`Unexpected mock request ${url}`);
+    }) as typeof fetch;
+
+    const response = await handleBillingWebhook(
+      await signedBillingEvent(
+        live.MP_WEBHOOK_SECRET,
+        "subscription_preapproval",
+        "sub-orphan",
+      ),
+      live,
+      providerFetch,
+    );
+
+    expect(await response.json()).toEqual({ ignored: true });
+    expect(cancellations).toEqual([JSON.stringify({ status: "cancelled" })]);
+  });
+
   it("recovers a lost subscription notification before status, cancellation, and deletion", async ({
     onTestFinished,
   }) => {
