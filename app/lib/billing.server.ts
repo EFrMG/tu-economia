@@ -185,12 +185,22 @@ async function reconcileSubscription(
   )
     return row;
 
-  if (found.paging.total !== 1 || found.results.length !== 1)
+  if (found.paging.total !== 1 || found.results.length !== 1) {
+    // Counts only, so support can tell a vanished subscription from a duplicate without the payload.
+    console.warn("billing: plan search requires manual reconciliation", {
+      total: found.paging.total,
+      results: found.results.length,
+      includesStored: found.results.some(
+        (result) => result.id === row.subscription_id,
+      ),
+    });
+
     throw failure(
       "Subscription search requires manual reconciliation",
       409,
       "La suscripción requiere una verificación manual. Contacte a soporte.",
     );
+  }
 
   const subscription = await getSubscription(
     env,
