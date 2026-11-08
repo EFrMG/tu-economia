@@ -321,7 +321,9 @@ export const BillingPanel = ({
           soporte antes de volver a intentar.
         </p>
       ) : null}
-      {billing?.status === "canceled" ? (
+      {/* Once access has ended, the offer above already says what comes next. */}
+      {billing?.status === "canceled" &&
+      (billing.entitled || reconciliationRequired) ? (
         <div role="status" className="stack-2 text-body-sm">
           {reconciliationRequired ? (
             <p className="text-tertiary-text-200">
@@ -333,11 +335,9 @@ export const BillingPanel = ({
               <p className="text-tertiary-text-200">
                 La renovación se canceló.
               </p>
-              {billing.entitled ? (
-                <p className="text-secondary-text-100">
-                  Conserva su acceso hasta el fin del período vigente.
-                </p>
-              ) : null}
+              <p className="text-secondary-text-100">
+                Conserva su acceso hasta el fin del período vigente.
+              </p>
             </>
           )}
         </div>
