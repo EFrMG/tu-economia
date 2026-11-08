@@ -9,7 +9,7 @@ The public text is at `/terms`, linked from the footer, the sitemap and the chec
 - Mercado Pago's hosted checkout collects the payment details and the recurring-charge authorization; card data never enters this app.
 - A subscriber may cancel at any time. Cancellation stops the next charge, and access continues until the end of the current trial or paid period.
 - After a cancellation or a lapse the subscriber can subscribe again. The free calendar month belongs to the account's first plan; a replacement plan has no `free_trial` and starts charging at authorization.
-- A failed renewal grants no grace period: editing stops when the last paid period ends. A verified refund or reversal removes the access that payment granted.
+- A failed renewal grants no grace period: editing stops when the last paid period ends. A refund removes the access that payment granted; refunds are issued on request; see [Refunds](#refunds).
 - Without a current period an account keeps read access, JSON export and record deletion, and its records are deleted after the retention period. See [cloud-finance-setup.md](cloud-finance-setup.md#retention-of-lapsed-records).
 
 ## How it works
@@ -45,7 +45,21 @@ Account deletion cancels an active subscription first; see [cloud-finance-setup.
 - **Trial**: starts when a verified subscription is `authorized`, its plan includes a one-month `free_trial`, and its plan terms are as expected. It ends one calendar month after the subscription's creation timestamp, clamped to the month's last day. A replacement plan omits `free_trial`, so it never grants a trial; its access starts with the first approved payment.
 - **Paid period**: each approved authorized payment of the monthly amount extends access to one calendar month after its debit date. Repeated events for a payment update one row. A refunded, reversed or charged-back payment no longer counts, and a delayed approval cannot restore it.
 - **Access** lasts until the later of the trial end and the paid-through date. Cancelling keeps the stored dates, and a verified payment keeps its paid period even if a later renewal fails.
-- **Late or missing notifications**: a refund whose notification never arrives keeps counting until its paid period ends. Payments are found through the current subscription ID, so a notification for a replaced subscription is ignored and its `billing_payments` row keeps the last verified status.
+- **Late or missing notifications**: payments are found through the current subscription ID, so a notification for a replaced subscription is ignored and its `billing_payments` row keeps the last verified status.
+
+### Refunds
+
+Refunds are issued by hand from the seller's Mercado Pago panel, on request. A refund neither cancels the subscription nor sends a subscription notification, so it changes nothing here by itself:
+
+1. Refund the payment in Mercado Pago. If renewal should also stop, cancel the subscription there too, or ask the subscriber to cancel it in the app; the cancellation arrives as a notification.
+2. In D1, mark the payment and take back the period it paid for. `paid_until` becomes one calendar month after the latest payment still `approved` for that subscription, or `NULL` if none remains, which is the case below:
+
+   ```sql
+   UPDATE billing_payments SET status = 'refunded' WHERE provider_payment_id = '<authorized payment id>';
+   UPDATE billing_subscriptions SET paid_until = NULL, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE subscription_id = '<subscription id>';
+   ```
+
+A later notification for that payment cannot turn a `refunded` row back into `approved`.
 
 [Subscription management](https://www.mercadopago.com.ar/developers/es/docs/subscriptions/subscription-management) documents cancelling renewal by setting the subscription status to `canceled`, but the API rejects that value and takes `cancelled`; the client sends `cancelled` and normalizes either spelling it reads back to `canceled`. Cancellation is final at the provider, which is why the app stores its own access end dates instead of relying on the provider status.
 
