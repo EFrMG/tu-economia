@@ -13,7 +13,13 @@ export async function isRateLimited(
     const { success } = await limiter.limit({ key });
 
     return !success;
-  } catch {
+  } catch (error) {
+    // Logged so a broken binding does not pass as an unreached limit.
+    console.warn(
+      "rate limiter failed open:",
+      error instanceof Error ? error.message : String(error),
+    );
+
     return false;
   }
 }
