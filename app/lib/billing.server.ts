@@ -155,7 +155,69 @@ async function storeSubscription(
   }
 }
 
-/** One filtered search and one canonical GET; an ambiguous search is never resolved by picking a result. */
+/**
+ * The plan's one subscription that can still charge. A checkout whose card was rejected leaves a cancelled subscription on the same plan, so cancelled extras are set aside; two live ones (pending included, since a pending checkout can still be completed) stay ambiguous.
+ */
+async function currentPlanSubscription(
+  env: CloudflareEnvironment,
+  row: BillingRecord,
+  found: Awaited<ReturnType<typeof searchSubscriptionsByPlan>>,
+  providerFetch: typeof fetch,
+) {
+  const complete = found.paging.total === found.results.length;
+  if (complete && found.results.length === 1) return found.results[0].id;
+
+  if (complete && found.results.length > 1) {
+    const statuses = await Promise.all(
+      found.results.map((result) =>
+        getSubscriptionStatus(env, result.id, providerFetch),
+      ),
+    );
+
+    if (statuses.some((status, index) => status.id !== found.results[index].id))
+      throw privateJSON(
+        { error: "Provider subscription identity mismatch" },
+        502,
+      );
+
+    const live = statuses.filter((status) => status.status !== "canceled");
+
+    if (
+      live.length === 1 &&
+      (!row.subscription_id || live[0].id === row.subscription_id)
+    )
+      return live[0].id;
+
+    // All cancelled: the stored one still carries this account's dates.
+    if (
+      live.length === 0 &&
+      statuses.some((status) => status.id === row.subscription_id)
+    )
+      return row.subscription_id!;
+
+    console.warn("billing: plan search requires manual reconciliation", {
+      statuses: statuses.map((status) => status.status),
+      storedIsLive: live.some((status) => status.id === row.subscription_id),
+    });
+  } else {
+    // Counts only, so support can tell a vanished subscription from an incomplete page without the payload.
+    console.warn("billing: plan search requires manual reconciliation", {
+      total: found.paging.total,
+      results: found.results.length,
+      includesStored: found.results.some(
+        (result) => result.id === row.subscription_id,
+      ),
+    });
+  }
+
+  throw failure(
+    "Subscription search requires manual reconciliation",
+    409,
+    "La suscripción requiere una verificación manual. Contacte a soporte.",
+  );
+}
+
+/** One filtered search and one canonical GET; an ambiguous search is never resolved by guessing between live results. */
 async function reconcileSubscription(
   db: D1Database,
   userId: string,
@@ -185,30 +247,20 @@ async function reconcileSubscription(
   )
     return row;
 
-  if (found.paging.total !== 1 || found.results.length !== 1) {
-    // Counts only, so support can tell a vanished subscription from a duplicate without the payload.
-    console.warn("billing: plan search requires manual reconciliation", {
-      total: found.paging.total,
-      results: found.results.length,
-      includesStored: found.results.some(
-        (result) => result.id === row.subscription_id,
-      ),
-    });
-
-    throw failure(
-      "Subscription search requires manual reconciliation",
-      409,
-      "La suscripción requiere una verificación manual. Contacte a soporte.",
-    );
-  }
-
-  const subscription = await getSubscription(
+  const subscriptionId = await currentPlanSubscription(
     env,
-    found.results[0].id,
+    row,
+    found,
     providerFetch,
   );
 
-  if (subscription.id !== found.results[0].id)
+  const subscription = await getSubscription(
+    env,
+    subscriptionId,
+    providerFetch,
+  );
+
+  if (subscription.id !== subscriptionId)
     throw privateJSON(
       { error: "Provider subscription identity mismatch" },
       502,

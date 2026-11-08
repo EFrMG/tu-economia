@@ -23,6 +23,18 @@ const canceledProvider = (async (input: RequestInfo | URL) =>
     status: "canceled",
   })) as typeof fetch;
 
+/** Two live subscriptions on one plan: a second charge is possible, so neither may be picked. */
+const ambiguousPlanSearch = async (input: RequestInfo | URL) => {
+  const url = String(input);
+  if (url.includes("/preapproval/search?"))
+    return Response.json({
+      paging: { total: 2 },
+      results: [{ id: "a" }, { id: "b" }],
+    });
+
+  return Response.json({ id: url.split("/").at(-1), status: "authorized" });
+};
+
 /** Run the actual D1 SQL and foreign keys using an isolated SQLite database. */
 function localD1(database: DatabaseSync): D1Database {
   const prepare = (query: string) => {
@@ -1725,6 +1737,71 @@ describe("subscription entitlement", () => {
     expect(cancellations).toBe(1);
   });
 
+  it("sets aside a cancelled subscription left on the plan by a rejected card", async ({
+    onTestFinished,
+  }) => {
+    const { env, signIn, database } = await setup(onTestFinished);
+    const { cookie, userId } = await signIn("rejected-card@example.test");
+
+    database
+      .prepare(
+        "UPDATE billing_subscriptions SET plan_id = 'plan-rejected', subscription_id = NULL, provider_status = 'pending', trial_ends_at = NULL, paid_until = NULL, canceled_at = NULL WHERE user_id = ?",
+      )
+      .run(userId);
+
+    const providerFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/preapproval/search?preapproval_plan_id=plan-rejected"))
+        return Response.json({
+          paging: { total: 2 },
+          results: [{ id: "sub-rejected" }, { id: "sub-live" }],
+        });
+
+      // Mercado Pago spells the status it returns "cancelled".
+      if (url.endsWith("/preapproval/sub-rejected"))
+        return Response.json({ id: "sub-rejected", status: "cancelled" });
+
+      if (url.endsWith("/preapproval/sub-live"))
+        return Response.json({
+          id: "sub-live",
+          preapproval_plan_id: "plan-rejected",
+          status: "authorized",
+          date_created: new Date().toISOString(),
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 5000,
+            currency_id: "ARS",
+            free_trial: { frequency: 1, frequency_type: "months" },
+          },
+        });
+
+      throw new Error(`Unexpected mock request ${url}`);
+    }) as typeof fetch;
+
+    const live = { ...env, MP_ACCESS_TOKEN: "synthetic-token" };
+    const response = await handleBilling(
+      request("GET", cookie),
+      live,
+      providerFetch,
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(await response.json()).toMatchObject({
+      entitled: true,
+      status: "authorized",
+    });
+
+    expect(
+      database
+        .prepare(
+          "SELECT subscription_id FROM billing_subscriptions WHERE user_id = ?",
+        )
+        .get(userId),
+    ).toEqual({ subscription_id: "sub-live" });
+  });
+
   it("keeps an uncertain plan creation reserved so a retry cannot create a second checkout", async ({
     onTestFinished,
   }) => {
@@ -2169,20 +2246,18 @@ describe("subscription entitlement", () => {
       )
       .run(`synthetic-${userId}`, userId);
 
-    const ambiguousFetch = (async () => {
+    const ambiguousFetch = (async (input: RequestInfo | URL) => {
       providerCalls++;
 
-      return Response.json({
-        paging: { total: 2 },
-        results: [{ id: "a" }, { id: "b" }],
-      });
+      return ambiguousPlanSearch(input);
     }) as typeof fetch;
 
     expect(
       (await handleBilling(checkoutRequest(), live, ambiguousFetch)).status,
     ).toBe(409);
 
-    expect(providerCalls).toBe(2);
+    // One search and one status read per result, and no plan request.
+    expect(providerCalls).toBe(4);
 
     expect(
       database
@@ -2209,12 +2284,7 @@ describe("subscription entitlement", () => {
       )
       .run(userId);
 
-    const providerFetch = (async () =>
-      Response.json({
-        paging: { total: 2 },
-        results: [{ id: "a" }, { id: "b" }],
-      })) as typeof fetch;
-
+    const providerFetch = ambiguousPlanSearch as typeof fetch;
     const live = { ...env, MP_ACCESS_TOKEN: "synthetic-token" };
 
     expect(
