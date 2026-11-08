@@ -1710,6 +1710,65 @@ describe("subscription entitlement", () => {
     expect(await status.json()).toMatchObject({ status: "authorized" });
   });
 
+  it("stops when a cancelled subscription reads as authorized again", async ({
+    onTestFinished,
+  }) => {
+    const { env, signIn, database } = await setup(onTestFinished);
+    const { cookie, userId } = await signIn("reactivated@example.test");
+
+    database
+      .prepare(
+        "UPDATE billing_subscriptions SET plan_id = 'plan-current', subscription_id = 'sub-reactivated', provider_status = 'canceled', canceled_at = '2026-01-01T00:00:00.000Z' WHERE user_id = ?",
+      )
+      .run(userId);
+
+    const providerFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/preapproval/search?preapproval_plan_id=plan-current"))
+        return Response.json({
+          paging: { total: 1 },
+          results: [{ id: "sub-reactivated" }],
+        });
+
+      if (url.endsWith("/preapproval/sub-reactivated"))
+        return Response.json({
+          id: "sub-reactivated",
+          preapproval_plan_id: "plan-current",
+          status: "authorized",
+          date_created: "2026-01-01T00:00:00.000Z",
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 5000,
+            currency_id: "ARS",
+          },
+        });
+
+      throw new Error(`Unexpected mock request ${url}`);
+    }) as typeof fetch;
+
+    const live = { ...env, MP_ACCESS_TOKEN: "synthetic-token" };
+
+    const response = await handleBilling(
+      request("GET", cookie),
+      live,
+      providerFetch,
+    );
+
+    expect(response.status).toBe(409);
+
+    expect(
+      database
+        .prepare(
+          "SELECT provider_status, canceled_at FROM billing_subscriptions WHERE user_id = ?",
+        )
+        .get(userId),
+    ).toEqual({
+      provider_status: "canceled",
+      canceled_at: "2026-01-01T00:00:00.000Z",
+    });
+  });
+
   it("cancels a subscription whose plan belongs to no account", async ({
     onTestFinished,
   }) => {

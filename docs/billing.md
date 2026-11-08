@@ -75,6 +75,7 @@ A later notification for that payment cannot turn a `refunded` row back into `ap
 These cases answer `409` and need manual reconciliation, because continuing could leave a charge possible or create a duplicate:
 
 - A plan creation whose response was lost blocks another checkout, re-subscription and account deletion. A checkout with no provider subscription can be resumed through its stored link but still blocks account deletion.
+- A cancelled subscription that Mercado Pago reports as `authorized` again. Cancellation is final there, so this is a stale read, which the notification's retry corrects, or an undocumented reactivation that could charge without granting access.
 - A plan search with incomplete results or more than one subscription that can still charge (a `pending` one counts, since its checkout can still be completed), or a payment search that returns more than one page. The Worker logs the result count or the statuses involved, never the payload.
 
 Billing rows are kept after account deletion (marked `account_deleted_at`).

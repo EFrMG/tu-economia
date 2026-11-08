@@ -166,14 +166,31 @@ async function storeSubscription(
 
   if (!updated.meta.changes) {
     const current = await billingRecord(db, row.user_id);
+
+    // An older `pending` read arriving late changes nothing.
     if (
       current?.subscription_id === subscription.id &&
-      ((subscription.status === "pending" &&
-        ["authorized", "canceled"].includes(current.provider_status)) ||
-        (current.provider_status === "canceled" &&
-          subscription.status === "authorized"))
+      subscription.status === "pending" &&
+      ["authorized", "canceled"].includes(current.provider_status)
     )
       return;
+
+    // Cancellation is final at Mercado Pago, so a cancelled subscription reading `authorized` again is either a stale read, which the notification's retry corrects, or a reactivation that could charge without access. Neither is ignored silently.
+    if (
+      current?.subscription_id === subscription.id &&
+      current.provider_status === "canceled" &&
+      subscription.status === "authorized"
+    ) {
+      console.warn(
+        "billing: a cancelled subscription reads as authorized again",
+      );
+
+      throw failure(
+        "Cancelled subscription reads as authorized",
+        409,
+        "La suscripción requiere una verificación manual. Contacte a soporte.",
+      );
+    }
 
     throw failure(
       "Subscription changed during verification",
