@@ -58,10 +58,10 @@ const NewsLoading = ({ showAll = false }: { showAll?: boolean }) => (
 );
 
 const NewsHeading = ({ showAll = false }: { showAll?: boolean }) => (
-  <div className="mb-4 flex items-center justify-between">
+  <div className="mb-4 flex items-center justify-between gap-4">
     <h2
       id="news-heading"
-      className="border-b border-primary-500/30 pb-1 font-mono text-label-caps text-text-200 uppercase"
+      className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase"
     >
       Noticias económicas
     </h2>

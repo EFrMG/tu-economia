@@ -256,8 +256,8 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
             {rates?.freshness.lastSuccessfulFetchAtLabel} ART.
           </p>
         ) : null}
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="border-b border-primary-500/30 pb-1 font-mono text-label-caps text-text-200 uppercase">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase">
             ARS-USD
           </h2>
           {rates ? (
