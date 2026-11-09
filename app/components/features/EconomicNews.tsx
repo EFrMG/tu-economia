@@ -20,7 +20,7 @@ const publicationTime = new Intl.DateTimeFormat("es-AR", {
 
 /** Keeps "a. m. ART" on one line: the formatter separates "a." and "m." with an ordinary, breakable space. */
 const formatPublicationTime = (publishedAt: string) =>
-  `${publicationTime.format(new Date(publishedAt)).replace(/([ap]\.)\s(m\.)/, "$1 $2")} ART`;
+  `${publicationTime.format(new Date(publishedAt)).replace(/([ap]\.)\s(m\.)/, "$1\xA0$2")}\xA0ART`;
 
 const sourceName = (id: NewsSourceId) =>
   NEWS_SOURCES.find((source) => source.id === id)?.name ?? id;
@@ -91,7 +91,7 @@ const NewsItemCard = ({ item }: { item: NewsItem }) => (
     >
       <div className="mb-3 font-mono text-data-label text-text-400">
         <span>{item.source}</span>
-        {" "}
+        {"\xA0"}
         <span aria-hidden="true" className="mx-1">
           ·
         </span>{" "}
