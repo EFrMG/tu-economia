@@ -275,7 +275,7 @@ const DataControls = ({
 }) => (
   <section
     aria-labelledby="data-controls-title"
-    className="stack-4 border-t border-base-700 pt-8"
+    className="border-t border-base-700 pt-8"
   >
     <h2
       id="data-controls-title"
