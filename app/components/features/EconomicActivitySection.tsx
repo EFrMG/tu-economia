@@ -237,23 +237,26 @@ const EconomicActivitySection = ({
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <table className="sr-only">
-                <caption>Variación interanual del EMAE por mes</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Mes</th>
-                    <th scope="col">Variación interanual</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {observations.map((point) => (
-                    <tr key={point.date}>
-                      <th scope="row">{formatActivityMonth(point.date)}</th>
-                      <td>{formatActivityChange(point.yearOverYear)}</td>
+              {/* `sr-only` goes on a wrapper: a table ignores its 1px height and overflow clip, so its rows would still extend the page's scroll area. */}
+              <div className="sr-only">
+                <table>
+                  <caption>Variación interanual del EMAE por mes</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Mes</th>
+                      <th scope="col">Variación interanual</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {observations.map((point) => (
+                      <tr key={point.date}>
+                        <th scope="row">{formatActivityMonth(point.date)}</th>
+                        <td>{formatActivityChange(point.yearOverYear)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : null}
         </>

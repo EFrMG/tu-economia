@@ -403,25 +403,28 @@ const HistoricalExchangeChart = ({
             <PlotFallback notice={plotFailureNotice} message={plotMessage} />
           )}
           {plotState === "ready" ? (
-            <table className="sr-only">
-              <caption>Brecha Blue por fecha</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Brecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gapPoints.map((point) => (
-                  <tr key={point.fecha}>
-                    <th scope="row">{point.fecha}</th>
-                    <td>
-                      {point.gap === null ? "s/d" : formatPercent(point.gap)}
-                    </td>
+            // `sr-only` goes on a wrapper: a table ignores its 1px height and overflow clip, so its rows would still extend the page's scroll area.
+            <div className="sr-only">
+              <table>
+                <caption>Brecha Blue por fecha</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Brecha</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {gapPoints.map((point) => (
+                    <tr key={point.fecha}>
+                      <th scope="row">{point.fecha}</th>
+                      <td>
+                        {point.gap === null ? "s/d" : formatPercent(point.gap)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : null}
         </>
       ) : (
