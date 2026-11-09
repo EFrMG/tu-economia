@@ -155,10 +155,10 @@ export const AccountAccess = ({
             la crea al ingresar.
           </p>
         ) : null}
-        {/* Stays mounted while empty so screen readers announce the result of each sign-in action. */}
+        {/* Stays mounted while empty so screen readers announce the result of each sign-in action; `sr-only` takes it out of the flex flow until then, so it adds no gap. */}
         <p
           id="account-access-status"
-          className={`text-center text-body-sm ${statusTone}`}
+          className={`text-center text-body-sm empty:sr-only ${statusTone}`}
           role="status"
         >
           {statusNotice}
