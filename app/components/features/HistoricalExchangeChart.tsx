@@ -297,7 +297,7 @@ const HistoricalExchangeChart = ({
       className="border border-base-700 bg-surface-950 p-4 sm:p-5"
       aria-labelledby="historical-chart-title"
     >
-      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+      <div className="mb-4 flex flex-col justify-between gap-4 sm:mb-5 sm:flex-row sm:items-start">
         <div>
           <h2
             id="historical-chart-title"
@@ -310,8 +310,8 @@ const HistoricalExchangeChart = ({
               ? "Brecha entre cierres de venta Blue y Oficial."
               : "Precio de venta en pesos argentinos."}
           </p>
-          {/* One status line reserved in every state: a partial failure explains itself here instead of pushing the plot down. */}
-          <p className="mt-1 min-h-[1.5em] text-body-sm">
+          {/* From `sm` up this status line is reserved in every state and sits beside the selector, so a partial failure explains itself without pushing the plot down. Stacked on mobile, an empty reserved line would only add space above the selector, so it collapses until there is a notice. */}
+          <p className="mt-1 min-h-[1.5em] text-body-sm max-sm:empty:hidden">
             {plotState === "ready" && plotFailureNotice ? (
               <UnavailableStatus>{plotFailureNotice}</UnavailableStatus>
             ) : null}
@@ -319,7 +319,7 @@ const HistoricalExchangeChart = ({
         </div>
         {/* The selector stays in place once the source failed: there is no other period to try. */}
         <div
-          className="flex w-fit border border-base-700"
+          className="flex w-fit self-center border border-base-700 sm:self-auto"
           role="group"
           aria-label="Período del gráfico"
         >
