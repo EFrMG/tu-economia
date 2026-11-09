@@ -18,6 +18,10 @@ const publicationTime = new Intl.DateTimeFormat("es-AR", {
   timeZone: "America/Argentina/Buenos_Aires",
 });
 
+/** Keeps "a. m. ART" on one line: the formatter separates "a." and "m." with an ordinary, breakable space. */
+const formatPublicationTime = (publishedAt: string) =>
+  `${publicationTime.format(new Date(publishedAt)).replace(/([ap]\.)\s(m\.)/, "$1 $2")} ART`;
+
 const sourceName = (id: NewsSourceId) =>
   NEWS_SOURCES.find((source) => source.id === id)?.name ?? id;
 
@@ -85,11 +89,14 @@ const NewsItemCard = ({ item }: { item: NewsItem }) => (
       aria-label={`${item.headline}. ${item.source}. Abre en una nueva pestaña.`}
       className="block h-full border border-base-700 bg-surface-950 p-4 transition-colors focus-visible:outline-none hocus:border-primary-500/50 hocus:bg-surface-900/80"
     >
-      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-data-label text-text-400">
+      <div className="mb-3 font-mono text-data-label text-text-400">
         <span>{item.source}</span>
-        <span aria-hidden="true">·</span>
+        {" "}
+        <span aria-hidden="true" className="mx-1">
+          ·
+        </span>{" "}
         <time dateTime={item.publishedAt}>
-          {publicationTime.format(new Date(item.publishedAt))} ART
+          {formatPublicationTime(item.publishedAt)}
         </time>
       </div>
       <h3 className="font-heading text-body-lg text-text-100">
