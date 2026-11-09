@@ -106,13 +106,13 @@ const IndicatorCard = ({
       </p>
     )}
 
-    <div className="mt-auto stack-2 border-t border-base-700 pt-4 text-right text-body-sm text-text-400">
+    <div className="mt-auto flex justify-end border-t border-base-700 pt-4">
       <a
         href={definition.sourceUrl}
         target="_blank"
         rel="noopener noreferrer"
         tabIndex={loading ? -1 : undefined}
-        className="relative z-40 w-fit self-end text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
+        className="relative z-40 block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
       >
         Ver documentación de la serie ↗
       </a>
@@ -178,7 +178,7 @@ export default function Indicadores({ loaderData }: Route.ComponentProps) {
   useFailedDataRetry(retryNeeded);
 
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <IndicadoresHeader />
 
       <Suspense fallback={<IndicatorsLoading />}>
@@ -206,7 +206,7 @@ export default function Indicadores({ loaderData }: Route.ComponentProps) {
 
 export function HydrateFallback() {
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <IndicadoresHeader />
       <IndicatorsLoading />
       <ActivityLoading />
@@ -217,7 +217,7 @@ export function HydrateFallback() {
 
 export function ErrorBoundary() {
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <IndicadoresHeader />
       <RouteError
         title="Indicadores no disponibles"

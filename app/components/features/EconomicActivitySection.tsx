@@ -77,7 +77,7 @@ const ActivityLoading = () => (
         interanual y mensual usan series diferentes.
       </p>
     </div>
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       {[
         "Variación interanual · serie original",
         "Variación mensual · desestacionalizada",
@@ -95,7 +95,7 @@ const ActivityLoading = () => (
       ))}
     </div>
     <div className="border-t border-base-700 pt-4">
-      <Skeleton className="mb-4 h-4 w-48" />
+      <Skeleton className="mb-5 h-4 w-48" />
       <ChartSkeleton className="h-56" />
     </div>
     <div className="flex justify-end gap-x-6 border-t border-base-700 pt-4">
@@ -144,7 +144,7 @@ const EconomicActivitySection = ({
 
       {latest ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="stack-2 border border-base-700 bg-base-900 p-4">
               <p className="font-mono text-label-caps text-text-200 uppercase">
                 Variación interanual · serie original
@@ -182,7 +182,7 @@ const EconomicActivitySection = ({
 
           {yearOverYearCount > 1 ? (
             <div className="border-t border-base-700 pt-4">
-              <p className="mb-4 font-mono text-label-caps text-text-200 uppercase">
+              <p className="mb-5 font-mono text-label-caps text-text-200 uppercase">
                 Variación interanual · últimos {observations.length} meses
               </p>
               <div className="h-56 w-full" aria-hidden="true">
@@ -267,7 +267,7 @@ const EconomicActivitySection = ({
         </UnavailableNotice>
       )}
 
-      <div className="flex flex-wrap justify-end gap-x-6 gap-y-2 border-t border-base-700 pt-4 text-body-sm text-text-400">
+      <div className="flex flex-wrap justify-end gap-x-6 gap-y-2 border-t border-base-700 pt-4 font-mono text-data-label text-text-400">
         <a
           href={ACTIVITY_METHOD_URL}
           target="_blank"

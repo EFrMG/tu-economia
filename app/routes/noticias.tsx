@@ -53,7 +53,7 @@ export default function Noticias({ loaderData }: Route.ComponentProps) {
   useFailedDataRetry(retryNeeded);
 
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <NoticiasHeader />
 
       <Suspense fallback={<NewsLoading showAll />}>
@@ -70,7 +70,7 @@ export default function Noticias({ loaderData }: Route.ComponentProps) {
 
 export function ErrorBoundary() {
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <NoticiasHeader />
       <RouteError
         title="Noticias no disponibles"

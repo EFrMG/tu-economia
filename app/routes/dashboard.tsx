@@ -170,7 +170,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
   }, [selectedCasa]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="stack-10">
       <Suspense fallback={<MarketContent market={null} loading />}>
         <Await
           resolve={loaderData.market}
@@ -214,7 +214,7 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
   );
 
   return (
-    <div className="flex flex-col gap-8" aria-busy={loading}>
+    <div className="stack-10" aria-busy={loading}>
       {loading ? (
         <span className="sr-only" role="status">
           Cargando cotizaciones del mercado.
@@ -222,8 +222,8 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
       ) : null}
 
       <header className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-        <div className="mb-auto">
-          <h1 className="mb-2 font-heading text-headline-lg text-text-100">
+        <div className="mb-auto stack-2">
+          <h1 className="font-heading text-headline-lg text-text-100">
             Tipos de cambio.
           </h1>
           <p className="max-w-2xl text-body-lg text-text-200">
@@ -256,7 +256,7 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
             {rates?.freshness.lastSuccessfulFetchAtLabel} ART.
           </p>
         ) : null}
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase">
             ARS-USD
           </h2>
@@ -296,7 +296,7 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
 
 export function HydrateFallback() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="stack-10">
       <MarketContent market={null} loading />
       <NewsLoading />
       <RouteFooter>

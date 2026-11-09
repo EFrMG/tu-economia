@@ -145,7 +145,7 @@ const GapSummaryBlock = ({
   summary,
   loading = false,
 }: GapSummaryBlockProps) => (
-  <div className="mb-4 grid gap-3 border-b border-base-700 pb-4 sm:grid-cols-2">
+  <div className="mb-4 grid gap-4 border-b border-base-700 pb-4 sm:grid-cols-2">
     <div>
       <p className="font-mono text-label-caps text-text-200 uppercase">
         Última brecha del período
@@ -297,7 +297,7 @@ const HistoricalExchangeChart = ({
       className="border border-base-700 bg-surface-950 p-4 sm:p-5"
       aria-labelledby="historical-chart-title"
     >
-      <div className="mb-4 flex flex-col justify-between gap-4 sm:mb-5 sm:flex-row sm:items-start">
+      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <h2
             id="historical-chart-title"

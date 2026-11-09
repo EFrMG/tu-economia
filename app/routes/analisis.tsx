@@ -153,7 +153,7 @@ export default function Analisis({ loaderData }: Route.ComponentProps) {
   useFailedDataRetry(retryNeeded);
 
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <AnalisisHeader />
 
       <Suspense fallback={<HistoryLoading />}>
@@ -201,7 +201,7 @@ export default function Analisis({ loaderData }: Route.ComponentProps) {
 
 export function HydrateFallback() {
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <AnalisisHeader />
       <HistoryLoading />
       <PurchasingPowerLoading />
@@ -215,7 +215,7 @@ export function HydrateFallback() {
 
 export function ErrorBoundary() {
   return (
-    <div className="stack-8">
+    <div className="stack-10">
       <AnalisisHeader />
       <RouteError
         title="Análisis no disponible"

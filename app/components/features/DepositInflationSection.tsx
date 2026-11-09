@@ -103,8 +103,8 @@ export const DepositInflationLoading = () => (
         </div>
       ))}
     </div>
-    <div className="mt-5 border-t border-base-700 pt-5">
-      <p className="mb-4 font-mono text-label-caps text-text-200 uppercase">
+    <div className="mt-5 border-t border-base-700 pt-4">
+      <p className="mb-5 font-mono text-label-caps text-text-200 uppercase">
         Tasas del período
       </p>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -272,8 +272,8 @@ export const DepositInflationSection = ({
                   </p>
                 </div>
               </div>
-              <div className="mt-5 border-t border-base-700 pt-5">
-                <p className="mb-4 font-mono text-label-caps text-text-200 uppercase">
+              <div className="mt-5 border-t border-base-700 pt-4">
+                <p className="mb-5 font-mono text-label-caps text-text-200 uppercase">
                   Tasas del período
                 </p>
                 <div className="grid gap-4 sm:grid-cols-3">
