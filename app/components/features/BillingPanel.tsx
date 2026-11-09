@@ -195,7 +195,8 @@ export const BillingPanel = ({
         >
           Suscripción a Mi economía
         </h3>
-        <AccessStatus access={access} />
+        {/* Without a subscription the card itself is the offer, so a "Solo lectura" tag would only repeat it. */}
+        {access === "read-only" ? null : <AccessStatus access={access} />}
       </div>
       {access === "read-only" && deletionDate ? (
         <p className="text-body-sm text-tertiary-text-200">
