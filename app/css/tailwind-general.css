@@ -44,6 +44,12 @@
       color-mix(in oklab, var(--color-primary-500) 50%, transparent);
     outline-offset: 1px;
   }
+
+  /* Recharts renders its z-index layers as `tabindex="-1"` groups so they stay out of the tab order, yet a tap still focuses them; they are never a meaningful focus target. A tap or click on the chart surface itself also focuses it, and the browser's default ring would show; keyboard focus keeps the fallback outline above. */
+  .recharts-wrapper [tabindex="-1"]:focus,
+  .recharts-wrapper :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 @custom-variant hocus {

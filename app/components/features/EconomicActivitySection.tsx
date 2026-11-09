@@ -194,6 +194,7 @@ const EconomicActivitySection = ({
                   <LineChart
                     data={observations}
                     margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
+                    accessibilityLayer={false}
                   >
                     <CartesianGrid
                       stroke="var(--color-base-700)"
