@@ -93,7 +93,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     : "No fue posible leer los registros guardados en su cuenta.";
 
   return (
-    <div className="stack-8 pb-12">
+    <div className="stack-8">
       <FinanceHeader tab={null} />
       <RouteError
         title="No se pudieron leer sus registros"
