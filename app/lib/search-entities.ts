@@ -1,5 +1,5 @@
 export type SearchEntityKind =
-  "exchange-rate" | "indicator" | "news" | "tracked-asset";
+  "exchange-rate" | "equity-panel" | "indicator" | "news" | "tracked-asset";
 
 export interface SearchTarget {
   pathname: string;

@@ -1,0 +1,309 @@
+{
+  "_recorded": "2026-11-10 from www.sec.gov and data.sec.gov for TGS; arrays trimmed, keys and values verbatim",
+  "tickerEntry": {
+    "cik_str": 931427,
+    "ticker": "TGS",
+    "title": "GAS TRANSPORTER OF THE SOUTH INC"
+  },
+  "submissions": {
+    "cik": "0000931427",
+    "entityType": "other",
+    "sic": "4922",
+    "sicDescription": "Natural Gas Transmission",
+    "ownerOrg": "01 Energy & Transportation",
+    "insiderTransactionForOwnerExists": 0,
+    "insiderTransactionForIssuerExists": 1,
+    "name": "GAS TRANSPORTER OF THE SOUTH INC",
+    "tickers": ["TGS"],
+    "exchanges": ["NYSE"],
+    "ein": "000000000",
+    "lei": null,
+    "description": "",
+    "website": "",
+    "investorWebsite": "",
+    "category": "Large accelerated filer",
+    "fiscalYearEnd": "1231",
+    "stateOfIncorporation": "",
+    "stateOfIncorporationDescription": "",
+    "addresses": {
+      "mailing": {
+        "street1": "CECILIA GRIERSON 355 26TH FLR",
+        "street2": "CAPITAL FEDERAL",
+        "city": "ARGENTINA",
+        "stateOrCountry": "C1",
+        "zipCode": "1107",
+        "stateOrCountryDescription": "Argentina",
+        "isForeignLocation": 0,
+        "foreignStateTerritory": null,
+        "country": null,
+        "countryCode": null
+      },
+      "business": {
+        "street1": "CECILIA GRIERSON 355 26TH FLR",
+        "street2": "1107 CAPITAL FEDERAL",
+        "city": "ARGENTINA",
+        "stateOrCountry": "C1",
+        "zipCode": "00000",
+        "stateOrCountryDescription": "Argentina",
+        "isForeignLocation": null,
+        "foreignStateTerritory": null,
+        "country": null,
+        "countryCode": null
+      }
+    },
+    "phone": "005401137515100X1093",
+    "flags": "",
+    "formerNames": [
+      {
+        "name": "GAS TRANSPORTER OF THE SOUTH INC",
+        "from": "2002-02-14T05:00:00.000Z",
+        "to": "2026-11-05T05:00:00.000Z"
+      }
+    ],
+    "filings": {
+      "recent": {
+        "accessionNumber": [
+          "0000931427-26-000015",
+          "0000931427-26-000014",
+          "0000931427-26-000013",
+          "0001140361-26-016167"
+        ],
+        "filingDate": ["2026-11-05", "2026-10-29", "2026-10-29", "2026-04-22"],
+        "reportDate": ["2026-09-30", "2026-09-30", "2026-10-29", "2025-12-31"],
+        "acceptanceDateTime": [
+          "2026-11-05T19:07:27.000Z",
+          "2026-10-29T21:13:24.000Z",
+          "2026-10-29T19:40:51.000Z",
+          "2026-04-22T21:26:30.000Z"
+        ],
+        "act": ["34", "34", "34", "34"],
+        "form": ["6-K", "6-K", "6-K", "20-F"],
+        "fileNumber": ["001-13396", "001-13396", "001-13396", "001-13396"],
+        "filmNumber": ["261526522", "261502858", "261501275", "26884829"],
+        "items": ["", "", "", ""],
+        "core_type": ["6-K", "6-K", "6-K", "XBRL"],
+        "size": [5404678, 3084973, 15367, 47876005],
+        "isXBRL": [0, 0, 0, 1],
+        "isInlineXBRL": [0, 0, 0, 1],
+        "isXBRLNumeric": [0, 0, 0, 1],
+        "primaryDocument": [
+          "tgs.htm",
+          "tgs.htm",
+          "tgs.htm",
+          "ef20060824_20f.htm"
+        ],
+        "primaryDocDescription": [
+          "FINANCIAL STATEMENTS AS OF SEPTEMBER 30, 2026",
+          "MATERIAL FACT",
+          "MATERIAL FACT",
+          "20-F"
+        ]
+      },
+      "files": []
+    }
+  },
+  "concepts": {
+    "Revenue": {
+      "cik": 931427,
+      "taxonomy": "ifrs-full",
+      "tag": "Revenue",
+      "label": null,
+      "description": null,
+      "entityName": "GAS TRANSPORTER OF THE SOUTH INC.",
+      "units": {
+        "ARS": [
+          {
+            "start": "2022-01-01",
+            "end": "2022-12-31",
+            "val": 1115696199000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2022"
+          },
+          {
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "val": 452808754000,
+            "accn": "0001140361-24-021683",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2024-04-24"
+          },
+          {
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "val": 986052768000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2023"
+          },
+          {
+            "start": "2024-01-01",
+            "end": "2024-12-31",
+            "val": 1219766287000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2024"
+          }
+        ]
+      }
+    },
+    "ProfitLoss": {
+      "cik": 931427,
+      "taxonomy": "ifrs-full",
+      "tag": "ProfitLoss",
+      "label": null,
+      "description": null,
+      "entityName": "GAS TRANSPORTER OF THE SOUTH INC.",
+      "units": {
+        "ARS": [
+          {
+            "start": "2015-01-01",
+            "end": "2015-12-31",
+            "val": -172109000,
+            "accn": "0001140361-18-018601",
+            "fy": 2017,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2018-04-16",
+            "frame": "CY2015"
+          },
+          {
+            "start": "2016-01-01",
+            "end": "2016-12-31",
+            "val": 930678000,
+            "accn": "0001140361-18-018601",
+            "fy": 2017,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2018-04-16",
+            "frame": "CY2016"
+          },
+          {
+            "start": "2017-01-01",
+            "end": "2017-12-31",
+            "val": 2793266000,
+            "accn": "0001140361-18-018601",
+            "fy": 2017,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2018-04-16",
+            "frame": "CY2017"
+          }
+        ]
+      }
+    },
+    "Assets": {
+      "cik": 931427,
+      "taxonomy": "ifrs-full",
+      "tag": "Assets",
+      "label": null,
+      "description": null,
+      "entityName": "GAS TRANSPORTER OF THE SOUTH INC.",
+      "units": {
+        "ARS": [
+          {
+            "end": "2022-12-31",
+            "val": 2794531641000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2022Q4I"
+          },
+          {
+            "end": "2023-12-31",
+            "val": 1525790880000,
+            "accn": "0001140361-24-021683",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2024-04-24"
+          },
+          {
+            "end": "2023-12-31",
+            "val": 3322617568000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2023Q4I"
+          },
+          {
+            "end": "2024-12-31",
+            "val": 3394598260000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2024Q4I"
+          }
+        ]
+      }
+    },
+    "Equity": {
+      "cik": 931427,
+      "taxonomy": "ifrs-full",
+      "tag": "Equity",
+      "label": null,
+      "description": null,
+      "entityName": "GAS TRANSPORTER OF THE SOUTH INC.",
+      "units": {
+        "ARS": [
+          {
+            "end": "2022-12-31",
+            "val": 1812134965000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2022Q4I"
+          },
+          {
+            "end": "2023-12-31",
+            "val": 855674894000,
+            "accn": "0001140361-24-021683",
+            "fy": 2023,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2024-04-24"
+          },
+          {
+            "end": "2023-12-31",
+            "val": 1863348684000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2023Q4I"
+          },
+          {
+            "end": "2024-12-31",
+            "val": 2233512179000,
+            "accn": "0001140361-25-015473",
+            "fy": 2024,
+            "fp": "FY",
+            "form": "20-F",
+            "filed": "2025-04-24",
+            "frame": "CY2024Q4I"
+          }
+        ]
+      }
+    }
+  }
+}

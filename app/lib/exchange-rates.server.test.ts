@@ -531,3 +531,55 @@ describe("getDashboardRates", () => {
     }
   });
 });
+
+describe("getLiveRates", () => {
+  it("returns the live quotations with their times and requests no history", async () => {
+    const fetch = successfulFetch();
+    vi.stubGlobal("fetch", fetch);
+    const { getLiveRates } = await loadModule();
+
+    const result = await getLiveRates();
+
+    expect(
+      result.rates.find((rate) => rate.casa === "contadoconliqui"),
+    ).toEqual({
+      casa: "contadoconliqui",
+      nombre: "CONTADOCONLIQUI",
+      compra: 103,
+      venta: 140,
+      updatedAt: "15/01/2026, 12:30",
+    });
+
+    expect(result.freshness).toEqual({
+      status: "current",
+      lastSuccessfulFetchAt: "2026-01-15T16:00:00.000Z",
+      lastSuccessfulFetchAtLabel: "15/01/2026, 13:00",
+    });
+
+    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([RATES_URL]);
+  });
+
+  it("shares the dashboard's stale fallback and then rejects with a gateway response", async () => {
+    const fetch = successfulFetch();
+    vi.stubGlobal("fetch", fetch);
+    const { getLiveRates } = await loadModule();
+
+    await getLiveRates();
+
+    fetch.mockImplementation(async () => {
+      throw new Error("temporary outage");
+    });
+
+    vi.advanceTimersByTime(60_001);
+
+    await expect(getLiveRates()).resolves.toMatchObject({
+      freshness: {
+        status: "stale",
+        lastSuccessfulFetchAtLabel: "15/01/2026, 13:00",
+      },
+    });
+
+    vi.advanceTimersByTime(15 * 60_000);
+    await expect(getLiveRates()).rejects.toMatchObject({ status: 502 });
+  });
+});

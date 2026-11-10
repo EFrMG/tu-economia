@@ -27,6 +27,7 @@ export default [
     route("analisis", "routes/analisis.tsx"),
     route("noticias", "routes/noticias.tsx"),
     route("indicadores", "routes/indicadores.tsx"),
+    route("acciones", "routes/acciones.tsx"),
     route("mi-economia", "routes/mi-economia.tsx"),
   ]),
 ] satisfies RouteConfig;

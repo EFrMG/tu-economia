@@ -1,10 +1,11 @@
-import { useId, useState, type KeyboardEvent, type Ref } from "react";
+import { useId, useMemo, useState, type KeyboardEvent, type Ref } from "react";
 import {
   MdOutlineMenu,
   MdOutlineRefresh,
   MdOutlineSearch,
 } from "react-icons/md";
 import { Link, useLocation, useNavigate } from "react-router";
+import { equityPanelSearchResults } from "~/lib/equity-search";
 import { EXCHANGE_RATE_SEARCH_RESULTS } from "~/lib/exchange-rate-search";
 import {
   searchEntities,
@@ -14,6 +15,14 @@ import {
 import { Wordmark } from "~/components/ui/Wordmark";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 
+/** Quotations first, so a term that matches both keeps the dashboard rates on top; the Acciones panels follow the BYMA flag. */
+function searchIndex(equitiesBymaEnabled: boolean): readonly SearchEntity[] {
+  return [
+    ...EXCHANGE_RATE_SEARCH_RESULTS,
+    ...equityPanelSearchResults(equitiesBymaEnabled),
+  ];
+}
+
 interface TopBarProps {
   onOpenNav: () => void;
   navTriggerRef: Ref<HTMLButtonElement>;
@@ -21,6 +30,8 @@ interface TopBarProps {
   isRefreshing: boolean;
   /** A route transition or data refresh is in flight; surfaced as a scan line. */
   isLoading?: boolean;
+  /** `EQUITIES_BYMA_ENABLED` from the layout loader; the BYMA panels are searchable only while it is on. */
+  equitiesBymaEnabled: boolean;
 }
 
 const TopBar = ({
@@ -29,6 +40,7 @@ const TopBar = ({
   onRefresh,
   isRefreshing,
   isLoading = false,
+  equitiesBymaEnabled,
 }: TopBarProps) => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -38,7 +50,12 @@ const TopBar = ({
   const navigate = useNavigate();
   const listboxId = useId();
 
-  const results = searchEntities(query, EXCHANGE_RATE_SEARCH_RESULTS);
+  const index = useMemo(
+    () => searchIndex(equitiesBymaEnabled),
+    [equitiesBymaEnabled],
+  );
+
+  const results = searchEntities(query, index);
   const hasQuery = query.trim().length > 0;
 
   const selectResult = (result: SearchEntity) => {

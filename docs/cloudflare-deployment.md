@@ -33,12 +33,17 @@ Before enabling accounts on the deployed Worker:
 3. Register the Mercado Pago notification URL `<AUTH_BASE_URL>/api/billing/webhook` and set `MP_WEBHOOK_SECRET`; see [billing.md](billing.md#provider-setup).
 4. Apply the migrations to the remote database with `wrangler d1 migrations apply tu-economia --remote`.
 5. Keep `AUTH_ACCOUNTS_ENABLED`, `FINANCE_STORAGE_ENABLED` and `BILLING_ENABLED` unset until the flows in [cloud-finance-setup.md](cloud-finance-setup.md) and [billing.md](billing.md) pass against the deployed Worker.
+6. Keep `EQUITIES_BYMA_ENABLED` at `"false"` until BYMA authorizes displaying its data.
 
 ## Checks
 
 GitHub Actions runs `pnpm test` and a Wrangler dry run (`pnpm exec wrangler deploy --dry-run`), which validates the Worker bundle without Cloudflare credentials. Run it locally after `pnpm build`.
 
-On a deployed URL, check `/dashboard`, `/indicadores`, `/noticias`, `/privacy` and that the fonts load.
+On a deployed URL, check `/dashboard`, `/indicadores`, `/noticias`, `/privacy` and that the fonts load, and on `/acciones`:
+
+- the Empresas list fills in, every issuer resolves (none reads "no identificado"), and the report links open documents on sec.gov; then one company (`/acciones?panel=empresas&empresa=YPF`) shows its filings and figures. SEC EDGAR has not yet been called from a deployed Worker: the SEC refuses requests without a declared `User-Agent` and throttles some cloud addresses, so a 403 here means the Worker is being refused;
+- `/api-status` shows a "SEC EDGAR" row that is not `failed`;
+- while `EQUITIES_BYMA_ENABLED` is off: no Acciones panel (index strip, CEDEAR and leaders tables), `/acciones?panel=acciones` redirects to `?panel=empresas`, the top-bar search does not offer CEDEARs or the leaders, `/api-status` has no BYMA row, and the Workers Logs show no request to `open.bymadata.com.ar`. If the flag is ever turned on, check the Acciones panel as well; BYMA has not been verified from a deployed Worker either.
 
 ## Deploying your own copy
 

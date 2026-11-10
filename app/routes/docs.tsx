@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 
+import type { Route } from "./+types/docs";
+import { accionesLabel, isEquitiesBymaEnabled } from "~/lib/acciones-panels";
 import { pageMeta } from "~/lib/meta";
 import {
   ACTIVITY_CSV_URL,
@@ -7,6 +9,7 @@ import {
   ACTIVITY_METHOD_URL,
 } from "~/lib/economic-activity";
 import { PRICE_SOURCE_DATE } from "~/lib/prices";
+import { workerEnvContext } from "~/lib/worker-context";
 
 export function meta() {
   return pageMeta({
@@ -17,6 +20,13 @@ export function meta() {
   });
 }
 
+/** The Acciones section describes the BYMA panels only while they are shown. */
+export function loader({ context }: Route.LoaderArgs) {
+  return {
+    equitiesBymaEnabled: isEquitiesBymaEnabled(context.get(workerEnvContext)),
+  };
+}
+
 const sourceLinkClass =
   "font-mono text-data-label text-primary-text-100 hocus:underline underline-offset-4 focus-visible:outline-none";
 
@@ -24,7 +34,7 @@ const sectionClass = "border-base-700 border-t pt-8";
 
 const priceSourceDateLabel = PRICE_SOURCE_DATE.split("-").reverse().join("/");
 
-export default function Docs() {
+export default function Docs({ loaderData }: Route.ComponentProps) {
   return (
     <section className="page-container max-w-3xl py-16 sm:py-24">
       <header className="stack-4 border-b border-base-700 pb-10">
@@ -331,6 +341,159 @@ export default function Docs() {
               fecha de colocación. El cálculo no contempla impuestos, cargos ni
               condiciones bancarias.
             </p>
+          </div>
+        </section>
+
+        <section className={sectionClass} aria-labelledby="equities-title">
+          <h2
+            id="equities-title"
+            className="font-heading text-headline-md text-text-100"
+          >
+            {accionesLabel(loaderData.equitiesBymaEnabled)}
+          </h2>
+          <div className="mt-4 stack-4 text-body-sm text-text-300">
+            <p>
+              La sección {accionesLabel(loaderData.equitiesBymaEnabled)} reúne
+              información pública de las empresas argentinas que cotizan en los
+              Estados Unidos, obtenida de{" "}
+              <a
+                className={sourceLinkClass}
+                href="https://www.sec.gov/edgar/search/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                EDGAR
+              </a>
+              , el sistema de presentaciones de la SEC, el regulador bursátil de
+              ese país. Para cada empresa se indica su último informe anual
+              (formulario 20-F, 10-K o 40-F), el período que cubre y la fecha en
+              que se presentó, con un enlace al documento en sec.gov.
+            </p>
+            <p>
+              Al elegir una empresa se muestran sus informes más recientes y
+              cuatro cifras de su último informe anual: ingresos, resultado del
+              ejercicio, activo total y patrimonio neto. Cada cifra se presenta
+              tal como la informó la empresa, en su moneda y bajo su norma
+              contable; todas provienen del mismo informe, cuyo cierre,
+              formulario y fecha de presentación se indican una vez. No se
+              convierten monedas ni se calculan variaciones: las emisoras
+              argentinas reexpresan sus estados contables por inflación, por lo
+              que las cifras de distintos ejercicios no son directamente
+              comparables. Bajo NIIF, el resultado del ejercicio incluye la
+              participación no controladora. Si una empresa no informa un
+              concepto con la etiqueta utilizada en ese informe, se indica s/d;
+              por ejemplo, los bancos no suelen informar ingresos con esa
+              etiqueta.
+            </p>
+            <p>
+              La lista de informes incluye los anuales, los trimestrales y los
+              de emisor extranjero (formulario 6-K, con el que las emisoras
+              extranjeras presentan la mayor parte de su información periódica),
+              con sus modificaciones; no incluye las declaraciones de tenencias
+              de directivos ni otros formularios administrativos. La descripción
+              es la que indicó la empresa, en inglés, cuando agrega información
+              al nombre del formulario.
+            </p>
+            <p>
+              La identidad de cada empresa se obtiene del registro de tickers de
+              la SEC y se confirma con sus propias presentaciones; si no
+              coincide, la empresa figura como no disponible. Los informes se
+              conservan en memoria del servidor por hasta seis horas. La
+              información publicada en sec.gov es pública y puede copiarse y
+              redistribuirse. Se presenta como referencia y no constituye una
+              recomendación de inversión.
+            </p>
+            <p>
+              La calculadora de CEDEAR estima el precio teórico de un CEDEAR en
+              pesos como precio del subyacente en dólares × tipo de cambio ÷
+              ratio de conversión. El ratio indica cuántos CEDEAR equivalen a
+              una acción: con un ratio de 20:1, cada CEDEAR representa la
+              vigésima parte de una acción. Usted ingresa el precio del
+              subyacente y el ratio; la página no muestra cotizaciones de ningún
+              título. El tipo de cambio se completa con el precio de venta del
+              CCL o del MEP de Dólar API, el mismo que figura en el panel de
+              cotizaciones, y puede reemplazarse por otro valor; la página
+              indica en todo momento cuál se está usando. Si la cotización no
+              está disponible, el campo queda para que usted lo complete.
+            </p>
+            <p>
+              Si además ingresa el precio de mercado del CEDEAR, se calculan el
+              tipo de cambio implícito (precio de mercado × ratio ÷ precio del
+              subyacente), su diferencia porcentual con el tipo de cambio de
+              referencia y la prima o el descuento frente al precio teórico. En
+              porcentaje, la prima y esa diferencia coinciden por construcción.
+              El resultado no contempla comisiones, impuestos, la diferencia
+              entre precios de compra y de venta, los horarios de cada mercado
+              ni los dividendos. El ratio de cada programa lo fija su emisor y
+              puede cambiar, por lo que conviene confirmarlo con el emisor o con
+              su agente de bolsa. Los valores ingresados se guardan en la
+              dirección de la página, de modo que un cálculo puede compartirse
+              con su enlace.
+            </p>
+            <p>
+              Ejemplo ilustrativo, con valores ficticios: si el subyacente vale
+              US$ 100, el ratio es 20:1 y el tipo de cambio es ARS 1.000, el
+              precio teórico es 100 × 1.000 ÷ 20 = ARS 5.000. Si el CEDEAR se
+              negocia a ARS 5.250, el tipo de cambio implícito es 5.250 × 20 ÷
+              100 = ARS 1.050, un 5% por encima del de referencia, y la prima es
+              de ARS 250 (5%).
+            </p>
+            {loaderData.equitiesBymaEnabled ? (
+              <>
+                <p>
+                  La sección también muestra los CEDEAR (incluidos los ETF) y
+                  las acciones del panel líder del S&P Merval, ordenados por
+                  monto operado en pesos, junto con el S&P Merval, el S&P BYMA
+                  General y el estado de la rueda. La tabla de CEDEAR presenta
+                  los 30 más operados; si operaron menos, se completa en orden
+                  alfabético con especies sin operaciones. Los precios
+                  corresponden al plazo de 24 horas.
+                </p>
+                <p>
+                  Los datos se consultan en{" "}
+                  <a
+                    className={sourceLinkClass}
+                    href="https://open.bymadata.com.ar/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    BYMA Open Data
+                  </a>
+                  , el servicio público y gratuito del sitio de BYMA, con una
+                  demora aproximada de 20 minutos. Los valores se presentan como
+                  referencia y no constituyen una recomendación de inversión.
+                </p>
+                <p>
+                  Un CEDEAR puede negociarse en pesos, en dólares MEP y en
+                  dólares cable. El tipo de cambio implícito es el último precio
+                  en pesos dividido por el último precio en dólares; el ratio de
+                  conversión se cancela. Se utiliza la especie en dólares cable
+                  (CCL) cuando operó en el día y, si no, la especie en dólares
+                  MEP. La variación en pesos se descompone según (1 + variación
+                  en pesos) = (1 + variación en dólares) × (1 + variación del
+                  tipo de cambio implícito), cada una contra su cierre anterior;
+                  como las partes se combinan multiplicando, su suma puede
+                  diferir levemente de la variación en pesos. Si ninguna especie
+                  en dólares operó o falta un cierre anterior, se informa como
+                  dato no disponible.
+                </p>
+                <p>
+                  La variación de la especie en dólares es una aproximación al
+                  movimiento del activo subyacente, no su precio en el mercado
+                  de origen. Muchas especies en dólares tienen poco volumen, por
+                  lo que esa aproximación puede no reflejar el día completo.
+                </p>
+                <p>
+                  Cada lista se conserva en memoria del servidor por hasta dos
+                  minutos y se consulta por separado, de modo que una falla no
+                  oculta los demás paneles. Si no se puede renovar una lista, se
+                  puede mostrar el último resultado obtenido por este proceso
+                  durante un máximo de quince minutos, identificado como no
+                  actualizado. El estado de la rueda no se reemplaza por un
+                  resultado anterior.
+                </p>
+              </>
+            ) : null}
           </div>
         </section>
 

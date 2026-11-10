@@ -411,6 +411,51 @@ export async function getDashboardRates(): Promise<DashboardRates> {
   };
 }
 
+export interface LiveRateQuote {
+  casa: string;
+  nombre: string;
+  compra: number;
+  venta: number;
+  /** This quote's provider date and time in Argentine time, when supplied. */
+  updatedAt: string | null;
+}
+
+export interface LiveRates {
+  rates: LiveRateQuote[];
+  freshness: DashboardRates["freshness"];
+}
+
+/**
+ * The live quotations alone, for pages that need no history (the CEDEAR calculator).
+ * It shares the dashboard's cache, 15-minute stale fallback and health record, and makes no ArgentinaDatos request. Rejects with the same 502 response when no usable snapshot exists.
+ */
+export async function getLiveRates(): Promise<LiveRates> {
+  const result = await getUsableLiveRates();
+
+  return {
+    rates: result.rates.map((rate) => {
+      const time = Date.parse(rate.fechaActualizacion);
+
+      return {
+        casa: rate.casa,
+        nombre: rate.nombre,
+        compra: rate.compra,
+        venta: rate.venta,
+        updatedAt: Number.isNaN(time)
+          ? null
+          : argentineDateTime(new Date(time)),
+      };
+    }),
+    freshness: {
+      status: result.status,
+      lastSuccessfulFetchAt: new Date(result.retrievedAt).toISOString(),
+      lastSuccessfulFetchAtLabel: argentineDateTime(
+        new Date(result.retrievedAt),
+      ),
+    },
+  };
+}
+
 /** Keeps the historical chart available when the live-rate source fails. */
 export async function getDashboardHistory(): Promise<DashboardHistory> {
   const casas = ["blue", "oficial"] as const;

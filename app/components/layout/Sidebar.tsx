@@ -4,6 +4,7 @@ import {
   MdFavorite,
   MdOutlineAccountBalanceWallet,
   MdOutlineAnalytics,
+  MdOutlineCandlestickChart,
   MdOutlineClose,
   MdOutlineDashboard,
   MdOutlineFavoriteBorder,
@@ -13,6 +14,7 @@ import {
 } from "react-icons/md";
 import { NavLink, useLocation } from "react-router";
 import { Wordmark } from "~/components/ui/Wordmark";
+import { accionesLabel } from "~/lib/acciones-panels";
 
 interface NavItem {
   label: string;
@@ -27,10 +29,16 @@ interface NavItem {
   hoverIconClassName?: string;
 }
 
-const primaryNav: NavItem[] = [
+/** `/acciones` is named for what it shows: stock quotations only while BYMA's are enabled. */
+const primaryNav = (equitiesBymaEnabled: boolean): NavItem[] => [
   { label: "Dashboard", icon: MdOutlineDashboard, to: "/dashboard" },
   { label: "Análisis", icon: MdOutlineAnalytics, to: "/analisis" },
   { label: "Indicadores", icon: MdOutlineQueryStats, to: "/indicadores" },
+  {
+    label: accionesLabel(equitiesBymaEnabled),
+    icon: MdOutlineCandlestickChart,
+    to: "/acciones",
+  },
   { label: "Noticias", icon: MdOutlineNewspaper, to: "/noticias" },
   {
     label: "Mi economía",
@@ -65,13 +73,22 @@ interface SidebarProps {
   onClose: () => void;
   onSupport: () => void;
   drawerRef: Ref<HTMLElement>;
+  /** `EQUITIES_BYMA_ENABLED`, from the terminal layout's loader. */
+  equitiesBymaEnabled: boolean;
 }
 
-const Sidebar = ({ open, onClose, onSupport, drawerRef }: SidebarProps) => {
+const Sidebar = ({
+  open,
+  onClose,
+  onSupport,
+  drawerRef,
+  equitiesBymaEnabled,
+}: SidebarProps) => {
   const location = useLocation();
+  const nav = primaryNav(equitiesBymaEnabled);
 
   const activePath =
-    primaryNav.find((item) => item.to === location.pathname)?.to ?? null;
+    nav.find((item) => item.to === location.pathname)?.to ?? null;
 
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
@@ -201,7 +218,7 @@ const Sidebar = ({ open, onClose, onSupport, drawerRef }: SidebarProps) => {
           />
 
           <nav className="flex flex-col gap-1" aria-label="Secciones">
-            {primaryNav.map((item) => (
+            {nav.map((item) => (
               <SidebarItem
                 key={item.label}
                 item={item}

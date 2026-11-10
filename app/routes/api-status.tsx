@@ -11,14 +11,24 @@ import {
   type NewsSourceHealth,
 } from "~/lib/economic-news.server";
 import { NEWS_SOURCES } from "~/lib/economic-news";
+import {
+  checkEquitySources,
+  getEquitySourceHealth,
+} from "~/lib/equities.server";
 import { getEconomicActivity } from "~/lib/economic-activity.server";
 import { getEconomicActivitySourceHealth } from "~/lib/economic-activity.server";
 import { getIndicators } from "~/lib/indicators.server";
 import { getIndicatorSourceHealth } from "~/lib/indicators.server";
 import { getPricesSourceHealth } from "~/lib/prices.server";
+import { isEquitiesBymaEnabled } from "~/lib/acciones-panels";
+import {
+  checkCompanyFilingSources,
+  getCompanyFilingSourceHealth,
+} from "~/lib/company-filings.server";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import { pageMeta } from "~/lib/meta";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
+import { workerEnvContext } from "~/lib/worker-context";
 
 interface StatusSource {
   name: string;
@@ -37,8 +47,26 @@ export function meta() {
   });
 }
 
-/** Uses the application data paths; it does not run a separate availability probe. */
-export async function loader({ request }: Route.LoaderArgs) {
+const BYMA_SOURCE = {
+  name: "BYMA Open Data",
+  detail: "Cotizaciones de CEDEARs, acciones líderes e índices, con demora",
+  url: "https://open.bymadata.com.ar/",
+} as const;
+
+const SEC_SOURCE = {
+  name: "SEC EDGAR",
+  detail:
+    "Informes y cifras anuales de empresas argentinas que cotizan en EE. UU.",
+  url: "https://www.sec.gov/edgar/search/",
+} as const;
+
+/**
+ * Uses the application data paths; it does not run a separate availability probe.
+ * While `EQUITIES_BYMA_ENABLED` is off, BYMA is neither checked nor listed.
+ */
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const bymaEnabled = isEquitiesBymaEnabled(context.get(workerEnvContext));
+
   if (isUnavailablePreview(new URL(request.url).searchParams)) {
     const checkedAt = new Date().toISOString();
 
@@ -75,6 +103,8 @@ export async function loader({ request }: Route.LoaderArgs) {
           url: "https://datos.gob.ar/",
           health,
         },
+        ...(bymaEnabled ? [{ ...BYMA_SOURCE, health }] : []),
+        { ...SEC_SOURCE, health },
         {
           name: "Precios Claros",
           detail: "Precios por cadena y ubicación",
@@ -100,6 +130,8 @@ export async function loader({ request }: Route.LoaderArgs) {
         getEconomicNews(),
         getIndicators(),
         getEconomicActivity(),
+        ...(bymaEnabled ? [checkEquitySources()] : []),
+        checkCompanyFilingSources(),
       ]),
     );
   } catch {
@@ -109,6 +141,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const exchange = getExchangeRateSourceHealth();
   const indicators = getIndicatorSourceHealth();
   const activity = getEconomicActivitySourceHealth();
+  const equities = bymaEnabled ? getEquitySourceHealth() : null;
+  const filings = getCompanyFilingSourceHealth();
   const prices = getPricesSourceHealth();
   const news = getNewsSourceHealth();
 
@@ -146,6 +180,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         url: "https://datos.gob.ar/",
         health: healthAfterTimeout(activity),
       },
+      ...(equities
+        ? [{ ...BYMA_SOURCE, health: healthAfterTimeout(equities) }]
+        : []),
+      { ...SEC_SOURCE, health: healthAfterTimeout(filings) },
       {
         name: "Precios Claros",
         detail: "Precios por cadena y ubicación",
@@ -224,11 +262,12 @@ const ApiStatusHeader = () => (
       Estado de fuentes
     </h1>
     <p className="max-w-2xl text-body-lg text-text-300">
-      Este registro resume los últimos resultados de las fuentes de cotizaciones
-      y noticias económicas obtenidos por esta instancia. No incluye
-      indicadores, actividad económica ni Precios Claros, y no mide
-      disponibilidad en tiempo real ni la hora de publicación de una noticia o
-      cotización.
+      Este registro resume los últimos resultados de las fuentes de
+      cotizaciones, informes de empresas, indicadores, actividad económica,
+      precios y noticias económicas obtenidos por esta instancia. Precios Claros
+      se informa según su último uso y no se consulta al abrir esta página. El
+      registro no mide disponibilidad en tiempo real ni la hora de publicación
+      de una noticia o cotización.
     </p>
   </header>
 );

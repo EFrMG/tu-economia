@@ -246,25 +246,19 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
       />
 
       <section>
-        {isStale ? (
-          <p
-            className="mb-4 border-l-2 border-tertiary-500/30 bg-surface-900 px-4 py-3 text-body-sm text-text-300"
-            role="status"
-          >
-            No fue posible actualizar las cotizaciones. Se muestran los últimos
-            valores recibidos. Última consulta exitosa:{" "}
-            {rates?.freshness.lastSuccessfulFetchAtLabel} ART.
-          </p>
-        ) : null}
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase">
             ARS-USD
           </h2>
+          {/* While stale, the quote time already dates the values shown; the line turns amber and says so instead of a separate notice. */}
           {rates ? (
-            <span className="font-mono text-data-label text-text-400">
-              {rates.updatedAt
-                ? `Última actualización: ${rates.updatedAt} ART`
-                : "Última actualización: s/d"}
+            <span
+              className={`font-mono text-data-label ${isStale ? "text-tertiary-text-400" : "text-text-400"}`}
+              role={isStale ? "status" : undefined}
+            >
+              Última actualización:{" "}
+              {rates.updatedAt ? `${rates.updatedAt} ART` : "s/d"}
+              {isStale ? " (sin actualizar)" : null}
             </span>
           ) : null}
         </div>

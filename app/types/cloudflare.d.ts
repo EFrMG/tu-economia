@@ -8,6 +8,8 @@ declare global {
     FINANCE_STORAGE_ENABLED?: string;
     /** New provider checkout stays disabled until private validation. */
     BILLING_ENABLED?: string;
+    /** The BYMA quotations on `/acciones` stay off until BYMA authorizes displaying its data. */
+    EQUITIES_BYMA_ENABLED?: string;
     MP_ACCESS_TOKEN?: string;
     MP_WEBHOOK_SECRET?: string;
     AUTH_BASE_URL?: string;

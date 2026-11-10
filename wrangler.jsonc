@@ -26,6 +26,8 @@
     "AUTH_ACCOUNTS_ENABLED": "true",
     "FINANCE_STORAGE_ENABLED": "true",
     "BILLING_ENABLED": "true",
+    // It stays "false" until BYMA authorizes displaying its data!
+    "EQUITIES_BYMA_ENABLED": "false",
   },
   // Workers Logs, matching the dashboard setting so a deploy does not switch them off. Invocation logs record each request's URL and metadata; Cloudflare keeps them for its plan's retention window.
   "observability": {

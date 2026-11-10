@@ -6,14 +6,30 @@ import {
   useRevalidator,
 } from "react-router";
 
+import type { Route } from "./+types/terminal";
 import { Sidebar } from "~/components/layout/Sidebar";
 import { TopBar } from "~/components/layout/TopBar";
 import { SupportDialog } from "~/components/features/SupportDialog";
+import { isEquitiesBymaEnabled } from "~/lib/acciones-panels";
+import type { TerminalLayoutData } from "~/lib/use-equities-byma-enabled";
+import { workerEnvContext } from "~/lib/worker-context";
+
+/** Deploy-time flags the shell and its pages need on the client; the top-bar search index depends on the BYMA one. */
+export function loader({ context }: Route.LoaderArgs): TerminalLayoutData {
+  return {
+    equitiesBymaEnabled: isEquitiesBymaEnabled(context.get(workerEnvContext)),
+  };
+}
+
+/** The flags only change with a deploy, so navigations and refreshes never need to reload them. */
+export function shouldRevalidate() {
+  return false;
+}
 
 /**
  * Terminal shell: fixed side navigation, a static top bar and a single scrollable canvas, so the chrome never moves while data is being read.
  */
-export default function TerminalLayout() {
+export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
 
@@ -125,6 +141,7 @@ export default function TerminalLayout() {
         onClose={() => setNavOpen(false)}
         onSupport={() => setSupportOpen(true)}
         drawerRef={drawerRef}
+        equitiesBymaEnabled={loaderData.equitiesBymaEnabled}
       />
 
       <div
@@ -137,6 +154,7 @@ export default function TerminalLayout() {
           onRefresh={refresh}
           isRefreshing={revalidator.state !== "idle"}
           isLoading={isLoading}
+          equitiesBymaEnabled={loaderData.equitiesBymaEnabled}
         />
 
         <main

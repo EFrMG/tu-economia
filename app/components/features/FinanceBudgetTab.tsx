@@ -353,7 +353,7 @@ const BudgetSection = ({ data }: FinanceDataProps) => {
         </p>
       </div>
       {overPlan.length ? (
-        <p className="max-w-3xl border-l-2 border-tertiary-500/30 bg-tertiary-500/5 px-4 py-3 text-body-sm text-text-200">
+        <p className="max-w-3xl text-body-sm text-tertiary-text-200">
           Los gastos registrados y pagos pendientes superan lo previsto en
           algunas categorías por{" "}
           <span className="font-mono">{money(overPlanCents)}</span>. Los pagos
