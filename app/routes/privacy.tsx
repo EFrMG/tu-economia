@@ -28,7 +28,7 @@ export default function Privacy() {
         </p>
       </header>
 
-      <div className="mt-10 stack-10">
+      <div className="mt-8 stack-10">
         <section aria-labelledby="principles-title">
           <h2
             id="principles-title"

@@ -529,7 +529,7 @@ export const FinancePricesTab = () => {
   const products = preferences?.products ?? defaultPricePreferences().products;
 
   return (
-    <section aria-labelledby="prices-title" className="stack-8">
+    <section aria-labelledby="prices-title" className="stack-10">
       <div className="stack-2">
         <h2
           id="prices-title"

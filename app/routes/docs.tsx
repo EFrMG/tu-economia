@@ -28,9 +28,6 @@ export default function Docs() {
   return (
     <section className="page-container max-w-3xl py-16 sm:py-24">
       <header className="stack-4 border-b border-base-700 pb-10">
-        <p className="font-mono text-label-caps text-primary-text-100 uppercase">
-          Referencia de datos
-        </p>
         <h1 className="font-heading text-headline-lg text-text-100">
           Documentación
         </h1>
@@ -40,7 +37,7 @@ export default function Docs() {
         </p>
       </header>
 
-      <div className="mt-10 stack-10">
+      <div className="mt-8 stack-10">
         <section aria-labelledby="sources-title">
           <h2
             id="sources-title"
@@ -91,7 +88,7 @@ export default function Docs() {
           >
             Cálculos mostrados
           </h2>
-          <dl className="mt-5 stack-6">
+          <dl className="mt-4 stack-6">
             <div>
               <dt className="font-mono text-label-caps text-text-200 uppercase">
                 Variación diaria

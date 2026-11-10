@@ -31,7 +31,7 @@ export default function Home() {
         <div className="pointer-events-none relative z-20">
           <Navbar />
         </div>
-        <div className="page-container marketing-hero-content pointer-events-none relative z-10 stack-12 pt-32 pb-48">
+        <div className="page-container marketing-hero-content pointer-events-none relative z-10 flex flex-col gap-24 pt-32 pb-24 lg:pb-48">
           <div className="stack-6 items-center">
             <h1 className="marketing-hero-title text-center font-heading text-marketing-display text-text-100">
               El mercado argentino.
@@ -44,7 +44,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="marketing-hero-actions mx-auto mt-12 flex flex-col gap-8 sm:flex-row">
+          <div className="marketing-hero-actions mx-auto flex flex-col gap-8 sm:flex-row">
             <Button
               href="/dashboard"
               size="lg"
@@ -65,9 +65,9 @@ export default function Home() {
       </section>
 
       {/* Animated Modules Section */}
-      <section className="relative z-10 mt-72 bg-base-950">
+      <section className="relative z-10 mt-40 bg-base-950 lg:mt-72">
         <div className="page-container pb-24">
-          <div className="stack-48">
+          <div className="stack-12 lg:stack-48">
             <ScrollFeature
               id="Cotizaciones"
               title="Tipos de cambio"
@@ -92,7 +92,7 @@ export default function Home() {
       </section>
 
       {/* Philosophy Section */}
-      <section className="page-container py-48">
+      <section className="page-container py-24 lg:py-48">
         <div>
           <Card className="group relative grid items-center gap-12 overflow-hidden p-8 shadow-none md:grid-cols-2 md:p-24">
             <div className="relative z-10 stack-8">
@@ -138,7 +138,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="stack-12 items-center border-t border-base-700/50 bg-linear-to-b from-transparent to-surface-900/30 px-4 py-48 text-center md:px-8">
+      <section className="stack-12 items-center border-t border-base-700/50 bg-linear-to-b from-transparent to-surface-900/30 px-4 py-24 text-center md:px-8 lg:py-48">
         <div className="stack-8 items-center">
           <h2 className="font-heading text-marketing-feature text-text-100">
             Inicie su terminal personal.

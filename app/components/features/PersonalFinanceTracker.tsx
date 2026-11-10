@@ -244,7 +244,7 @@ export const PersonalFinanceTracker = ({
   );
 
   return (
-    <div className="stack-8 pb-8">
+    <div className="stack-10 pb-8">
       <FinanceHeader tab={tab} month={data.month} />
 
       {/* A disabled fieldset turns off every control in the month tabs while links keep working. It renders only for those tabs, since an empty stack child would add a second gap below the tab bar. */}

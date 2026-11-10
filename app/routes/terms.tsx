@@ -31,7 +31,7 @@ export default function Terms() {
         </p>
       </header>
 
-      <div className="mt-10 stack-10">
+      <div className="mt-8 stack-10">
         <section aria-labelledby="scope-title">
           <h2
             id="scope-title"
