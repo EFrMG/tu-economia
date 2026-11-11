@@ -7,17 +7,19 @@ import { pageMeta } from "~/lib/meta";
 import { motion, useScroll, useTransform } from "motion/react";
 import {
   HiOutlineArrowRight,
+  HiOutlineBriefcase,
   HiOutlineCheckCircle,
-  HiOutlineCurrencyDollar,
-  HiOutlineTrendingUp,
   HiOutlineCollection,
+  HiOutlineCurrencyDollar,
+  HiOutlineNewspaper,
+  HiOutlinePresentationChartLine,
   HiOutlineTerminal,
 } from "react-icons/hi";
 
 export function meta() {
   return pageMeta({
     description:
-      "Cotizaciones del dólar, evolución histórica y noticias económicas argentinas con fuentes y metodología documentadas.",
+      "Cotizaciones del dólar, indicadores, análisis histórico, empresas, noticias y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
     path: "/",
   });
 }
@@ -37,10 +39,13 @@ export default function Home() {
               El mercado argentino.
             </h1>
             <p className="block max-w-2xl text-center text-body-lg text-text-300 md:text-marketing-lead">
-              <span>Cotizaciones, noticias y evolución histórica.</span> <br />
-              <span>Maneje sus ahorros y gastos en un solo lugar.</span>
+              <span>Cotizaciones, indicadores, empresas y noticias.</span>{" "}
+              <br />
+              <span>Registre sus ahorros y gastos en un solo lugar.</span>
               <br />{" "}
-              <span>Nuestro santuario financiero en un contexto volátil.</span>
+              <span>
+                Información clara para decidir en un contexto volátil.
+              </span>
             </p>
           </div>
 
@@ -55,10 +60,10 @@ export default function Home() {
             <Button
               variant="outline"
               size="lg"
-              href="/noticias"
+              href="/mi-economia"
               className="pointer-events-auto h-16 px-8 text-body-lg"
             >
-              Ver noticias
+              Mi economía
             </Button>
           </div>
         </div>
@@ -69,22 +74,62 @@ export default function Home() {
         <div className="page-container pb-24">
           <div className="stack-12 lg:stack-48">
             <ScrollFeature
-              id="Cotizaciones"
-              title="Tipos de cambio"
-              description="Compra, venta, variación diaria y brecha para Blue, Oficial, MEP, CCL y Cripto. Un conversor rápido permite estimar montos en ARS o USD con la cotización elegida."
+              id="Dólar"
+              title="Cotizaciones del dólar"
+              description="Las cinco referencias del mercado en una sola pantalla, con su evolución reciente y la brecha contra el Oficial."
+              points={[
+                "Blue, Oficial, MEP, CCL y Cripto",
+                "Compra, venta, variación diaria y brecha",
+                "Cierres y brecha Blue–Oficial de 7, 30 o 90 días",
+                "Conversor de pesos y dólares",
+              ]}
               icon={<HiOutlineCurrencyDollar />}
             />
             <ScrollFeature
-              id="Historial"
-              title="Evolución histórica"
-              description="El gráfico compara los cierres de venta de Blue y Oficial en períodos variables."
-              icon={<HiOutlineTrendingUp />}
+              id="Indicadores"
+              title="Inflación e indicadores"
+              description="Inflación, tasas, UVA, riesgo país y actividad económica."
+              points={[
+                "Inflación mensual e interanual",
+                "Depósitos a 30 días, UVA y riesgo país",
+                "EMAE: variación interanual y mensual desestacionalizada",
+                "Equivalencia de un monto según el IPC",
+                "Retorno real frente a la inflación",
+              ]}
+              icon={<HiOutlinePresentationChartLine />}
               reverse
             />
             <ScrollFeature
-              id="Planificación personal"
-              title="Sueldo y gastos"
-              description="Registre su sueldo, organice un presupuesto por categorías y anticipe pagos. Sus registros se guardan en su cuenta; el primer mes no tiene cargo."
+              id="Empresas"
+              title="Empresas y CEDEARs"
+              description="Las compañías argentinas que cotizan en los Estados Unidos, con sus informes ante la SEC y una calculadora del precio teórico de un CEDEAR."
+              points={[
+                "Informe anual, presentaciones recientes y cifras informadas",
+                "Enlaces directos a los documentos",
+                "Precio teórico con CCL o MEP",
+              ]}
+              icon={<HiOutlineBriefcase />}
+            />
+            <ScrollFeature
+              id="Noticias"
+              title="Noticias económicas"
+              description="Titulares recientes de medios argentinos. El dashboard muestra un avance de las últimas noticias."
+              points={[
+                "iProfesional, Clarín y Página/12",
+                "Enlace directo a cada publicación original",
+              ]}
+              icon={<HiOutlineNewspaper />}
+              reverse
+            />
+            <ScrollFeature
+              id="Mi economía"
+              title="Sueldo, gastos y precios"
+              description="Registre su sueldo y presupuesto; anote sus gastos y pagos. Compare además los precios de productos habituales entre los comercios de su ciudad."
+              points={[
+                "Ingreso mensual, presupuesto y gastos por categoría",
+                "Próximos pagos y metas de ahorro",
+                "Precios de consumo por ciudad y cadena",
+              ]}
               icon={<HiOutlineCollection />}
             />
           </div>
@@ -162,12 +207,14 @@ function ScrollFeature({
   id,
   title,
   description,
+  points,
   icon,
   reverse = false,
 }: {
   id: string;
   title: string;
   description: string;
+  points: string[];
   icon: React.ReactNode;
   reverse?: boolean;
 }) {
@@ -198,14 +245,27 @@ function ScrollFeature({
                 {title}
               </h3>
             </div>
-            <p className="max-w-lg text-body-lg text-text-300 md:text-marketing-lead">
-              {description}
-            </p>
 
-            <div
-              className="mx-auto h-px w-2/3 bg-primary-500/50"
-              aria-hidden="true"
-            />
+            <div className="stack-4">
+              <p className="max-w-lg text-body-lg text-text-300 md:text-marketing-lead">
+                {description}
+              </p>
+
+              <ul className="grid max-w-lg gap-2">
+                {points.map((point) => (
+                  <li
+                    key={point}
+                    className="flex items-start gap-3 text-body-sm text-text-300"
+                  >
+                    <span
+                      className="mt-2 h-1 w-1 shrink-0 bg-primary-500"
+                      aria-hidden="true"
+                    />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Visual Representation (Mini version of icon) */}
