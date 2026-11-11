@@ -210,10 +210,7 @@ export default function Home() {
         </Button>
       </section>
 
-      <SupportDialog
-        open={supportOpen}
-        onClose={() => setSupportOpen(false)}
-      />
+      <SupportDialog open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

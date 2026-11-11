@@ -99,7 +99,7 @@ const NewsItemCard = ({ item }: { item: NewsItem }) => (
           {formatPublicationTime(item.publishedAt)}
         </time>
       </div>
-      <h3 className="font-heading text-body-lg text-text-100">
+      <h3 className="font-heading text-body-lg leading-tight text-text-100 md:leading-base">
         {item.headline}
         <MdOpenInNew
           className="ml-1 inline-block align-middle text-sm"
