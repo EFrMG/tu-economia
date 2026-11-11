@@ -4,7 +4,7 @@
 
 Economic monitoring platform for Argentina.
 
-[![License](https://img.shields.io/github/license/EFrMG/tu-economia)](LICENSE)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE)
 
 <img src="app/assets/OG-image.png" alt="Tu Economía OG image" width="980">
 
