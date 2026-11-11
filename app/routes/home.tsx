@@ -198,7 +198,7 @@ export default function Home() {
         <Button
           href="/dashboard"
           size="lg"
-          className="h-24 gap-4 pr-8 pl-8 text-body-lg md:text-marketing-lead"
+          className="h-18 gap-3 pr-6 pl-6 text-body-lg md:h-24 md:gap-4 md:pr-8 md:pl-8 md:text-marketing-lead"
         >
           <span className="text-inherit [text-box:trim-both_cap_alphabetic]">
             Abrir Dashboard
