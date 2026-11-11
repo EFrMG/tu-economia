@@ -147,7 +147,7 @@ export default function Home() {
           <Card className="group relative grid items-center gap-12 overflow-hidden p-8 shadow-none md:grid-cols-2 md:p-24">
             <div className="relative z-10 stack-8">
               <div className="stack-2">
-                <h2 className="font-heading text-marketing-section text-text-100">
+                <h2 className="font-heading text-headline-lg text-text-100 md:text-marketing-section">
                   Transparencia y Serenidad.
                 </h2>
               </div>
@@ -190,7 +190,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="stack-12 items-center border-t border-base-700/50 bg-linear-to-b from-transparent to-surface-900/30 px-4 py-24 text-center md:px-8 lg:py-48">
         <div className="stack-8 items-center">
-          <h2 className="font-heading text-marketing-feature text-text-100">
+          <h2 className="font-heading text-headline-lg text-text-100 md:text-marketing-feature">
             Inicie su terminal personal.
           </h2>
         </div>
@@ -198,7 +198,7 @@ export default function Home() {
         <Button
           href="/dashboard"
           size="lg"
-          className="h-24 gap-4 pr-8 pl-8 text-marketing-lead"
+          className="h-24 gap-4 pr-8 pl-8 text-body-lg md:text-marketing-lead"
         >
           <span className="text-inherit [text-box:trim-both_cap_alphabetic]">
             Abrir Dashboard
@@ -253,7 +253,7 @@ function ScrollFeature({
           {/* Content */}
           <div className="relative z-10 stack-8 flex-1">
             <div className="stack-4">
-              <h3 className="font-heading text-marketing-feature text-text-100">
+              <h3 className="font-heading text-headline-lg text-text-100 md:text-marketing-feature">
                 {title}
               </h3>
             </div>
