@@ -106,10 +106,7 @@ const PriceRow = ({
             <p className="font-mono text-label-caps text-text-400 uppercase">
               {priceCaption(product.id)}
               {archived ? (
-                <span className="text-tertiary-text-400">
-                  {" "}
-                  · Referencia SEPA {sourceDateLabel}
-                </span>
+                <span className="text-tertiary-text-400"> · Referencia</span>
               ) : null}
             </p>
           </div>
