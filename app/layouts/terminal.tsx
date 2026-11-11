@@ -159,7 +159,7 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
 
         <main
           ref={mainRef}
-          className="relative flex-1 [scrollbar-gutter:stable] overflow-y-auto py-4 md:py-8"
+          className="relative flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto py-4 md:py-8"
           aria-busy={isLoading}
         >
           <div

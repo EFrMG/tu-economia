@@ -111,7 +111,7 @@ const InstrumentCell = ({ symbol, name, etf = false }: InstrumentCellProps) => (
     </span>
     {/* The name is truncated visually only; assistive technology reads it whole. */}
     <span
-      className="block max-w-40 truncate text-body-sm text-text-400 sm:max-w-56"
+      className="block max-w-24 truncate text-body-sm text-text-400 md:max-w-72"
       title={name !== symbol ? name : undefined}
     >
       {name !== symbol ? name : "\xA0"}
@@ -191,9 +191,9 @@ export const TableFrame = ({
       role="region"
       aria-labelledby={`${id}-caption`}
       tabIndex={0}
-      className="overflow-x-auto border border-base-700 bg-surface-950"
+      className="min-w-0 overflow-x-auto overflow-y-hidden border border-base-700 bg-surface-950"
     >
-      <table className="w-full border-collapse">
+      <table className="w-full min-w-max border-collapse">
         <caption id={`${id}-caption`} className="sr-only">
           {caption}
         </caption>
