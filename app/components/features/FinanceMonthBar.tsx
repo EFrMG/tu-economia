@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+
 import { Button } from "~/components/ui/Button";
 import {
   ActionForm,
@@ -92,7 +94,7 @@ export const FinanceMonthBar = ({
             className={navLinkClassName}
             preventScrollReset
           >
-            ←
+            <MdChevronLeft aria-hidden="true" />
           </Link>
           <span className="stack-2 min-w-32 text-center">
             <span className="block font-mono text-data-label text-text-100 capitalize">
@@ -114,7 +116,7 @@ export const FinanceMonthBar = ({
             className={navLinkClassName}
             preventScrollReset
           >
-            →
+            <MdChevronRight aria-hidden="true" />
           </Link>
         </nav>
 
