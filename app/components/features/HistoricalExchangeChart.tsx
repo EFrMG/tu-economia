@@ -157,7 +157,9 @@ const GapSummaryBlock = ({
         </>
       ) : (
         <>
-          <p className="font-mono text-data-display text-text-100">
+          <p
+            className={`font-mono text-data-display ${summary && summary.last.gap < 0 ? "text-red-text-400" : "text-text-100"}`}
+          >
             {summary ? formatPercent(summary.last.gap) : "s/d"}
           </p>
           <p className="min-h-[0.75rem] font-mono text-data-label text-text-400">
@@ -177,7 +179,9 @@ const GapSummaryBlock = ({
         </>
       ) : (
         <>
-          <p className="font-mono text-data-display text-text-100">
+          <p
+            className={`font-mono text-data-display ${summary?.change != null && summary.change < 0 ? "text-red-text-400" : "text-text-100"}`}
+          >
             {summary?.change === null || summary?.change === undefined
               ? "s/d"
               : formatPoints(summary.change)}
