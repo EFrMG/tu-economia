@@ -3,6 +3,7 @@ import { useFetcher } from "react-router";
 
 import { money } from "~/components/features/FinanceFields";
 import { Button } from "~/components/ui/Button";
+import { MdAdd, MdCheck } from "react-icons/md";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { UnavailableStatus } from "~/components/ui/UnavailableNotice";
@@ -165,9 +166,16 @@ interface ToggleControlsProps {
 /** The trailing state of a toggleable product: added, addable, or blocked by the limit. */
 const ToggleLabel = ({ added, full }: { added: boolean; full: boolean }) => (
   <span
-    className={`shrink-0 font-mono text-label-caps uppercase ${added ? "text-primary-text-100" : full ? "text-text-400" : "text-text-200"}`}
+    className={`inline-flex shrink-0 items-center font-mono text-label-caps uppercase ${added ? "gap-[1.2ch] text-primary-text-100" : full ? "text-text-400" : "gap-[0.2ch] text-green-100"}`}
   >
-    {added ? "✓ Agregado" : full ? "Límite" : "+ Agregar"}
+    <span
+      className="inline-flex size-4 shrink-0 items-center justify-center"
+      aria-hidden="true"
+    >
+      {added ? <MdCheck className="text-base" /> : null}
+      {!added && !full ? <MdAdd className="text-base" /> : null}
+    </span>
+    {added ? "Quitar" : full ? "Límite" : "Agregar"}
   </span>
 );
 
