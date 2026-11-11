@@ -156,7 +156,7 @@ const SupportDialog = ({
           tabIndex={-1}
           className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto border border-base-700 bg-surface-950 focus:outline-none"
         >
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-base-700 bg-surface-950 p-6">
+          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-base-700 bg-surface-950 p-3 sm:p-6">
             <div className="flex min-w-0 items-start gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-red-500/30 bg-red-500/15 text-red-text-300">
                 <MdFavorite
@@ -169,7 +169,7 @@ const SupportDialog = ({
                   Soporte
                 </h2>
                 <p id={descriptionId} className="text-body-sm text-text-300">
-                  Canales de contacto y formas de colaborar con Tu Economía.
+                  Canales de contacto y colaboración.
                 </p>
               </div>
             </div>
@@ -183,7 +183,7 @@ const SupportDialog = ({
             </button>
           </div>
 
-          <div className="stack-6 p-6">
+          <div className="stack-6 p-3 sm:p-6">
             <section aria-labelledby={donationsTitleId} className="stack-4">
               <div className="stack-2">
                 <h3
@@ -249,8 +249,7 @@ const SupportDialog = ({
                 </h3>
                 <p className="text-body-sm text-text-300">
                   Reporte un problema en el repositorio público o envíe sus
-                  comentarios por correo. Ambos canales llegan directamente al
-                  autor del proyecto.
+                  comentarios por correo.
                 </p>
               </div>
 
