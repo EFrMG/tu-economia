@@ -356,7 +356,7 @@ const HistoricalExchangeChart = ({
               >
                 <LineChart
                   data={gapPoints}
-                  margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                   accessibilityLayer
                 >
                   <CartesianGrid
@@ -379,7 +379,7 @@ const HistoricalExchangeChart = ({
                     stroke="var(--color-text-400)"
                     tickLine={false}
                     axisLine={false}
-                    width={64}
+                    width="auto"
                     tick={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
                   />
                   <Tooltip
@@ -448,7 +448,7 @@ const HistoricalExchangeChart = ({
               >
                 <LineChart
                   data={periodPoints}
-                  margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                   accessibilityLayer
                 >
                   <CartesianGrid
@@ -471,7 +471,7 @@ const HistoricalExchangeChart = ({
                     stroke="var(--color-text-400)"
                     tickLine={false}
                     axisLine={false}
-                    width={72}
+                    width="auto"
                     tick={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
                   />
                   <Tooltip

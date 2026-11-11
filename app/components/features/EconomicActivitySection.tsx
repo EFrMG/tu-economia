@@ -193,7 +193,7 @@ const EconomicActivitySection = ({
                 >
                   <LineChart
                     data={observations}
-                    margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
+                    margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                     accessibilityLayer={false}
                   >
                     <CartesianGrid
@@ -216,7 +216,7 @@ const EconomicActivitySection = ({
                       stroke="var(--color-text-400)"
                       tickLine={false}
                       axisLine={false}
-                      width={44}
+                      width="auto"
                       tick={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
                     />
                     <Tooltip
