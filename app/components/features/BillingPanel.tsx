@@ -277,7 +277,7 @@ export const BillingPanel = ({
               : "Autorizo a Mercado Pago a debitar ARS 5.000 por mes desde la autorización, hasta que cancele."}
           </label>
           <p className="text-body-sm text-text-400">
-            Al marcar la casilla y continuar, acepta los{" "}
+            Al marcar la casilla, acepta los{" "}
             <Link
               to="/terms"
               className="text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"

@@ -51,7 +51,7 @@ Page data is read in React Router v8 loaders. Slow or optional data, such as the
 - [ArgentinaDatos](https://api.argentinadatos.com/) for historical series and macroeconomic indicators;
 - [Datos Argentina](https://apis.datos.gob.ar/) for EMAE activity data;
 - [SEC EDGAR](https://www.sec.gov/edgar/search/), the SEC's public filing system, for the filings and annual figures of Argentine companies listed in the US (public information that may be copied and redistributed; not yet verified against the live API);
-- [BYMA Open Data](https://open.bymadata.com.ar/), BYMA's free public feed, for CEDEAR, S&P Merval leader and index quotations, delayed about 20 minutes. It is switched off by `EQUITIES_BYMA_ENABLED` until BYMA authorizes displaying its data, and has not been verified against the live API either; see [docs/market-data.md](docs/market-data.md);
+- [BYMA Open Data](https://open.bymadata.com.ar/), BYMA's free public feed, for CEDEAR, S&P Merval leader and index quotations, delayed about 20 minutes. It is switched off by `EQUITIES_BYMA_ENABLED` until BYMA authorizes displaying its data; see [docs/market-data.md](docs/market-data.md);
 - RSS feeds from Argentine news publishers;
 - the SEPA retail-price archive and the unofficial Precios Claros API for product prices.
 

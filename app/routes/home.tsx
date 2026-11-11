@@ -41,10 +41,7 @@ export default function Home() {
               <span>Cotizaciones, indicadores, empresas y noticias.</span>{" "}
               <br />
               <span>Registre sus ahorros y gastos en un solo lugar.</span>
-              <br />{" "}
-              <span>
-                Información clara para decidir en un contexto volátil.
-              </span>
+              <br /> <span>Información clara en un contexto volátil.</span>
             </p>
           </div>
 

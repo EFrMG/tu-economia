@@ -1,11 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="#131314" />
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 4096 4096"
+   version="1.1"
+   id="svg2"
+   width="4096"
+   height="4096"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <rect
+     width="64"
+     height="64"
+     fill="#131314"
+     id="rect1"
+     x="0"
+     y="0" />
   <path
-    d="M20.34 32V12.67h-6.98V9h18.18v3.67h-6.98V32z"
-    fill="#00d1ff"
-  />
+     d="m 20.34,35.337734 v -19.33 h -6.98 v -3.67 h 18.18 v 3.67 h -6.98 v 19.33 z"
+     fill="#00d1ff"
+     id="path1" />
   <path
-    d="M34.59 55V32h15.49v3.67H38.8v5.99h10.89v3.62H38.8v6.05h11.28V55z"
-    fill="#e5e2e3"
-  />
+     d="m 34.921133,51.233958 v -23 h 15.49 v 3.67 h -11.28 v 5.99 h 10.89 v 3.62 h -10.89 v 6.05 h 11.28 v 3.67 z"
+     fill="#e5e2e3"
+     id="path2" />
 </svg>
