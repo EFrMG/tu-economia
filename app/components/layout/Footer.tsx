@@ -15,7 +15,12 @@ export const Footer = () => {
       <div className="grid gap-12 md:grid-cols-12 md:items-start md:gap-8">
         <div className="stack-2 md:col-span-4">
           <h2>
-            <Wordmark />
+            <Link
+              to="/"
+              className="transition-opacity focus-visible:outline-none hocus:opacity-80"
+            >
+              <Wordmark />
+            </Link>
           </h2>
           <p className="max-w-xs text-body-sm text-text-300">
             Cotizaciones y noticias económicas de Argentina.
@@ -24,7 +29,7 @@ export const Footer = () => {
 
         <nav
           aria-label="Enlaces del pie de página"
-          className="flex flex-wrap gap-x-8 gap-y-4 font-mono text-data-label uppercase md:col-span-4 md:justify-self-center"
+          className="grid grid-cols-2 gap-x-8 gap-y-4 font-mono text-data-label uppercase md:col-span-4 md:justify-self-center"
         >
           {footerLinks.map(({ to, label }) => (
             <Link

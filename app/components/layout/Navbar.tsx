@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import { HiOutlineTerminal } from "react-icons/hi";
+import { SiGithub } from "react-icons/si";
 
-import { Button } from "~/components/ui/Button";
 import { Wordmark } from "~/components/ui/Wordmark";
+import { SUPPORT_REPOSITORY_URL } from "~/lib/support";
 
 export const Navbar = () => {
   return (
@@ -15,14 +15,15 @@ export const Navbar = () => {
       </Link>
 
       <div className="flex items-center gap-6">
-        <Button
-          href="/dashboard"
-          size="sm"
-          className="pointer-events-auto gap-2"
+        <a
+          href={SUPPORT_REPOSITORY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ver el repositorio en GitHub (se abre en una nueva pestaña)"
+          className="pointer-events-auto text-primary-400 transition-colors focus-visible:outline-none hocus:text-primary-500"
         >
-          <HiOutlineTerminal aria-hidden="true" className="text-lg" />
-          Dashboard
-        </Button>
+          <SiGithub aria-hidden="true" className="text-3xl" />
+        </a>
       </div>
     </nav>
   );

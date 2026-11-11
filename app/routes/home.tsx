@@ -6,7 +6,6 @@ import { Navbar } from "~/components/layout/Navbar";
 import { pageMeta } from "~/lib/meta";
 import { motion, useScroll, useTransform } from "motion/react";
 import {
-  HiOutlineArrowRight,
   HiOutlineBriefcase,
   HiOutlineCheckCircle,
   HiOutlineCollection,
@@ -53,9 +52,15 @@ export default function Home() {
             <Button
               href="/dashboard"
               size="lg"
-              className="pointer-events-auto h-16 gap-3 px-8 text-body-lg"
+              className="pointer-events-auto h-16 gap-2.5 px-5! text-body-lg"
             >
-              Dashboard <HiOutlineArrowRight aria-hidden="true" />
+              <span className="text-inherit [text-box:trim-both_cap_alphabetic]">
+                Dashboard
+              </span>
+              <HiOutlineTerminal
+                aria-hidden="true"
+                className="-mr-[0.2em] size-[2cap]"
+              />
             </Button>
             <Button
               variant="outline"
@@ -193,10 +198,15 @@ export default function Home() {
         <Button
           href="/dashboard"
           size="lg"
-          className="h-24 gap-6 px-16 text-marketing-lead"
+          className="h-24 gap-4 pr-8 pl-8 text-marketing-lead"
         >
-          Abrir Dashboard
-          <HiOutlineTerminal aria-hidden="true" className="text-4xl" />
+          <span className="text-inherit [text-box:trim-both_cap_alphabetic]">
+            Abrir Dashboard
+          </span>
+          <HiOutlineTerminal
+            aria-hidden="true"
+            className="-mr-[0.2em] size-[2cap]"
+          />
         </Button>
       </section>
     </div>
