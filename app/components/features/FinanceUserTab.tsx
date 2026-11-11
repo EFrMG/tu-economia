@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router";
 
 import { AccountAccess } from "~/components/features/AccountAccess";
 import { BillingPanel } from "~/components/features/BillingPanel";
@@ -39,12 +38,6 @@ const StorageStatus = ({ account }: { account: AccountState }) => (
           trialEligible={account.trialEligible}
           leadClassName="max-w-xl text-body-sm text-text-300"
         />
-        <Link
-          to="/terms"
-          className="ml-auto block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
-        >
-          Ver condiciones
-        </Link>
       </div>
     ) : null}
     <dl className="my-auto border border-base-700 bg-surface-950">
