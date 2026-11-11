@@ -140,7 +140,7 @@ const SupportDialog = ({
         : "Mercado Pago Alias";
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-base-950/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-60 overflow-y-auto bg-base-950/85 backdrop-blur-sm">
       <div
         className="flex min-h-full items-center justify-center p-4"
         onMouseDown={(event) => {
@@ -158,9 +158,9 @@ const SupportDialog = ({
         >
           <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-base-700 bg-surface-950 p-6">
             <div className="flex min-w-0 items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-red-500/30 bg-red-500/10 text-red-text-300">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-red-500/30 bg-red-500/15 text-red-text-300">
                 <MdFavorite
-                  className="text-2xl motion-safe:animate-pulse"
+                  className="text-2xl motion-safe:animate-heartbeat"
                   aria-hidden="true"
                 />
               </span>

@@ -266,6 +266,7 @@
 
   /* Route-transition progress is the only indeterminate animation. */
   --animate-scan: scan 1.2s ease-in-out infinite;
+  --animate-heartbeat: heartbeat 3.6s ease-in-out infinite;
 
   @keyframes scan {
     0% {
@@ -273,6 +274,25 @@
     }
     100% {
       transform: translateX(400%);
+    }
+  }
+
+  @keyframes heartbeat {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+
+    42% {
+      opacity: 1;
+    }
+
+    57% {
+      opacity: 0.82;
+    }
+
+    70% {
+      opacity: 0.94;
     }
   }
 }

@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { HeroBlockField } from "~/components/features/HeroBlockField";
+import { SupportDialog } from "~/components/features/SupportDialog";
 import { Navbar } from "~/components/layout/Navbar";
 import { pageMeta } from "~/lib/meta";
 import { motion, useScroll, useTransform } from "motion/react";
@@ -24,13 +25,15 @@ export function meta() {
 }
 
 export default function Home() {
+  const [supportOpen, setSupportOpen] = useState(false);
+
   return (
     <div className="relative">
       {/* Hero Section */}
       <section className="relative isolate min-h-svh overflow-hidden">
         <HeroBlockField />
         <div className="pointer-events-none relative z-20">
-          <Navbar />
+          <Navbar onSupport={() => setSupportOpen(true)} />
         </div>
         <div className="page-container marketing-hero-content pointer-events-none relative z-10 flex flex-col gap-24 pt-32 pb-24 lg:pb-48">
           <div className="stack-6 items-center">
@@ -206,6 +209,11 @@ export default function Home() {
           />
         </Button>
       </section>
+
+      <SupportDialog
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+      />
     </div>
   );
 }

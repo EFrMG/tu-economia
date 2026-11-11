@@ -54,7 +54,7 @@ const secondaryNav = (onSupport: () => void): NavItem[] => [
     icon: MdOutlineFavoriteBorder,
     hoverIcon: MdFavorite,
     iconClassName: "text-red-text-400",
-    hoverIconClassName: "text-red-text-200",
+    hoverIconClassName: "text-red-text-300",
     onSelect: onSupport,
   },
 ];
