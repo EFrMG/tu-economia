@@ -6,68 +6,41 @@ Economic monitoring platform for Argentina.
 
 ### 1.1 Purpose and Vision
 
-**Tu Economía** provides a precise, minimalist interface for monitoring currency exchange rates and economic indicators.
-
-It serves as a reliable reference point for freelancers, remote workers, and savers who need to preserve purchasing power and make independent, informed decisions without the noise of economic anxiety.
+**Tu Economía** provides a precise, minimalist interface for monitoring exchange rates and economic indicators. It is a reliable reference for freelancers, remote workers and savers who need to preserve purchasing power and make independent, informed decisions without the noise of economic anxiety.
 
 ### 1.2 Argentine Economic Context
 
-In Argentina, volatility and uncertainty are daily realities. The "Dólar" is more than a currency; it is a unit of account and a measure of value for most of the population.
-
-Centralizing all relevant numbers in one place gives people a coherent view of an otherwise fragmented landscape.
+In Argentina, volatility is a daily reality and the "Dólar" is a unit of account as much as a currency. Centralizing the relevant numbers in one place gives people a coherent view of an otherwise fragmented landscape.
 
 ## 2. Tech Stack and Development
 
 ### 2.1 Libraries and Tooling
 
-- **Styling:** Tailwind CSS v4.
-- **Fonts:** Self-hosted variable Geist, Inter, and JetBrains Mono files sourced from Fontsource 5.3.0.
-- **Icons:** react-icons.
-- **Charts:** Recharts for the historical comparisons.
 - **Routing:** React Router v8 (SSR).
-- **Validation:** Zod, applied at the API boundary.
 - **State Management:** Prefer URL state and Router loaders.
-- **Animation:** motion for React.
-- **Smooth scroll:** Lenis.
 - **Hosting:** Cloudflare Workers, with static assets served by the same deployment.
 - **Accounts and storage:** Better Auth and Cloudflare D1, email through Resend, and subscriptions through Mercado Pago.
-- **Tests:** Vitest, for server, data and calculation logic.
+- **Validation:** Zod, at the API boundary.
+- **Styling:** Tailwind CSS v4, with the system described in [DESIGN.md](DESIGN.md).
+- **Fonts:** self-hosted variable Geist, Inter and JetBrains Mono from Fontsource 5.3.0.
+- **UI libraries:** react-icons, Recharts, motion, Lenis.
+- **Tests:** Vitest.
 
-#### 2.1.1 Styling and Design System
+#### 2.1.1 Data Sources
 
-The working design reference is [DESIGN.md](DESIGN.md).
+Exchange rates, indicators, activity data, company filings, equity quotations, news and product prices come from public APIs, feeds and archives. Each source, its cache and its fallback are listed in [docs/market-data.md](docs/market-data.md), [docs/rss-sources.md](docs/rss-sources.md) and [docs/product-price-feed.md](docs/product-price-feed.md).
 
-The interface reads as a calm, reliable financial instrument rather than a news ticker.
+##### 2.1.1.1 Search Entities
 
-It prioritizes information density without visual noise; depth is built from tonal layering, low-contrast outlines, and restrained glows.
+The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, and the Acciones panels. Single tickers and companies are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
 
-Accent colors are strictly role-based: primary blue for actions and active states, terminal green for success and positive movement, muted amber for neutral or informational states, and red only for negative movement or genuine risk. All accents use low-opacity fills with high-opacity strokes.
-
-#### 2.1.2 Data Sources
-
-Page data is read in React Router v8 loaders. Slow or optional data, such as the dashboard quotations, streams in behind a loading state, so a slow upstream never blocks the page. The app draws from these upstream sources:
-
-- [Dólar API](https://dolarapi.com/) for live rates;
-- [ArgentinaDatos](https://api.argentinadatos.com/) for historical series and macroeconomic indicators;
-- [Datos Argentina](https://apis.datos.gob.ar/) for EMAE activity data;
-- [SEC EDGAR](https://www.sec.gov/edgar/search/), the SEC's public filing system, for the filings and annual figures of Argentine companies listed in the US (public information that may be copied and redistributed; not yet verified against the live API);
-- [BYMA Open Data](https://open.bymadata.com.ar/), BYMA's free public feed, for CEDEAR, S&P Merval leader and index quotations, delayed about 20 minutes. It is switched off by `EQUITIES_BYMA_ENABLED` until BYMA authorizes displaying its data; see [docs/market-data.md](docs/market-data.md);
-- RSS feeds from Argentine news publishers;
-- the SEPA retail-price archive and the unofficial Precios Claros API for product prices.
-
-Every response is validated at the boundary, and a failing source degrades only its own cards: stale live quotes are labelled with their fetch time, and missing history shows as `s/d` (_Sin Datos_). Exchange rates, indicators, EMAE, company filings, equities, caching and fallbacks are in [docs/market-data.md](docs/market-data.md), news in [docs/rss-sources.md](docs/rss-sources.md) and product prices in [docs/product-price-feed.md](docs/product-price-feed.md).
-
-##### 2.1.2.1 Search Entities
-
-Search records have a category, stable ID, display title, aliases, and an internal target with optional URL parameters and a focusable element ID. The index covers the five exchange-rate cards, identified by their Dólar API `casa` code and indexed locally; selecting one shares `?rate=<casa>` (and focuses its card). It also covers the Acciones panels, which open `/acciones?panel=<panel>`: "Empresas argentinas en la SEC" (also "SEC", "EDGAR", "balances") and "Calculadora de precio teórico de CEDEAR" (also "calculadora cedear", "precio teórico", "ratio") always, and, only while `EQUITIES_BYMA_ENABLED` is on, the quotations panel ("CEDEARs y acciones líderes", also "CEDEAR" or "Merval"). The flag reaches the client through the terminal layout's loader. Single tickers and companies are not indexed.
-
-The shared model and matching logic live in `app/lib/search-entities.ts`; the rate index lives in `app/lib/exchange-rate-search.ts` and the panel index in `app/lib/equity-search.ts`. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
+The shared model is `app/lib/search-entities.ts`, the rate index `app/lib/exchange-rate-search.ts` and the panel index `app/lib/equity-search.ts`.
 
 ### 2.2 Code Quality Standards
 
 - Strict TypeScript configurations are non-negotiable.
 - **Styling:** Use the custom Tailwind v4 utilities in `/app/css` and the design tokens in `tailwind-theme.css`; avoid hardcoded values in JSX.
-- The full contributor rules, including the codebase layout and verification steps, are in [AGENTS.md](AGENTS.md).
+- Contributor rules, including the codebase layout and verification steps, are in [AGENTS.md](AGENTS.md).
 
 #### 2.2.1 Component Architecture
 
@@ -94,7 +67,7 @@ The project is pnpm-managed; `mise.toml` and `packageManager` in `package.json` 
 1. Clone the repository.
 2. Provision pnpm: `mise install`.
 3. Install dependencies: `mise exec -- pnpm install --frozen-lockfile`.
-4. Local D1 (Miniflare) starts empty. See [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
+4. Local D1 (Miniflare) starts empty; see [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
 5. Start the development server: `mise exec -- pnpm dev`.
 
 > For a local production preview, run `mise exec -- pnpm build` followed by `mise exec -- pnpm preview`.
@@ -103,83 +76,54 @@ The project is pnpm-managed; `mise.toml` and `packageManager` in `package.json` 
 
 Before committing, run `mise exec -- pnpm test`. It groups formatting, lint, typecheck, unit tests, and the build in one command.
 
-> [!NOTE]
-> Tailwind does not error on unknown classes, so a token mistake only shows up in the generated CSS.
+#### 2.3.1 Configuration
 
-##### 2.3.1.1 Dev Preview Params
+Build variables, runtime variables, secrets and flags are documented in [docs/cloudflare-deployment.md](docs/cloudflare-deployment.md) and [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
+
+#### 2.3.2 Dev Preview Params
 
 Production builds ignore these.
 
-| Flag                                                                                                                                      | Route(s)                                                                                                                                                                                                                 | Effect                            |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| `?preview=unavailable`                                                                                                                    | `/dashboard`, `/analisis`, `/noticias`, `/indicadores`, `/acciones`, `/acciones?panel=empresas&empresa=YPF`, `/acciones?panel=calculadora` (manual-rate state), `/acciones?panel=acciones` (BYMA on only), `/api-status` | Simulates unavailable data states |
-| `?preview=sent`                                                                                                                           | `/mi-economia?tab=usuario`                                                                                                                                                                                               | Shows "link sent" confirmation    |
-| `?preview=error`                                                                                                                          | `/mi-economia?tab=usuario`                                                                                                                                                                                               | Shows retry/error notice          |
-| To review route-level error screens, open a path that does not exist for the 404 view, or trigger a server error in development for 500s. |
+| Parameter              | Where                                                                                                                                                                                                                                              | Effect                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `?preview=unavailable` | `/dashboard`, `/analisis`, `/noticias`, `/indicadores`, `/acciones` (also `?panel=empresas&empresa=YPF`, `?panel=calculadora` for the manual-rate state, and `?panel=acciones` with BYMA on), `/mi-economia` (inflation and prices), `/api-status` | Simulates unavailable data states |
+| `?preview=sent`        | `/mi-economia?tab=usuario`                                                                                                                                                                                                                         | Shows the "link sent" message     |
+| `?preview=error`       | `/mi-economia?tab=usuario`                                                                                                                                                                                                                         | Shows the retry/error notice      |
 
-#### 2.3.1 Configuration
-
-The public pages need no configuration beyond `VITE_SITE_URL`, the absolute origin used for canonical and OpenGraph URLs. **Set as a Cloudflare build variable**; otherwise, social cards point at localhost by default.
-
-Accounts, cloud finance storage and billing are runtime configuration (Worker variables, secrets and the D1 binding), documented in [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
-
-`EQUITIES_BYMA_ENABLED` switches the BYMA quotations on `/acciones` on with the literal `"true"`. **It stays off until BYMA authorizes displaying its data**; while off, no request reaches BYMA. See [docs/market-data.md](docs/market-data.md#the-byma-gate).
-
-Deployment steps are in [docs/cloudflare-deployment.md](docs/cloudflare-deployment.md).
+To review the route-level error screens, open a path that does not exist (404) or trigger a server error in development (500).
 
 ### 2.4 Routes
 
-| Route                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                  | Home. Introduction to the quotations, history and news, with their sources and methodology                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `/dashboard`         | Live exchange rates with sparklines, daily variation, and stale-data fallback                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `/analisis`          | Blue–Oficial gap over time, purchasing-power estimate, and deposit-vs-inflation comparison                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `/indicadores`       | Monthly and annual inflation, 30-day deposit rate, UVA, country risk, and EMAE activity                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `/acciones`          | Argentine companies listed in the US (`?panel=empresas`, `&empresa=<ticker>`): latest annual report linked to sec.gov, recent filings and annual figures as filed, from SEC EDGAR. A CEDEAR theoretical-price calculator (`?panel=calculadora`, `&precio`, `ratio`, `referencia`, `tc`, `mercado`): the visitor types the underlying's price and the ratio, the CCL or MEP comes from Dólar API. While `EQUITIES_BYMA_ENABLED` is on, also a quotations panel (`?panel=acciones`) with the index strip and the CEDEARs and S&P Merval leaders ranked by traded amount; BYMA data delayed about 20 minutes |
-| `/noticias`          | Aggregate of economic news                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `/mi-economia`       | Personal salary and budget tracker in tabs (`?tab=usuario`, `presupuesto`, `planificacion`, `precios`); records stored per account in D1; editing requires an active trial or paid subscription; signed-out visitors browse a read-only example. There's also a price tracker for consumer goods                                                                                                                                                                                                                                                                                                          |
-| `/api-status`        | Health and cache status for all upstream data sources                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `/docs`              | Sources, calculations, update frequency, and limits of the data shown                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `/privacy`, `/terms` | Privacy policy and Service terms                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+Every route, page or endpoint, is declared in `app/routes.ts`.
+
+| Route                | Description                                                                                                                                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                  | Home: introduction to the quotations, history and news, with their sources and methodology                                                                                                                                     |
+| `/dashboard`         | Live exchange rates with sparklines, daily variation and stale-data fallback                                                                                                                                                   |
+| `/analisis`          | Blue–Oficial gap over time, purchasing-power estimate and deposit-vs-inflation comparison                                                                                                                                      |
+| `/indicadores`       | Monthly and annual inflation, 30-day deposit rate, UVA, country risk and EMAE activity                                                                                                                                         |
+| `/acciones`          | Argentine companies listed in the US (SEC EDGAR), a CEDEAR theoretical-price calculator and, while `EQUITIES_BYMA_ENABLED` is on, delayed BYMA quotations; panels and parameters in [docs/market-data.md](docs/market-data.md) |
+| `/noticias`          | Aggregate of economic news                                                                                                                                                                                                     |
+| `/mi-economia`       | Personal salary, budget and price tracker                                                                                                                                                                                      |
+| `/api-status`        | Health and cache status of every upstream data source                                                                                                                                                                          |
+| `/docs`              | Sources, calculations, update frequency and limits of the data shown                                                                                                                                                           |
+| `/privacy`, `/terms` | Privacy policy and service terms                                                                                                                                                                                               |
 
 #### 2.4.1 Mi economía
 
-_Mi economía_ is a cloud-synced **Salary and Savings Tracker**. Signed-in users can:
+_Mi economía_ is a cloud-synced salary and savings tracker: monthly income and budgets per category, manually recorded expenses (never presented as a bank balance), upcoming expenses and savings goals, salary purchasing power across months, and reference prices of everyday products near the user's city. Its tabs, data and calculations are in [docs/personal-finance.md](docs/personal-finance.md), and access, storage and retention in [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
 
-- Define monthly income and allocate budgets across spending categories.
-- Compare planned allocations with expenses they record manually, without presenting the result as a bank balance.
-- Plan upcoming one-time and monthly expenses, and track savings goals.
-- Compare salary purchasing power across months when published inflation data covers the period.
-- Consult reference prices of everyday products near their city.
+### 2.5 Further Documentation
 
-Accounts, cloud storage and billing stay off until they are configured; see [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md). [docs/personal-finance.md](docs/personal-finance.md) covers the implementation.
-
-### 2.5 Endpoints
-
-Declared in `app/routes.ts`.
-
-- `/api/auth/*` (sign-in).
-- `/api/account` (account deletion).
-- `/api/finance-export` (JSON copy of records).
-- `/api/billing` and `/api/billing/webhook` (subscription).
-- `/resources/prices` and `/resources/inflation-history` (data for client components).
-- `robots.txt` and `sitemap.xml`.
-
-### 2.6 Further Documentation
-
-[docs/README.md](docs/README.md) indexes the feature and operations guides: deployment, accounts and cloud storage, _Mi economía_, billing, market data, the product-price feed, the news sources and security.
+[docs/README.md](docs/README.md) indexes the feature and operations guides.
 
 ## 3. Security and Legal Considerations
 
-### 3.1 Data Privacy
+### 3.1 Disclaimer
 
-Without an account, the platform stores no personal financial data; it acts as a read-only interface for public economic information. Personal records are stored only when a signed-in user saves them in _Mi economía_, scoped to that account, and the user can export or delete them at any time.
+All financial data is for informational purposes only. This platform is **not a financial advisor**; consult a professional before making significant investment decisions.
 
-### 3.2 Disclaimer
-
-All financial data provided is for informational purposes only. This platform is **not a financial advisor**. Users should consult professionals before making significant investment decisions.
-
-### 3.3 License and Contributing
+### 3.2 License and Contributing
 
 The source is published under the [PolyForm Noncommercial License 1.0.0](LICENSE): free to use for noncommercial purposes. It is source-available, not open source.
 

@@ -1,6 +1,6 @@
 # Accounts and cloud finance setup
 
-*Mi economía* stores each signed-in account's records in Cloudflare D1. Accounts, cloud storage and billing are off by default: with the three flags below unset, the routes stay disabled and nothing is written to D1.
+*Mi economía* stores each signed-in account's records in Cloudflare D1. Accounts, cloud storage and billing each have a flag in the table below, set to the literal `"true"`. While one is off, its routes stay disabled and nothing is written to D1.
 
 ## Configuration
 
@@ -13,10 +13,10 @@
 | `AUTH_SECRET` | secret | At least 32 characters; `openssl rand -hex 32` produces one. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secrets | Enable Google sign-in; both are required. |
 | `RESEND_API_KEY` | secret | Enables email sign-in links and retention notices. Required together with `EMAIL_FROM`. |
-| `EMAIL_FROM` | variable | Plain sender address on a domain verified with Resend, for example `"Tu Economía <acceso@example.com>"`. Not a secret. |
+| `EMAIL_FROM` | variable | Sender on a domain verified with Resend, for example `"Tu Economía <acceso@example.com>"`. Not a secret. |
 | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` | secrets | Mercado Pago credentials for [billing](billing.md). |
 
-Variables go in `vars` in `wrangler.jsonc`. Secrets are set with `wrangler secret put <NAME>` and, locally, in the gitignored `.dev.vars`; never put them in tracked files.
+Variables go in `vars` in `wrangler.jsonc`, and a deploy replaces variables set in the dashboard with them. Secrets are set with `wrangler secret put <NAME>` and, locally, in the gitignored `.dev.vars`; never put them in tracked files.
 
 ## Database
 

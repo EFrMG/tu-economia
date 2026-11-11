@@ -1,6 +1,6 @@
 # Billing
 
-Editing *Mi economía* in the cloud is paid: the first subscription includes one calendar month at no charge, then a monthly fee (`MONTHLY_PRICE_ARS` in `app/lib/billing-entitlement.ts`) through Mercado Pago subscriptions. Billing is off by default (`BILLING_ENABLED`).
+Editing *Mi economía* in the cloud is paid: the first subscription includes one calendar month at no charge, then a monthly fee (`MONTHLY_PRICE_ARS` in `app/lib/billing-entitlement.ts`) through Mercado Pago subscriptions.
 
 ## Product terms
 
@@ -10,13 +10,13 @@ The public text is at `/terms`, linked from the footer, the sitemap and the chec
 - A subscriber may cancel at any time. Cancellation stops the next charge, and access continues until the end of the current trial or paid period.
 - After a cancellation or a lapse the subscriber can subscribe again. The free calendar month belongs to the account's first plan; a replacement plan has no `free_trial` and starts charging at authorization.
 - A failed renewal grants no grace period: editing stops when the last paid period ends. A refund removes the access that payment granted; refunds are issued on request; see [Refunds](#refunds).
-- Without a current period an account keeps read access, JSON export and record deletion, and its records are deleted after the retention period. See [cloud-finance-setup.md](cloud-finance-setup.md#retention-of-lapsed-records).
+- What an account can still do without a current period, and when its records are deleted: [cloud-finance-setup.md](cloud-finance-setup.md#cloud-storage-and-access) and [retention](cloud-finance-setup.md#retention-of-lapsed-records).
 
 ## How it works
 
 Code: `app/lib/billing.server.ts` (handlers and reconciliation), `app/lib/mercado-pago.server.ts` (the provider client), `app/lib/billing-entitlement.ts` (who may edit) and the routes `billing-api.ts` and `billing-webhook-api.ts`. Billing is stored apart from the finance documents: `billing_subscriptions` holds one row per user for the current subscription (plan and subscription IDs, provider status, trial and paid end times), and `billing_payments` the verified payments. A later checkout replaces the row's plan and subscription IDs; earlier payments stay.
 
-`BILLING_ENABLED` only controls new checkouts; an existing subscriber can still cancel when it is off. `MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are Worker secrets; see [cloud-finance-setup.md](cloud-finance-setup.md).
+`BILLING_ENABLED` only controls new checkouts; an existing subscriber can still cancel when it is off. The Mercado Pago credentials are listed in [cloud-finance-setup.md](cloud-finance-setup.md#configuration).
 
 ## Provider setup
 
@@ -29,7 +29,7 @@ Access never comes from a browser return URL or a notification payload alone: ev
 
 ### Endpoints
 
-`/api/billing` needs a signed-in session. `POST` and `DELETE` also need a same-origin request and a body of at most 1,024 characters.
+`/api/billing` needs a signed-in session. `POST` and `DELETE` also need a same-origin request and a body of at most 1,024 bytes.
 
 - **`POST` (checkout)** requires `acceptedTerms` and the matching `expectedUserId`. It creates a plan unique to the user (monthly, with a one-month `free_trial` on the account's first plan only) and returns the plan's hosted checkout URL, which must be `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=<plan>`. While the plan has no subscription, a repeated `POST` and the `GET` status return the same stored link, so an abandoned or failed checkout can be resumed without a second plan; once a subscription exists the link is cleared. While access is still in force, while an authorized replacement awaits its first verified payment, or while a checkout is `creating` or otherwise unreconciled, another checkout answers `409`. A `pending` subscription whose provider ID is known is cancelled and replaced like any other ended one, so an abandoned checkout does not trap the account. Once access has ended, `POST` starts a replacement with a new plan that omits `free_trial`: a subscription the provider still shows as active is cancelled first, and the record is reserved for the new plan. The old plan is never reused, because a second subscription on it would make the plan-filtered search ambiguous. The reservation is written before the plan request, so a lost provider response leaves the record `creating` and blocks a retry.
 - **`GET` (status)** returns whether the account is entitled, the provider status, the trial and paid end dates, and `checkoutURL` for a checkout that can be resumed. It reconciles by searching for a subscription on the user's plan ID and verifying the canonical provider record, which recovers a lost subscription notification. A checkout whose card is rejected leaves a cancelled subscription on the same plan, so when the search returns several, cancelled ones are set aside and the one that can still charge is used. When access has expired it also searches the subscription's authorized payments, reading the first result page only.
@@ -38,20 +38,18 @@ Access never comes from a browser return URL or a notification payload alone: ev
 
 An unexpected failure answers `502` and is logged to Workers Logs. When a Mercado Pago response fails validation, the log lists only each issue's field path, code and message, never the payload.
 
-Account deletion cancels an active subscription first; see [cloud-finance-setup.md](cloud-finance-setup.md#account-deletion).
-
 ### Entitlement
 
-- **Trial**: starts when a verified subscription is `authorized`, its plan includes a one-month `free_trial`, and its plan terms are as expected. It ends one calendar month after the subscription's creation timestamp, clamped to the month's last day. A replacement plan omits `free_trial`, so it never grants a trial; its access starts with the first approved payment.
+- **Trial**: starts when a verified subscription is `authorized`, its plan includes a one-month `free_trial`, and its plan terms are as expected. It ends one calendar month after the subscription's creation timestamp, clamped to the month's last day. A replacement plan has no trial; its access starts with the first approved payment.
 - **Paid period**: each approved authorized payment of the monthly amount extends access to one calendar month after its debit date. Repeated events for a payment update one row. A refunded, reversed or charged-back payment no longer counts, and a delayed approval cannot restore it.
-- **Access** lasts until the later of the trial end and the paid-through date. Cancelling keeps the stored dates, and a verified payment keeps its paid period even if a later renewal fails.
+- **Access** lasts until the later of the trial end and the paid-through date.
 - **Late or missing notifications**: payments are found through the current subscription ID, so a notification for a replaced subscription is ignored and its `billing_payments` row keeps the last verified status.
 
 ### Re-subscribing from Mercado Pago
 
 A buyer can re-subscribe to a cancelled subscription from their own Mercado Pago account, without visiting the app. Mercado Pago then creates a new subscription on the same plan; it does not reactivate the old one.
 
-- **On the account's current plan**, the new `authorized` subscription replaces the cancelled one in the record. The stored dates stay until its first payment is verified; the plan has no `free_trial` if it is a replacement, so that payment is taken at authorization.
+- **On the account's current plan**, the new `authorized` subscription replaces the cancelled one in the record. The stored dates stay until its first payment is verified.
 - **On a plan a later checkout replaced**, no account owns the plan, so the subscription can never grant access. The webhook cancels it at Mercado Pago and logs it. A charge already taken, such as the first month of a plan without a free trial, needs a [refund](#refunds).
 
 ### Refunds
