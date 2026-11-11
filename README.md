@@ -1,14 +1,19 @@
+<div align="center">
+
 # Tu Economía
 
 Economic monitoring platform for Argentina.
 
-## 1. Project Philosophy
+[![License](https://img.shields.io/github/license/EFrMG/tu-economia)](LICENSE)
 
-### 1.1 Purpose and Vision
+<img src="app/assets/OG-image.png" alt="Tu Economía OG image" width="980">
+
+</div>
+<br>
 
 **Tu Economía** provides a precise, minimalist interface for monitoring exchange rates and economic indicators. It is a reliable reference for freelancers, remote workers and savers who need to preserve purchasing power and make independent, informed decisions without the noise of economic anxiety.
 
-### 1.2 Argentine Economic Context
+## 1. Argentine Economic Context
 
 In Argentina, volatility is a daily reality and the "Dólar" is a unit of account as much as a currency. Centralizing the relevant numbers in one place gives people a coherent view of an otherwise fragmented landscape.
 
