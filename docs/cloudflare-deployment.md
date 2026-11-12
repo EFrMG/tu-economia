@@ -40,7 +40,7 @@ GitHub Actions runs `pnpm test` and a Wrangler dry run (`pnpm exec wrangler depl
 
 On a deployed URL, check `/dashboard`, `/indicadores`, `/noticias`, `/privacy` and that the fonts load, and on `/acciones`:
 
-- the Empresas list fills in, every issuer resolves (none reads "no identificado"), and the report links open documents on sec.gov; then one company (`/acciones?panel=empresas&empresa=YPF`) shows its filings and figures. SEC EDGAR has not yet been called from a deployed Worker, and the SEC throttles some cloud addresses, so a 403 here means the Worker is being refused;
+- the Empresas list fills in, every issuer resolves (none reads "no identificado"), and the report links open documents on sec.gov; then one company (`/acciones?panel=empresas&empresa=YPF`) shows its filings and figures. The SEC throttles some cloud addresses, so a 403 here means the Worker is being refused;
 - `/api-status` shows a "SEC EDGAR" row that is not `failed`;
 - while `EQUITIES_BYMA_ENABLED` is off, the effects listed under [the BYMA gate](market-data.md#the-byma-gate) hold and the Workers Logs show no request to `open.bymadata.com.ar`. If the flag is ever turned on, check the BYMA panel too.
 

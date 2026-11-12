@@ -18,6 +18,7 @@ import {
   formatIndicatorPeriod,
   formatIndicatorValue,
   INDICATOR_DEFINITIONS,
+  INDICATOR_GROUPS,
   type IndicatorDefinition,
   type IndicatorResult,
 } from "~/lib/indicators";
@@ -28,7 +29,7 @@ export function meta() {
   return pageMeta({
     title: "Indicadores",
     description:
-      "Inflación, actividad económica, depósitos a 30 días, UVA y riesgo país, con períodos y fuentes.",
+      "Inflación, tasas de interés, reservas, tipo de cambio, dinero, UVA, riesgo país y actividad económica, con períodos y fuentes.",
     path: "/indicadores",
   });
 }
@@ -77,9 +78,9 @@ const IndicatorCard = ({
       <p className="font-mono text-label-caps text-text-200 uppercase">
         {definition.cadence}
       </p>
-      <h2 className="font-heading text-headline-md text-text-100">
+      <h3 className="font-heading text-body-lg font-semibold text-text-100">
         {definition.title}
-      </h2>
+      </h3>
       <p className="text-body-sm text-text-300">{definition.description}</p>
     </div>
 
@@ -114,53 +115,84 @@ const IndicatorCard = ({
         tabIndex={loading ? -1 : undefined}
         className="relative z-40 block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
       >
-        Ver documentación de la serie ↗
+        Ver la serie en la fuente ↗
       </a>
     </div>
   </CopyableCard>
 );
 
-const IndicatorResults = ({ results }: { results: IndicatorResult[] }) => {
+interface IndicatorGroupsProps {
+  results?: IndicatorResult[];
+  loading?: boolean;
+}
+
+/** Renders one section per subject, in `INDICATOR_GROUPS` order, so the loading and loaded states share a layout. */
+const IndicatorGroups = ({
+  results = [],
+  loading = false,
+}: IndicatorGroupsProps) => {
   const byId = new Map(results.map((result) => [result.id, result]));
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {INDICATOR_DEFINITIONS.map((definition) => (
-        <IndicatorCard
-          key={definition.id}
-          definition={definition}
-          result={byId.get(definition.id)}
-        />
+    <div className="stack-8" aria-busy={loading || undefined}>
+      {loading ? (
+        <span className="sr-only" role="status">
+          Cargando indicadores
+        </span>
+      ) : null}
+
+      {INDICATOR_GROUPS.map((group) => (
+        <section
+          key={group.id}
+          className="stack-4"
+          aria-labelledby={`indicadores-${group.id}`}
+        >
+          <h2
+            id={`indicadores-${group.id}`}
+            className="font-heading text-headline-md text-text-100"
+          >
+            {group.title}
+          </h2>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {INDICATOR_DEFINITIONS.filter(
+              (definition) => definition.group === group.id,
+            ).map((definition) => (
+              <IndicatorCard
+                key={definition.id}
+                definition={definition}
+                result={byId.get(definition.id)}
+                loading={loading}
+              />
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
 };
 
-const IndicatorsLoading = () => (
-  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-    <span className="sr-only" role="status">
-      Cargando indicadores
-    </span>
-    {INDICATOR_DEFINITIONS.map((definition) => (
-      <IndicatorCard key={definition.id} definition={definition} loading />
-    ))}
-  </div>
+const IndicatorResults = ({ results }: { results: IndicatorResult[] }) => (
+  <IndicatorGroups results={results} />
 );
+
+const IndicatorsLoading = () => <IndicatorGroups loading />;
 
 /** Shared by the page, its hydration fallback and its error state, so the page keeps its title in all three. */
 const IndicadoresHeader = () => (
   <header className="stack-2">
     <h1 className="font-heading text-headline-lg text-text-100">Indicadores</h1>
     <p className="max-w-2xl text-body-lg text-text-200">
-      Inflación, actividad económica, tasas de depósitos, UVA y riesgo país con
-      la fecha y unidad de cada dato. Las series se publican con diferentes
-      frecuencias.
+      Precios, tasas de interés, dólar, dinero, unidades de actualización y
+      actividad económica, con la fecha y unidad de cada dato. Las series se
+      publican con diferentes frecuencias y demoras.
     </p>
   </header>
 );
 
 const IndicadoresFooter = () => (
   <RouteFooter>
-    <p>Fuentes: BCRA y Ámbito vía ArgentinaDatos; INDEC vía Datos Argentina.</p>
+    <p>Fuentes: BCRA; Ámbito vía ArgentinaDatos; INDEC vía Datos Argentina.</p>
   </RouteFooter>
 );
 

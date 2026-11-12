@@ -47,6 +47,18 @@ export function meta() {
   });
 }
 
+const BCRA_SOURCE = {
+  name: "BCRA (Estadísticas Monetarias)",
+  detail: "Inflación, tasas, reservas, tipo de cambio, dinero y UVA",
+  url: "https://www.bcra.gob.ar/apis-banco-central/",
+} as const;
+
+const COUNTRY_RISK_SOURCE = {
+  name: "ArgentinaDatos (riesgo país)",
+  detail: "Riesgo país informado por Ámbito",
+  url: "https://argentinadatos.com/",
+} as const;
+
 const BYMA_SOURCE = {
   name: "BYMA Open Data",
   detail: "Cotizaciones de CEDEARs, acciones líderes e índices, con demora",
@@ -91,12 +103,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           url: "https://argentinadatos.com/",
           health,
         },
-        {
-          name: "ArgentinaDatos (indicadores)",
-          detail: "Inflación, depósitos, UVA y riesgo país",
-          url: "https://argentinadatos.com/",
-          health,
-        },
+        { ...BCRA_SOURCE, health },
+        { ...COUNTRY_RISK_SOURCE, health },
         {
           name: "Datos Argentina (EMAE)",
           detail: "Actividad económica mensual",
@@ -168,11 +176,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         url: "https://argentinadatos.com/",
         health: healthAfterTimeout(exchange.history),
       },
+      { ...BCRA_SOURCE, health: healthAfterTimeout(indicators.bcra) },
       {
-        name: "ArgentinaDatos (indicadores)",
-        detail: "Inflación, depósitos, UVA y riesgo país",
-        url: "https://argentinadatos.com/",
-        health: healthAfterTimeout(indicators),
+        ...COUNTRY_RISK_SOURCE,
+        health: healthAfterTimeout(indicators.countryRisk),
       },
       {
         name: "Datos Argentina (EMAE)",

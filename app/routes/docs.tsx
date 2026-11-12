@@ -215,17 +215,32 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              La sección Indicadores muestra la inflación mensual y la variación
-              interanual del IPC, la tasa nominal anual de depósitos a 30 días,
-              el valor de la UVA y el riesgo país. También presenta el estimador
-              mensual de actividad económica (EMAE). La inflación y la tasa se
-              muestran como porcentajes, la UVA en pesos y el riesgo país en
-              puntos básicos. Las cinco tarjetas presentan los valores tal como
-              los informa cada serie, sin conversiones de escala o frecuencia.
-              La tasa de depósitos no equivale a una tasa de política monetaria.
+              La sección Indicadores agrupa las series por tema: precios
+              (inflación mensual, interanual y esperada a 12 meses), tasas de
+              interés (depósitos a 30 días, BADLAR, TAMAR y préstamos
+              personales), dólar y sector externo (reservas internacionales,
+              dólar minorista, dólar mayorista de referencia y riesgo país),
+              dinero (base monetaria y variación interanual del M2 privado) y
+              unidades de actualización (UVA, UVI, CER e ICL). También presenta
+              el estimador mensual de actividad económica (EMAE). Cada tarjeta
+              indica su unidad y presenta el valor tal como lo informa la serie,
+              sin conversiones de escala o frecuencia. Las tasas se expresan
+              como nominales anuales. Ninguna de ellas equivale a una tasa de
+              política monetaria.
             </p>
             <p>
-              Los datos se consultan en las series documentadas de{" "}
+              Todas las series, salvo el riesgo país, se consultan directamente
+              en la API de Estadísticas Monetarias del{" "}
+              <a
+                className={sourceLinkClass}
+                href="https://www.bcra.gob.ar/apis-banco-central/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                BCRA
+              </a>
+              . El BCRA no publica el riesgo país; esa serie identifica a Ámbito
+              como fuente y se consulta en{" "}
               <a
                 className={sourceLinkClass}
                 href="https://argentinadatos.com/docs/"
@@ -234,28 +249,19 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               >
                 ArgentinaDatos
               </a>
-              . Las series de inflación, depósitos y UVA identifican al{" "}
-              <a
-                className={sourceLinkClass}
-                href="https://www.bcra.gob.ar/principales-variables/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                BCRA
-              </a>{" "}
-              como fuente; la serie de riesgo país identifica a Ámbito. La
-              inflación tiene periodicidad mensual; la UVA, la tasa de depósitos
-              y el riesgo país presentan observaciones diarias cuando hay datos
-              publicados. La fecha de cada tarjeta corresponde al período
-              informado por la serie, no a la hora de publicación.
+              . Las series se publican con distintas frecuencias y demoras: las
+              reservas y las tasas suelen informarse con algunos días hábiles de
+              atraso. La fecha de cada tarjeta corresponde al período informado
+              por la serie, no a la hora de publicación.
             </p>
             <p>
-              Cada serie se conserva en memoria del servidor por hasta treinta
-              minutos y se consulta de manera independiente. Si una falla, las
-              demás pueden seguir visibles. Las tarjetas con datos permiten
-              copiar el valor, período y fuente al portapapeles. Las fuentes
-              pueden corregir observaciones anteriores; Tu Economía no guarda
-              versiones históricas de esas revisiones.
+              Los valores se conservan en memoria del servidor por hasta treinta
+              minutos. Las series del BCRA y el riesgo país se consultan por
+              separado, y una serie con datos inválidos no impide mostrar las
+              demás. Las tarjetas con datos permiten copiar el valor, período y
+              fuente al portapapeles. Las fuentes pueden corregir observaciones
+              anteriores; Tu Economía no guarda versiones históricas de esas
+              revisiones.
             </p>
             <p>
               El panel de actividad utiliza las series del EMAE de{" "}

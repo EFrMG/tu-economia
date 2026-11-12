@@ -155,10 +155,11 @@ export default function Privacy() {
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
               Las consultas a fuentes públicas de mercado (Dólar API,
-              ArgentinaDatos, Datos Argentina, canales RSS de noticias y la API
-              no oficial de Precios Claros) se efectúan de forma centralizada
-              desde nuestro servidor. Su navegador no se comunica directamente
-              con esos proveedores externos para cargar los paneles.
+              ArgentinaDatos, la API del BCRA, Datos Argentina, canales RSS de
+              noticias y la API no oficial de Precios Claros) se efectúan de
+              forma centralizada desde nuestro servidor. Su navegador no se
+              comunica directamente con esos proveedores externos para cargar
+              los paneles.
             </p>
             <p>
               Para operar la infraestructura del servicio, compartimos datos

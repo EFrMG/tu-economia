@@ -40,7 +40,10 @@ vi.mock("~/lib/economic-news.server", () => ({
 
 vi.mock("~/lib/indicators.server", () => ({
   getIndicators: vi.fn(async () => undefined),
-  getIndicatorSourceHealth: vi.fn(() => health),
+  getIndicatorSourceHealth: vi.fn(() => ({
+    bcra: health,
+    countryRisk: health,
+  })),
 }));
 
 vi.mock("~/lib/economic-activity.server", () => ({
