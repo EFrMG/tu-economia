@@ -7,6 +7,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router";
 import { equityPanelSearchResults } from "~/lib/equity-search";
 import { EXCHANGE_RATE_SEARCH_RESULTS } from "~/lib/exchange-rate-search";
+import { INDICATOR_SEARCH_RESULTS } from "~/lib/indicator-search";
 import { RATES_PANEL_SEARCH_RESULTS } from "~/lib/rates-search";
 import {
   searchEntities,
@@ -22,6 +23,7 @@ function searchIndex(equitiesBymaEnabled: boolean): readonly SearchEntity[] {
     ...EXCHANGE_RATE_SEARCH_RESULTS,
     ...equityPanelSearchResults(equitiesBymaEnabled),
     ...RATES_PANEL_SEARCH_RESULTS,
+    ...INDICATOR_SEARCH_RESULTS,
   ];
 }
 
@@ -61,7 +63,7 @@ const TopBar = ({
   const hasQuery = query.trim().length > 0;
 
   const selectResult = (result: SearchEntity) => {
-    const { pathname, searchParams, focusId } = result.target;
+    const { pathname, searchParams, focusId, hash } = result.target;
     const currentParams = new URLSearchParams(location.search);
 
     const params =
@@ -91,7 +93,11 @@ const TopBar = ({
     }
 
     const search = params.toString();
-    navigate({ pathname, search: search ? `?${search}` : "" });
+    navigate({
+      pathname,
+      search: search ? `?${search}` : "",
+      hash: hash ? `#${hash}` : "",
+    });
   };
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

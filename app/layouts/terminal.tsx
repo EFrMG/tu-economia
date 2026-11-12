@@ -131,8 +131,19 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
     const params = new URLSearchParams(location.search);
     if (params.has("rate")) return;
 
+    // A search result names the section to open at; every table renders its frame, with that id, while its data loads.
+    const target = location.hash
+      ? document.getElementById(decodeURIComponent(location.hash.slice(1)))
+      : null;
+
+    if (target) {
+      target.scrollIntoView({ block: "start" });
+
+      return;
+    }
+
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, location.hash]);
 
   return (
     <div className="flex h-dvh overflow-hidden bg-base-950 text-text-100">

@@ -11,6 +11,10 @@ import {
   EconomicActivitySection,
 } from "~/components/features/EconomicActivitySection";
 import { getEconomicActivity } from "~/lib/economic-activity.server";
+import { IndecTables } from "~/components/features/IndecTables";
+import { UNAVAILABLE_INDEC_DATA } from "~/lib/indec";
+import { getIndecData } from "~/lib/indec.server";
+import { indicatorCardId } from "~/lib/indicator-search";
 import { getIndicators } from "~/lib/indicators.server";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import {
@@ -24,17 +28,18 @@ import {
 } from "~/lib/indicators";
 import { pageMeta } from "~/lib/meta";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
+import { workerEnvContext } from "~/lib/worker-context";
 
 export function meta() {
   return pageMeta({
     title: "Indicadores",
     description:
-      "Inflación, tasas de interés, reservas, tipo de cambio, dinero, UVA, riesgo país y actividad económica, con períodos y fuentes.",
+      "Inflación, canasta básica, salarios, tasas de interés, reservas, tipo de cambio, dinero, UVA, riesgo país y actividad económica, con períodos y fuentes.",
     path: "/indicadores",
   });
 }
 
-export function loader({ request }: Route.LoaderArgs) {
+export function loader({ request, context }: Route.LoaderArgs) {
   const previewUnavailable = isUnavailablePreview(
     new URL(request.url).searchParams,
   );
@@ -52,7 +57,11 @@ export function loader({ request }: Route.LoaderArgs) {
     ? Promise.resolve(null)
     : getEconomicActivity().catch(() => null);
 
-  return { indicators, activity };
+  const indec = previewUnavailable
+    ? Promise.resolve(UNAVAILABLE_INDEC_DATA)
+    : getIndecData(context.get(workerEnvContext).INDEC_API_TOKEN);
+
+  return { indicators, activity, indec };
 }
 
 interface IndicatorCardProps {
@@ -67,6 +76,7 @@ const IndicatorCard = ({
   loading = false,
 }: IndicatorCardProps) => (
   <CopyableCard
+    id={indicatorCardId(definition.id)}
     copyLabel={`Copiar indicador ${definition.title}`}
     text={
       result?.point ? formatIndicatorCardText(definition, result.point) : null
@@ -183,28 +193,38 @@ const IndicadoresHeader = () => (
   <header className="stack-2">
     <h1 className="font-heading text-headline-lg text-text-100">Indicadores</h1>
     <p className="max-w-2xl text-body-lg text-text-200">
-      Precios, tasas de interés, dólar, dinero, unidades de actualización y
-      actividad económica, con la fecha y unidad de cada dato. Las series se
-      publican con diferentes frecuencias y demoras.
+      Precios, ingresos, tasas de interés, dólar, dinero, unidades de
+      actualización y actividad económica, con la fecha y unidad de cada dato.
+      Las series se publican con diferentes frecuencias y demoras.
     </p>
   </header>
 );
 
 const IndicadoresFooter = () => (
   <RouteFooter>
-    <p>Fuentes: BCRA; Ámbito vía ArgentinaDatos; INDEC vía Datos Argentina.</p>
+    <p>
+      Fuentes: BCRA; INDEC, Catálogo API-INDEC (canastas básicas, índice de
+      salarios e IPC); Ámbito vía ArgentinaDatos; INDEC vía Datos Argentina
+      (EMAE).
+    </p>
   </RouteFooter>
 );
 
 export default function Indicadores({ loaderData }: Route.ComponentProps) {
   const retryNeeded = useMemo(
     () =>
-      Promise.all([loaderData.indicators, loaderData.activity]).then(
-        ([results, activity]) =>
-          results.some((result) => result.point === null) || activity === null,
+      Promise.all([
+        loaderData.indicators,
+        loaderData.activity,
+        loaderData.indec,
+      ]).then(
+        ([results, activity, indec]) =>
+          results.some((result) => result.point === null) ||
+          activity === null ||
+          Object.values(indec).some((part) => part === null),
         () => true,
       ),
-    [loaderData.indicators, loaderData.activity],
+    [loaderData.indicators, loaderData.activity, loaderData.indec],
   );
 
   useFailedDataRetry(retryNeeded);
@@ -219,6 +239,15 @@ export default function Indicadores({ loaderData }: Route.ComponentProps) {
           errorElement={<IndicatorResults results={[]} />}
         >
           {(results) => <IndicatorResults results={results} />}
+        </Await>
+      </Suspense>
+
+      <Suspense fallback={<IndecTables />}>
+        <Await
+          resolve={loaderData.indec}
+          errorElement={<IndecTables data={UNAVAILABLE_INDEC_DATA} />}
+        >
+          {(indec) => <IndecTables data={indec} />}
         </Await>
       </Suspense>
 
@@ -241,6 +270,7 @@ export function HydrateFallback() {
     <div className="stack-10">
       <IndicadoresHeader />
       <IndicatorsLoading />
+      <IndecTables />
       <ActivityLoading />
       <IndicadoresFooter />
     </div>

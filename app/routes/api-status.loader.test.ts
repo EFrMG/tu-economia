@@ -46,6 +46,11 @@ vi.mock("~/lib/indicators.server", () => ({
   })),
 }));
 
+vi.mock("~/lib/indec.server", () => ({
+  getIndecData: vi.fn(async () => undefined),
+  getIndecSourceHealth: vi.fn(() => health),
+}));
+
 vi.mock("~/lib/economic-activity.server", () => ({
   getEconomicActivity: vi.fn(async () => undefined),
   getEconomicActivitySourceHealth: vi.fn(() => health),

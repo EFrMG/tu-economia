@@ -37,7 +37,7 @@ Exchange rates, indicators, activity data, company filings, equity quotations, n
 
 ##### 2.1.1.1 Search Entities
 
-The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, and the Acciones panels. Single tickers and companies are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
+The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, the Acciones and Tasas panels, and every `/indicadores` card and table (canasta básica, salarios, inflation by division and region, EMAE). From another page, a result opens its destination at the matching element: the URL carries its id as the hash, and the terminal shell scrolls to it. Single tickers, companies and lenders are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
 
 The shared model is `app/lib/search-entities.ts`, the rate index `app/lib/exchange-rate-search.ts` and the panel index `app/lib/equity-search.ts`.
 
@@ -106,7 +106,7 @@ Every route, page or endpoint, is declared in `app/routes.ts`.
 | `/`                  | Home: introduction to the quotations, history and news, with their sources and methodology                                                                                                                                     |
 | `/dashboard`         | Live exchange rates with sparklines, daily variation and stale-data fallback                                                                                                                                                   |
 | `/analisis`          | Blue–Oficial gap over time, purchasing-power estimate and deposit-vs-inflation comparison                                                                                                                                      |
-| `/indicadores`       | BCRA series by subject (inflation, rates, reserves, exchange rates, money, UVA/UVI/CER/ICL), country risk and EMAE activity                                                                                                    |
+| `/indicadores`       | BCRA series by subject (inflation, rates, reserves, exchange rates, money, UVA/UVI/CER/ICL), country risk, INDEC's canasta básica, wages and IPC by division and region, and EMAE activity                                        |
 | `/acciones`          | Argentine companies listed in the US (SEC EDGAR), a CEDEAR theoretical-price calculator and, while `EQUITIES_BYMA_ENABLED` is on, delayed BYMA quotations; panels and parameters in [docs/market-data.md](docs/market-data.md) |
 | `/tasas`             | Personal loans and credit cards per lender (CFT and maximum rates) from the BCRA Régimen de Transparencia, built weekly; see [docs/transparency-rates.md](docs/transparency-rates.md)                                          |
 | `/noticias`          | Aggregate of economic news                                                                                                                                                                                                     |

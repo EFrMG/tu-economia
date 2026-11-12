@@ -264,6 +264,28 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               revisiones.
             </p>
             <p>
+              Tres tablas se consultan directamente en la API del{" "}
+              <a
+                className={sourceLinkClass}
+                href="https://api.indec.gob.ar/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                INDEC
+              </a>
+              . La canasta básica muestra el valor mensual de la canasta
+              alimentaria (línea de indigencia) y de la total (línea de pobreza)
+              en Gran Buenos Aires, por adulto equivalente y para el hogar tipo
+              2 del INDEC, de cuatro personas. La tabla de salarios muestra la
+              variación mensual e interanual del índice de salarios por sector y
+              la variación interanual real, que descuenta la inflación
+              interanual del mismo mes. La tabla de inflación muestra el IPC por
+              división, por categoría (núcleo, regulados, estacionales, bienes y
+              servicios) y por región. Cada tabla indica el mes al que
+              corresponde y se conserva en memoria del servidor por hasta una
+              hora.
+            </p>
+            <p>
               El panel de actividad utiliza las series del EMAE de{" "}
               <a
                 className={sourceLinkClass}

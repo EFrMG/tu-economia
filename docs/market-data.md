@@ -8,6 +8,7 @@ Exchange rates, economic indicators, activity data, company filings and equity q
 | [ArgentinaDatos](https://api.argentinadatos.com/) `/v1/cotizaciones/dolares/<casa>` | Daily closes for variation and sparklines | `exchange-rates.server.ts` | 10 min | 8 s |
 | [BCRA Estadísticas Monetarias v4.0](https://www.bcra.gob.ar/apis-banco-central/) `/estadisticas/v4.0/monetarias` | Every `/indicadores` card except country risk; the inflation and deposit-rate histories of Análisis | `indicators.server.ts` | 30 min | 8 s |
 | ArgentinaDatos `/v1/finanzas/indices/riesgo-pais/ultimo` | Country risk | `indicators.server.ts` | 30 min | 8 s |
+| [Catálogo API-INDEC](https://api.indec.gob.ar/) `valorizacion_canastas_cba_cbt`, `indice_salarios`, `ipc_nacional` | Canasta básica, wages and IPC by division and region on `/indicadores`; needs `INDEC_API_TOKEN` | `indec.server.ts` | 60 min | 8 s |
 | [Datos Argentina](https://apis.datos.gob.ar/) series API, then its CSV export | EMAE activity | `economic-activity.server.ts` | 30 min | 3 s (API), 8 s (CSV) |
 | [BYMA Open Data](https://open.bymadata.com.ar/) `cedears`, `etf`, `leading-equity`, `index-price`, `market-open` | CEDEARs, S&P Merval leaders, index strip, market state; off unless `EQUITIES_BYMA_ENABLED` is `"true"` | `equities.server.ts` | 2 min | 8 s |
 | [SEC EDGAR](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) `company_tickers.json`, `submissions`, `companyconcept` | Argentine issuers listed in the US: filings and annual figures | `company-filings.server.ts` | 24 h (tickers), 6 h (submissions, concepts) | 8 s |
@@ -34,6 +35,19 @@ All modules live in `app/lib/`.
 - The BCRA catalogue and country risk are cached and fail independently. `/api-status` reports them as two rows, "BCRA (Estadísticas Monetarias)" and "ArgentinaDatos (riesgo país)".
 - Each card discloses the series' period, unit and source, links the series itself, and copies those details on click.
 - `/resources/inflation-history` serves the monthly inflation series to the client components that compare purchasing power and deposits with inflation. A successful response is public (one hour in browsers, one day in shared caches); an unavailable one is `private, no-store`.
+
+## INDEC (canastas, salarios, IPC)
+
+Three tables on `/indicadores`, after the cards, read INDEC's own API: the canasta básica, the wage index and the IPC by division, category and region.
+
+- **Source**: Catálogo API-INDEC, `https://api.indec.gob.ar/v1/<service>`, in beta. Every data request needs `Authorization: Bearer <token>`; the token is a Worker secret, `INDEC_API_TOKEN` (see [cloud-finance-setup.md](cloud-finance-setup.md#configuration)). The catalogue (`/api/datasets`) and the OpenAPI spec (`/api/openapi?v=2`) are public. Queries use PostgREST syntax (`select`, `order`, `limit`, `offset`, `column=op.value`, `or=(…)`), and a response holds at most 1,000 rows. Rate limits are not published. Reuse requires citing "Fuente: INDEC" and the service consulted; each table links its service's catalogue page.
+- **Rows**: the three services share a long format, one row per `codigo`, `tipo_de_indicador` (`v_m` monthly change, `v_ia` yearly change, the value itself), `region` and `periodo` (`YYYYMM`). A value replaced by one of INDEC's conventional signs (`///`, `s`, `...`) arrives with `valor` null and the sign in `valor_null`, and is shown as `s/d`. Rows are validated one by one, so a malformed row only blanks its figure.
+- **Requests**: one per service, filtered by `periodo=gte.<four months back>` and to the columns and indicators shown, which keeps each response under 400 rows (about 50 KB for the IPC, the largest). A response that reaches 1,000 rows fails instead of truncating. Each table shows the latest month with data in its window.
+  - `valorizacion_canastas_cba_cbt`: CBA and CBT per adult equivalent (`codigo` `CBA`/`CBT`, with their `v_m` and `v_ia`) and for household 2 (`CBA H2`/`CBT H2`: four members, 35, 31, 8 and 6 years old). Gran Buenos Aires only, the region INDEC values them for.
+  - `indice_salarios`: `codigo` `0` (general level), `110` (registered private), `120` (public) and `200` (unregistered private), `v_m` and `v_ia`. The real yearly change divides by the national IPC's yearly change for the same month, read from the IPC response; without it, that column is `s/d`.
+  - `ipc_nacional`: `region=Nacional` (general level, the twelve COICOP divisions, and the categories core, regulated, seasonal, goods and services) or `nivel=Nivel General` (the six regions), `v_m` and `v_ia`.
+- **Failure**: the three services are cached and fail independently; a missing token fails all three without a request. `/api-status` reports them as one row, "INDEC (Catálogo API-INDEC)".
+- **CPU**: parsing and building the three responses takes about 4 ms on a cache miss and well under 1 ms from the cache.
 
 ## Economic activity (EMAE)
 

@@ -19,6 +19,7 @@ import { getEconomicActivity } from "~/lib/economic-activity.server";
 import { getEconomicActivitySourceHealth } from "~/lib/economic-activity.server";
 import { getIndicators } from "~/lib/indicators.server";
 import { getIndicatorSourceHealth } from "~/lib/indicators.server";
+import { getIndecData, getIndecSourceHealth } from "~/lib/indec.server";
 import { getPricesSourceHealth } from "~/lib/prices.server";
 import { isEquitiesBymaEnabled } from "~/lib/acciones-panels";
 import {
@@ -53,6 +54,12 @@ const BCRA_SOURCE = {
   url: "https://www.bcra.gob.ar/apis-banco-central/",
 } as const;
 
+const INDEC_SOURCE = {
+  name: "INDEC (Catálogo API-INDEC)",
+  detail: "Canastas básicas, índice de salarios e IPC por rubro y región",
+  url: "https://api.indec.gob.ar/",
+} as const;
+
 const COUNTRY_RISK_SOURCE = {
   name: "ArgentinaDatos (riesgo país)",
   detail: "Riesgo país informado por Ámbito",
@@ -77,7 +84,8 @@ const SEC_SOURCE = {
  * While `EQUITIES_BYMA_ENABLED` is off, BYMA is neither checked nor listed.
  */
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const bymaEnabled = isEquitiesBymaEnabled(context.get(workerEnvContext));
+  const env = context.get(workerEnvContext);
+  const bymaEnabled = isEquitiesBymaEnabled(env);
 
   if (isUnavailablePreview(new URL(request.url).searchParams)) {
     const checkedAt = new Date().toISOString();
@@ -104,6 +112,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           health,
         },
         { ...BCRA_SOURCE, health },
+        { ...INDEC_SOURCE, health },
         { ...COUNTRY_RISK_SOURCE, health },
         {
           name: "Datos Argentina (EMAE)",
@@ -137,6 +146,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         checkExchangeRateSources(),
         getEconomicNews(),
         getIndicators(),
+        getIndecData(env.INDEC_API_TOKEN),
         getEconomicActivity(),
         ...(bymaEnabled ? [checkEquitySources()] : []),
         checkCompanyFilingSources(),
@@ -177,6 +187,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         health: healthAfterTimeout(exchange.history),
       },
       { ...BCRA_SOURCE, health: healthAfterTimeout(indicators.bcra) },
+      { ...INDEC_SOURCE, health: healthAfterTimeout(getIndecSourceHealth()) },
       {
         ...COUNTRY_RISK_SOURCE,
         health: healthAfterTimeout(indicators.countryRisk),

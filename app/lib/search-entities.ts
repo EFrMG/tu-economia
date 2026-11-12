@@ -12,6 +12,8 @@ export interface SearchTarget {
   searchParams?: Readonly<Record<string, string>>;
   /** An existing element to reveal when the destination is already open. */
   focusId?: string;
+  /** An element id to scroll to after navigating from another page; the terminal shell reads it from the URL. */
+  hash?: string;
 }
 
 /** Only entities with a working destination belong in the active search index. */

@@ -15,6 +15,7 @@
 | `RESEND_API_KEY` | secret | Enables email sign-in links and retention notices. Required together with `EMAIL_FROM`. |
 | `EMAIL_FROM` | variable | Sender on a domain verified with Resend, for example `"Tu Economía <acceso@example.com>"`. Not a secret. |
 | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` | secrets | Mercado Pago credentials for [billing](billing.md). |
+| `INDEC_API_TOKEN` | secret | Catálogo API-INDEC token for the canasta, wages and IPC tables on `/indicadores` ([market-data.md](market-data.md#indec-canastas-salarios-ipc)). Generated under "Gestionar la cuenta" at `https://api.indec.gob.ar/` and shown once. It expires 12 months after it is generated; regenerating revokes the old one, so set the new one right away. Without it, those three tables show as unavailable. |
 
 Variables go in `vars` in `wrangler.jsonc`, and a deploy replaces variables set in the dashboard with them. Secrets are set with `wrangler secret put <NAME>` and, locally, in the gitignored `.dev.vars`; never put them in tracked files.
 

@@ -19,6 +19,8 @@ declare global {
     /** Resend credentials that send access links and retention notices; EMAIL_FROM needs a sender address on a domain verified in Resend. */
     RESEND_API_KEY?: string;
     EMAIL_FROM?: string;
+    /** Catálogo API-INDEC token for the canastas, salarios and IPC tables; it expires 12 months after it is generated. */
+    INDEC_API_TOKEN?: string;
   }
 }
 

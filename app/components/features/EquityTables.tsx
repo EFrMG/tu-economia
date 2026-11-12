@@ -146,6 +146,8 @@ interface TableFrameProps {
   body: ReactNode;
   /** Explanations under the table, identical in every state; omitted when the title and headers say enough. */
   notes?: ReactNode;
+  /** Caps the table's height and scrolls it inside the frame; its headers should be pinned. */
+  scrollable?: boolean;
 }
 
 /** Shared chrome of both panels: heading and data time, notices, a labelled keyboard-scrollable table region, and the notes. */
@@ -159,6 +161,7 @@ export const TableFrame = ({
   head,
   body,
   notes,
+  scrollable = false,
 }: TableFrameProps) => (
   <section
     id={id}
@@ -191,7 +194,7 @@ export const TableFrame = ({
       role="region"
       aria-labelledby={`${id}-caption`}
       tabIndex={0}
-      className="min-w-0 overflow-x-auto overflow-y-hidden border border-base-700 bg-surface-950"
+      className={`min-w-0 overflow-x-auto border border-base-700 bg-surface-950 ${scrollable ? "max-h-128 overflow-y-auto" : "overflow-y-hidden"}`}
     >
       <table className="w-full min-w-max border-collapse">
         <caption id={`${id}-caption`} className="sr-only">
