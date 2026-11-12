@@ -11,6 +11,7 @@ import {
   type IndicatorGroupId,
   type IndicatorResult,
 } from "~/lib/indicators";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface IndicatorCardProps {
   definition: IndicatorDefinition;
@@ -22,62 +23,67 @@ const IndicatorCard = ({
   definition,
   result,
   loading = false,
-}: IndicatorCardProps) => (
-  <CopyableCard
-    id={indicatorCardId(definition.id)}
-    copyLabel={`Copiar indicador ${definition.title}`}
-    text={
-      result?.point ? formatIndicatorCardText(definition, result.point) : null
-    }
-    ariaHidden={loading}
-    className={`stack-4 border border-base-700 bg-surface-950 p-5 ${result?.point ? "transition-colors duration-200 focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50" : ""}`}
-  >
-    <div className="stack-2">
-      <p className="font-mono text-label-caps text-text-200 uppercase">
-        {definition.cadence}
-      </p>
-      <h3 className="font-heading text-body-lg font-semibold text-text-100">
-        {definition.title}
-      </h3>
-      <p className="text-body-sm text-text-300">{definition.description}</p>
-    </div>
+}: IndicatorCardProps) => {
+  const borderClassName = useAnchorHighlight(indicatorCardId(definition.id));
 
-    {loading ? (
-      <div className="stack-2" aria-hidden="true">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-3 w-24" />
-      </div>
-    ) : result?.point ? (
+  return (
+    <CopyableCard
+      id={indicatorCardId(definition.id)}
+      copyLabel={`Copiar indicador ${definition.title}`}
+      text={
+        result?.point ? formatIndicatorCardText(definition, result.point) : null
+      }
+      ariaHidden={loading}
+      className={`stack-4 border bg-surface-950 p-5 transition-colors duration-200 ${borderClassName} ${result?.point ? "focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50" : ""}`}
+    >
       <div className="stack-2">
-        <p className="font-mono text-data-display text-text-100">
-          {formatIndicatorValue(result.point.value, definition.unit)}
+        <p className="font-mono text-label-caps text-text-200 uppercase">
+          {definition.cadence}
         </p>
-        <p className="font-mono text-data-label text-text-200">
-          Período: {formatIndicatorPeriod(result.point.date, definition.period)}
-        </p>
+        <h3 className="font-heading text-body-lg font-semibold text-text-100">
+          {definition.title}
+        </h3>
+        <p className="text-body-sm text-text-300">{definition.description}</p>
       </div>
-    ) : (
-      <p
-        className="font-mono text-label-caps text-tertiary-text-400 uppercase"
-        role="status"
-      >
-        Esta serie no está disponible en este momento.
-      </p>
-    )}
 
-    <div className="mt-auto flex justify-end border-t border-base-700 pt-4">
-      <a
-        href={definition.sourceUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        tabIndex={loading ? -1 : undefined}
-        className="relative z-40 block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
-      >
-        Ver la serie en la fuente ↗
-      </a>
-    </div>
-  </CopyableCard>
-);
+      {loading ? (
+        <div className="stack-2" aria-hidden="true">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      ) : result?.point ? (
+        <div className="stack-2">
+          <p className="font-mono text-data-display text-text-100">
+            {formatIndicatorValue(result.point.value, definition.unit)}
+          </p>
+          <p className="font-mono text-data-label text-text-200">
+            Período:{" "}
+            {formatIndicatorPeriod(result.point.date, definition.period)}
+          </p>
+        </div>
+      ) : (
+        <p
+          className="font-mono text-label-caps text-tertiary-text-400 uppercase"
+          role="status"
+        >
+          Esta serie no está disponible en este momento.
+        </p>
+      )}
+
+      <div className="mt-auto flex justify-end border-t border-base-700 pt-4">
+        <a
+          href={definition.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={loading ? -1 : undefined}
+          className="relative z-40 block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
+        >
+          Ver la serie en la fuente ↗
+        </a>
+      </div>
+    </CopyableCard>
+  );
+};
 
 interface IndicatorGroupsProps {
   /** The groups to show, in this order. */

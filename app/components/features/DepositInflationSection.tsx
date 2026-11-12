@@ -8,6 +8,7 @@ import {
   simulateDeposit,
   type DepositInflationComparison,
 } from "~/lib/deposit-inflation";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface DepositInflationSectionProps {
   comparisons: DepositInflationComparison[] | null;
@@ -54,76 +55,83 @@ const inputClassName = `border-base-700 bg-base-950 text-text-100 h-12 w-full bo
 const outputClassName =
   "border-base-700 bg-base-950 font-mono flex items-center overflow-x-auto border px-3 whitespace-nowrap";
 
-export const DepositInflationLoading = () => (
-  <section
-    className="border border-base-700 bg-surface-950 p-4 sm:p-5"
-    aria-busy="true"
-  >
-    <div className="mb-5">
-      <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
-        Análisis histórico · 30 días
-      </p>
-      <h2 className="font-heading text-headline-md text-text-100">
-        Depósito e inflación
-      </h2>
-      <p className="mt-1 text-body-sm text-text-200">
-        Simulación para un mes calendario de 30 días con datos publicados.
-      </p>
-    </div>
-    <div className="grid gap-4 md:grid-cols-2">
-      {["Monto simulado en ARS", "Mes de referencia"].map((label, index) => (
-        <div key={label}>
-          <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
-            {label}
-          </span>
-          <div className="relative">
-            {index === 0 ? (
-              <input type="number" disabled className={inputClassName} />
-            ) : (
-              <select disabled className={`${inputClassName} themed-select`}>
-                <option value="" />
-              </select>
-            )}
-            <Skeleton className="pointer-events-none absolute top-4 left-3 h-4 w-28" />
+export const DepositInflationLoading = () => {
+  const borderClassName = useAnchorHighlight("depositos-e-inflacion");
+
+  return (
+    <section
+      id="depositos-e-inflacion"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
+      aria-busy="true"
+    >
+      <div className="mb-5">
+        <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
+          Análisis histórico · 30 días
+        </p>
+        <h2 className="font-heading text-headline-md text-text-100">
+          Depósito e inflación
+        </h2>
+        <p className="mt-1 text-body-sm text-text-200">
+          Simulación para un mes calendario de 30 días con datos publicados.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {["Monto simulado en ARS", "Mes de referencia"].map((label, index) => (
+          <div key={label}>
+            <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
+              {label}
+            </span>
+            <div className="relative">
+              {index === 0 ? (
+                <input type="number" disabled className={inputClassName} />
+              ) : (
+                <select disabled className={`${inputClassName} themed-select`}>
+                  <option value="" />
+                </select>
+              )}
+              <Skeleton className="pointer-events-none absolute top-4 left-3 h-4 w-28" />
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-    <Skeleton className="mt-5 mb-4 h-4 w-2/3" />
-    <div className="grid gap-4 sm:grid-cols-2">
-      {["Saldo final simulado", "Poder de compra equivalente"].map((label) => (
-        <div key={label}>
-          <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
-            {label}
-          </span>
-          <div className="flex h-16 items-center border border-base-700 bg-base-950 px-3">
-            <Skeleton className="h-8 w-36" />
-          </div>
-          <Skeleton className="mt-2 h-4 w-3/4" />
-        </div>
-      ))}
-    </div>
-    <div className="mt-5 border-t border-base-700 pt-4">
-      <p className="mb-5 font-mono text-label-caps text-text-200 uppercase">
-        Tasas del período
-      </p>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {["Retorno nominal", "Inflación mensual", "Retorno real"].map(
+        ))}
+      </div>
+      <Skeleton className="mt-5 mb-4 h-4 w-2/3" />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {["Saldo final simulado", "Poder de compra equivalente"].map(
           (label) => (
             <div key={label}>
               <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
                 {label}
               </span>
-              <div className="flex h-12 items-center border border-base-700 bg-base-950 px-3">
-                <Skeleton className="h-5 w-20" />
+              <div className="flex h-16 items-center border border-base-700 bg-base-950 px-3">
+                <Skeleton className="h-8 w-36" />
               </div>
+              <Skeleton className="mt-2 h-4 w-3/4" />
             </div>
           ),
         )}
       </div>
-    </div>
-  </section>
-);
+      <div className="mt-5 border-t border-base-700 pt-4">
+        <p className="mb-5 font-mono text-label-caps text-text-200 uppercase">
+          Tasas del período
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {["Retorno nominal", "Inflación mensual", "Retorno real"].map(
+            (label) => (
+              <div key={label}>
+                <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
+                  {label}
+                </span>
+                <div className="flex h-12 items-center border border-base-700 bg-base-950 px-3">
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const DepositInflationSection = ({
   comparisons,
@@ -168,9 +176,13 @@ export const DepositInflationSection = ({
   const amount = amountText.trim() === "" ? Number.NaN : Number(amountText);
   const estimate = selected ? simulateDeposit(amount, selected) : null;
 
+  // Search's anchor; the loading state carries it too, since it has no heading id.
+  const borderClassName = useAnchorHighlight("depositos-e-inflacion");
+
   return (
     <section
-      className="border border-base-700 bg-surface-950 p-4 sm:p-5"
+      id="depositos-e-inflacion"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
       aria-labelledby="deposit-inflation-title"
     >
       <div className="mb-5">

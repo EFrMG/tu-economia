@@ -28,6 +28,7 @@ import {
 } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { ChartSkeleton } from "~/components/ui/ChartSkeleton";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface HistoricalExchangeChartProps {
   points: HistoricalChartPoint[];
@@ -296,9 +297,12 @@ const HistoricalExchangeChart = ({
     setSearchParams(next, { preventScrollReset: true });
   };
 
+  // Search opens at the heading; the bordered section around it carries the highlight.
+  const borderClassName = useAnchorHighlight("historical-chart-title");
+
   return (
     <section
-      className="border border-base-700 bg-surface-950 p-4 sm:p-5"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
       aria-labelledby="historical-chart-title"
     >
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">

@@ -10,6 +10,7 @@ import { EXCHANGE_RATE_SEARCH_RESULTS } from "~/lib/exchange-rate-search";
 import { INDICATOR_SEARCH_RESULTS } from "~/lib/indicator-search";
 import { RATES_PANEL_SEARCH_RESULTS } from "~/lib/rates-search";
 import {
+  searchDestination,
   searchEntities,
   searchEntityKey,
   type SearchEntity,
@@ -62,42 +63,14 @@ const TopBar = ({
   const results = searchEntities(query, index);
   const hasQuery = query.trim().length > 0;
 
+  // The same page navigates too, to its own hash: the shell scrolls there and the destination highlights, as from any other page.
   const selectResult = (result: SearchEntity) => {
-    const { pathname, searchParams, focusId, hash } = result.target;
-    const currentParams = new URLSearchParams(location.search);
-
-    const params =
-      location.pathname === pathname
-        ? new URLSearchParams(location.search)
-        : new URLSearchParams();
-
-    for (const [key, value] of Object.entries(searchParams ?? {}))
-      params.set(key, value);
+    const { replace, ...to } = searchDestination(result.target, location);
 
     setQuery("");
     setOpen(false);
     setActiveIndex(0);
-
-    if (
-      location.pathname === pathname &&
-      focusId &&
-      Object.entries(searchParams ?? {}).every(
-        ([key, value]) => currentParams.get(key) === value,
-      )
-    ) {
-      const target = document.getElementById(focusId);
-      target?.scrollIntoView({ block: "center" });
-      target?.focus({ preventScroll: true });
-
-      return;
-    }
-
-    const search = params.toString();
-    navigate({
-      pathname,
-      search: search ? `?${search}` : "",
-      hash: hash ? `#${hash}` : "",
-    });
+    navigate(to, { replace });
   };
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

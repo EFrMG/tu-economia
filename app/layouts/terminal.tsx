@@ -127,24 +127,23 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
     const pathnameChanged = previousPathname.current !== location.pathname;
     previousPathname.current = location.pathname;
 
-    // A search result names the section to open at, also on the same page with another query; each target renders, with that id, while its data loads.
+    // A search result names the element to open at, on any page including the current one; each target renders, with that id, while its data loads.
+    // The location key re-runs this when the same result is chosen again. Focus follows for keyboard users; elements that cannot take it ignore the call.
     const target = location.hash
       ? document.getElementById(decodeURIComponent(location.hash.slice(1)))
       : null;
 
     if (target) {
       target.scrollIntoView({ block: "start" });
+      target.focus({ preventScroll: true });
 
       return;
     }
 
     if (!pathnameChanged) return;
 
-    const params = new URLSearchParams(location.search);
-    if (params.has("rate")) return;
-
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [location.pathname, location.search, location.hash]);
+  }, [location.pathname, location.search, location.hash, location.key]);
 
   return (
     <div className="flex h-dvh overflow-hidden bg-base-950 text-text-100">
@@ -171,7 +170,7 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
 
         <main
           ref={mainRef}
-          className="relative flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto py-4 md:py-8"
+          className="relative flex-1 scroll-pt-[15vh] [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto py-4 md:py-8"
           aria-busy={isLoading}
         >
           <div

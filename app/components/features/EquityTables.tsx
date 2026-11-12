@@ -24,6 +24,7 @@ import {
   type LeaderPanelData,
   type LeaderRow,
 } from "~/lib/equities";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 /** `px-2` below `sm` keeps the three tabs shown while BYMA is on within a 360 px phone's content width; the row still scrolls if a font renders wider. */
 const tabClassName =
@@ -162,54 +163,59 @@ export const TableFrame = ({
   body,
   notes,
   scrollable = false,
-}: TableFrameProps) => (
-  <section
-    id={id}
-    className="stack-4 min-w-0"
-    aria-labelledby={`${id}-title`}
-    aria-busy={loading}
-  >
-    {loading ? (
-      <span className="sr-only" role="status">
-        Cargando {title}.
-      </span>
-    ) : null}
+}: TableFrameProps) => {
+  // A search result opens at the section, but the table's frame is the bordered element, so it carries the highlight.
+  const borderClassName = useAnchorHighlight(id);
 
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-      <h2
-        id={`${id}-title`}
-        className="font-heading text-headline-md text-text-100"
-      >
-        {title}
-      </h2>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-data-label text-text-400">
-        {meta}
-      </div>
-    </div>
-
-    {notices}
-
-    {/* Focusable so keyboard users can scroll the columns that do not fit; the caption names the region. */}
-    <div
-      role="region"
-      aria-labelledby={`${id}-caption`}
-      tabIndex={0}
-      className={`min-w-0 overflow-x-auto border border-base-700 bg-surface-950 ${scrollable ? "max-h-128 overflow-y-auto" : "overflow-y-hidden"}`}
+  return (
+    <section
+      id={id}
+      className="stack-4 min-w-0"
+      aria-labelledby={`${id}-title`}
+      aria-busy={loading}
     >
-      <table className="w-full min-w-max border-collapse">
-        <caption id={`${id}-caption`} className="sr-only">
-          {caption}
-        </caption>
-        {head}
-        <tbody>{body}</tbody>
-      </table>
-    </div>
+      {loading ? (
+        <span className="sr-only" role="status">
+          Cargando {title}.
+        </span>
+      ) : null}
 
-    {notes ? (
-      <div className="stack-2 text-body-sm text-text-400">{notes}</div>
-    ) : null}
-  </section>
-);
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <h2
+          id={`${id}-title`}
+          className="font-heading text-headline-md text-text-100"
+        >
+          {title}
+        </h2>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-data-label text-text-400">
+          {meta}
+        </div>
+      </div>
+
+      {notices}
+
+      {/* Focusable so keyboard users can scroll the columns that do not fit; the caption names the region. */}
+      <div
+        role="region"
+        aria-labelledby={`${id}-caption`}
+        tabIndex={0}
+        className={`min-w-0 overflow-x-auto border bg-surface-950 motion-safe:transition-colors ${borderClassName} ${scrollable ? "max-h-128 overflow-y-auto" : "overflow-y-hidden"}`}
+      >
+        <table className="w-full min-w-max border-collapse">
+          <caption id={`${id}-caption`} className="sr-only">
+            {caption}
+          </caption>
+          {head}
+          <tbody>{body}</tbody>
+        </table>
+      </div>
+
+      {notes ? (
+        <div className="stack-2 text-body-sm text-text-400">{notes}</div>
+      ) : null}
+    </section>
+  );
+};
 
 interface DataTimeProps {
   panel: EquityPanel<{ latestTradeTime: string | null }> | null;

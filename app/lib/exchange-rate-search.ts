@@ -34,8 +34,7 @@ function rateEntity(
     aliases,
     target: {
       pathname: "/dolar",
-      searchParams: { rate: id },
-      focusId: rateCardId(id),
+      hash: rateCardId(id),
     },
   };
 }
@@ -47,13 +46,4 @@ export function searchExchangeRates(query: string) {
 
 export function rateCardId(casa: SearchableRateCasa) {
   return `exchange-rate-${casa}`;
-}
-
-export function searchableRateCasa(
-  value: string | null,
-): SearchableRateCasa | null {
-  return (
-    EXCHANGE_RATE_SEARCH_RESULTS.find((result) => result.id === value)?.id ??
-    null
-  );
 }

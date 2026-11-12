@@ -232,19 +232,16 @@ export default function Tasas({ loaderData }: Route.ComponentProps) {
         ) : null}
       </div>
 
-      {/* A stable anchor for search: the calculator's loading state has no heading id. */}
-      <div id="depositos-e-inflacion">
-        <Suspense fallback={<DepositInflationLoading />}>
-          <Await
-            resolve={loaderData.comparisons}
-            errorElement={<DepositInflationSection comparisons={null} />}
-          >
-            {(comparisons) => (
-              <DepositInflationSection comparisons={comparisons} />
-            )}
-          </Await>
-        </Suspense>
-      </div>
+      <Suspense fallback={<DepositInflationLoading />}>
+        <Await
+          resolve={loaderData.comparisons}
+          errorElement={<DepositInflationSection comparisons={null} />}
+        >
+          {(comparisons) => (
+            <DepositInflationSection comparisons={comparisons} />
+          )}
+        </Await>
+      </Suspense>
 
       <TasasFooter />
     </div>

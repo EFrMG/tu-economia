@@ -22,6 +22,7 @@ import {
   formatActivityShortMonth,
   type EconomicActivity,
 } from "~/lib/economic-activity";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface EconomicActivitySectionProps {
   activity: EconomicActivity | null;
@@ -56,54 +57,58 @@ const ActivityTooltip = ({ active, label, payload }: TooltipContentProps) => {
   );
 };
 
-const ActivityLoading = () => (
-  <section
-    className="stack-6 border border-base-700 bg-surface-950 p-4 sm:p-5"
-    aria-busy="true"
-    aria-labelledby="activity-title"
-  >
-    <div className="stack-2">
-      <p className="font-mono text-label-caps text-text-200 uppercase">
-        EMAE · INDEC
-      </p>
-      <h2
-        id="activity-title"
-        className="font-heading text-headline-md text-text-100"
-      >
-        Actividad económica
-      </h2>
-      <p className="max-w-2xl text-body-sm text-text-300">
-        Evolución mensual de la actividad económica. Las comparaciones
-        interanual y mensual usan series diferentes.
-      </p>
-    </div>
-    <div className="grid gap-4 sm:grid-cols-2">
-      {[
-        "Variación interanual · serie original",
-        "Variación mensual · desestacionalizada",
-      ].map((label) => (
-        <div
-          key={label}
-          className="stack-2 border border-base-700 bg-base-900 p-4"
+const ActivityLoading = () => {
+  const borderClassName = useAnchorHighlight("activity-title");
+
+  return (
+    <section
+      className={`stack-6 border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
+      aria-busy="true"
+      aria-labelledby="activity-title"
+    >
+      <div className="stack-2">
+        <p className="font-mono text-label-caps text-text-200 uppercase">
+          EMAE · INDEC
+        </p>
+        <h2
+          id="activity-title"
+          className="font-heading text-headline-md text-text-100"
         >
-          <p className="font-mono text-label-caps text-text-200 uppercase">
-            {label}
-          </p>
-          <Skeleton className="h-9 w-28" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      ))}
-    </div>
-    <div className="border-t border-base-700 pt-4">
-      <Skeleton className="mb-5 h-4 w-48" />
-      <ChartSkeleton className="h-56" />
-    </div>
-    <div className="flex justify-end gap-x-6 border-t border-base-700 pt-4">
-      <Skeleton className="h-4 w-40" />
-      <Skeleton className="h-4 w-36" />
-    </div>
-  </section>
-);
+          Actividad económica
+        </h2>
+        <p className="max-w-2xl text-body-sm text-text-300">
+          Evolución mensual de la actividad económica. Las comparaciones
+          interanual y mensual usan series diferentes.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[
+          "Variación interanual · serie original",
+          "Variación mensual · desestacionalizada",
+        ].map((label) => (
+          <div
+            key={label}
+            className="stack-2 border border-base-700 bg-base-900 p-4"
+          >
+            <p className="font-mono text-label-caps text-text-200 uppercase">
+              {label}
+            </p>
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-base-700 pt-4">
+        <Skeleton className="mb-5 h-4 w-48" />
+        <ChartSkeleton className="h-56" />
+      </div>
+      <div className="flex justify-end gap-x-6 border-t border-base-700 pt-4">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-4 w-36" />
+      </div>
+    </section>
+  );
+};
 
 const EconomicActivitySection = ({
   activity,
@@ -121,9 +126,12 @@ const EconomicActivitySection = ({
     (point) => point.yearOverYear !== null,
   ).length;
 
+  // Search opens at the heading; the bordered section around it carries the highlight.
+  const borderClassName = useAnchorHighlight("activity-title");
+
   return (
     <section
-      className="stack-6 border border-base-700 bg-surface-950 p-4 sm:p-5"
+      className={`stack-6 border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
       aria-labelledby="activity-title"
     >
       <div className="stack-2">

@@ -5,6 +5,7 @@ import { Sparkline } from "~/components/ui/Sparkline";
 import { UnavailableStatus } from "~/components/ui/UnavailableNotice";
 import { CopyableCard } from "~/components/features/CopyableCard";
 import { Skeleton } from "~/components/ui/Skeleton";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 import { RATE_PRESENTATION } from "./rate-presentation";
 
 interface HighlightRateCardProps {
@@ -27,13 +28,14 @@ const HighlightRateCard = ({
 }: HighlightRateCardProps) => {
   const { title } = RATE_PRESENTATION.blue;
   const trend = trendOf(rate?.changePct ?? null);
+  const borderClassName = useAnchorHighlight(id);
 
   return (
     <CopyableCard
       id={id}
       copyLabel={`Copiar cotización de ${title}`}
       text={rate ? formatHighlightRateCardText(title, rate) : null}
-      className="group w-full shrink-0 overflow-hidden border border-base-700 bg-surface-950 p-5 focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50 lg:w-96 xl:w-md"
+      className={`group w-full shrink-0 overflow-hidden border bg-surface-950 p-5 transition-colors duration-200 focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50 lg:w-96 xl:w-md ${borderClassName}`}
     >
       <div className="absolute top-0 left-0 h-px w-full bg-primary-500 opacity-50" />
 

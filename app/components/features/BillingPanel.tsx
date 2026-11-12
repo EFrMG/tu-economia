@@ -165,7 +165,7 @@ export const BillingPanel = ({
     .at(-1);
 
   // Arriving from an upsell link marks this card as the place to act.
-  const borderClassName = useAnchorHighlight(SUBSCRIPTION_ANCHOR);
+  const borderClassName = useAnchorHighlight(SUBSCRIPTION_ANCHOR, "invitation");
 
   // The live status takes over once loaded, in case billing changed since the page rendered.
   const startsTrial = billing ? billing.status === "none" : trialEligible;
@@ -186,7 +186,7 @@ export const BillingPanel = ({
     <section
       id={SUBSCRIPTION_ANCHOR}
       aria-labelledby="billing-title"
-      className={`stack-4 scroll-mt-24 border bg-surface-950 p-4 motion-safe:transition-colors motion-safe:duration-1000 sm:p-5 ${borderClassName}`}
+      className={`stack-4 border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
     >
       <div className="flex items-baseline justify-between gap-4">
         <h3

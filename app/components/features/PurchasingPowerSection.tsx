@@ -6,6 +6,7 @@ import { Skeleton } from "~/components/ui/Skeleton";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 import type { IndicatorPoint } from "~/lib/indicators";
 import { calculatePurchasingPower } from "~/lib/purchasing-power";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface PurchasingPowerSectionProps {
   history: IndicatorPoint[] | null;
@@ -30,50 +31,58 @@ const formatMonth = (month: string) =>
 
 const inputClassName = `border-base-700 bg-base-950 text-text-100 h-12 w-full border px-3 font-mono text-body-sm ${fieldFocusClassName}`;
 
-export const PurchasingPowerLoading = () => (
-  <section
-    className="border border-base-700 bg-surface-950 p-4 sm:p-5"
-    aria-busy="true"
-  >
-    <div className="mb-5">
-      <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
-        Análisis histórico · IPC
-      </p>
-      <h2 className="font-heading text-headline-md text-text-100">
-        Poder adquisitivo
-      </h2>
-      <p className="mt-1 text-body-sm text-text-200">
-        Equivalencia de un monto anterior según la inflación publicada.
-      </p>
-    </div>
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 xl:items-end">
-      {["Monto original en ARS", "Mes de origen", "Monto equivalente"].map(
-        (label, index) => (
-          <div
-            key={label}
-            className={index === 2 ? "md:col-span-2 xl:col-span-1" : ""}
-          >
-            <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
-              {label}
-            </span>
-            <div className="relative">
-              {index === 0 ? (
-                <input type="number" disabled className={inputClassName} />
-              ) : index === 1 ? (
-                <select disabled className={`${inputClassName} themed-select`}>
-                  <option value="" />
-                </select>
-              ) : (
-                <output className="flex h-12 items-center border border-base-700 bg-base-950 px-3" />
-              )}
-              <Skeleton className="pointer-events-none absolute top-4 left-3 h-4 w-28" />
+export const PurchasingPowerLoading = () => {
+  const borderClassName = useAnchorHighlight("poder-adquisitivo");
+
+  return (
+    <section
+      id="poder-adquisitivo"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
+      aria-busy="true"
+    >
+      <div className="mb-5">
+        <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
+          Análisis histórico · IPC
+        </p>
+        <h2 className="font-heading text-headline-md text-text-100">
+          Poder adquisitivo
+        </h2>
+        <p className="mt-1 text-body-sm text-text-200">
+          Equivalencia de un monto anterior según la inflación publicada.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 xl:items-end">
+        {["Monto original en ARS", "Mes de origen", "Monto equivalente"].map(
+          (label, index) => (
+            <div
+              key={label}
+              className={index === 2 ? "md:col-span-2 xl:col-span-1" : ""}
+            >
+              <span className="mb-2 block font-mono text-data-label text-text-200 uppercase">
+                {label}
+              </span>
+              <div className="relative">
+                {index === 0 ? (
+                  <input type="number" disabled className={inputClassName} />
+                ) : index === 1 ? (
+                  <select
+                    disabled
+                    className={`${inputClassName} themed-select`}
+                  >
+                    <option value="" />
+                  </select>
+                ) : (
+                  <output className="flex h-12 items-center border border-base-700 bg-base-950 px-3" />
+                )}
+                <Skeleton className="pointer-events-none absolute top-4 left-3 h-4 w-28" />
+              </div>
             </div>
-          </div>
-        ),
-      )}
-    </div>
-  </section>
-);
+          ),
+        )}
+      </div>
+    </section>
+  );
+};
 
 export const PurchasingPowerSection = ({
   history,
@@ -125,9 +134,13 @@ export const PurchasingPowerSection = ({
     ? calculatePurchasingPower(amount, selectedMonth, history ?? [])
     : null;
 
+  // Search's anchor; the loading state carries it too, since it has no heading id.
+  const borderClassName = useAnchorHighlight("poder-adquisitivo");
+
   return (
     <section
-      className="border border-base-700 bg-surface-950 p-4 sm:p-5"
+      id="poder-adquisitivo"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
       aria-labelledby="purchasing-power-title"
     >
       <div className="mb-5">

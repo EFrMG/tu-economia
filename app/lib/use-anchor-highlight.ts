@@ -1,29 +1,41 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
-
-/** How long the full highlight holds before it settles to half strength. */
-const HIGHLIGHT_MS = 5000;
+import {
+  anchorTargeted,
+  highlightBorderClassName,
+  highlightSchedule,
+  type HighlightKind,
+  type HighlightPhase,
+} from "~/lib/anchor-highlight";
 
 /**
- * Border classes for a card that links point at with `#anchor`: full primary on arrival, half strength after a few seconds, and the standard hairline otherwise.
+ * Border classes for an element that links or search results point at with `#anchor`: bold on arrival, fading to the cards' hover border, and the standard hairline otherwise.
  * The router's hash is read instead of CSS `:target`, which client-side navigation does not update. A new navigation to the same anchor restarts the highlight.
+ * The phase starts `idle` and arrives in an effect, so the server render, which has no hash, matches hydration.
  */
-export function useAnchorHighlight(anchor: string) {
+export function useAnchorHighlight(
+  anchor: string | undefined,
+  kind: HighlightKind = "search",
+) {
   const location = useLocation();
-  const targeted = location.hash === `#${anchor}`;
-  const [settled, setSettled] = useState(false);
+  const targeted = anchorTargeted(location.hash, anchor);
+  const [phase, setPhase] = useState<HighlightPhase>("idle");
 
   useEffect(() => {
-    setSettled(false);
+    if (!targeted) {
+      setPhase("idle");
 
-    if (!targeted) return;
+      return;
+    }
 
-    const timer = window.setTimeout(() => setSettled(true), HIGHLIGHT_MS);
+    setPhase("arrival");
 
-    return () => window.clearTimeout(timer);
-  }, [targeted, location.key]);
+    const timers = highlightSchedule(kind).map(({ phase, at }) =>
+      window.setTimeout(() => setPhase(phase), at),
+    );
 
-  if (!targeted) return "border-base-700";
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [targeted, kind, location.key]);
 
-  return settled ? "border-primary-500/50" : "border-primary-500";
+  return highlightBorderClassName(targeted ? phase : "idle");
 }

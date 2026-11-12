@@ -11,6 +11,7 @@ import {
 } from "~/lib/currency-converter";
 import type { ExchangeRate } from "~/lib/exchange-rates.server";
 import { formatAmount } from "~/lib/format";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 
 interface CurrencyConverterProps {
   rates: ExchangeRate[];
@@ -53,9 +54,12 @@ const CurrencyConverter = ({
     );
   };
 
+  // Search opens at the heading; the bordered section around it carries the highlight.
+  const borderClassName = useAnchorHighlight("currency-converter-title");
+
   return (
     <section
-      className="border border-base-700 bg-surface-950 p-4 sm:p-5"
+      className={`border bg-surface-950 p-4 motion-safe:transition-colors sm:p-5 ${borderClassName}`}
       aria-labelledby="currency-converter-title"
     >
       <div className="mb-5">

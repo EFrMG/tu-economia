@@ -158,17 +158,14 @@ export default function Precios({ loaderData }: Route.ComponentProps) {
         </Await>
       </Suspense>
 
-      {/* A stable anchor for search: the calculator's loading state has no heading id. */}
-      <div id="poder-adquisitivo">
-        <Suspense fallback={<PurchasingPowerLoading />}>
-          <Await
-            resolve={loaderData.inflationHistory}
-            errorElement={<PurchasingPowerSection history={null} />}
-          >
-            {(history) => <PurchasingPowerSection history={history} />}
-          </Await>
-        </Suspense>
-      </div>
+      <Suspense fallback={<PurchasingPowerLoading />}>
+        <Await
+          resolve={loaderData.inflationHistory}
+          errorElement={<PurchasingPowerSection history={null} />}
+        >
+          {(history) => <PurchasingPowerSection history={history} />}
+        </Await>
+      </Suspense>
 
       <PreciosFooter />
     </div>

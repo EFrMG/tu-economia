@@ -34,7 +34,7 @@ export const AccountAccess = ({
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   // Arriving from "Crear cuenta" marks this card as the place to act.
-  const borderClassName = useAnchorHighlight(ACCOUNT_ANCHOR);
+  const borderClassName = useAnchorHighlight(ACCOUNT_ANCHOR, "invitation");
 
   const available = googleEnabled || emailEnabled;
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
@@ -139,7 +139,7 @@ export const AccountAccess = ({
     <section
       id={ACCOUNT_ANCHOR}
       aria-labelledby="account-access-title"
-      className={`stack-6 scroll-mt-24 border bg-surface-950 p-4 motion-safe:transition-colors motion-safe:duration-1000 sm:p-6 ${borderClassName}`}
+      className={`stack-6 border bg-surface-950 p-4 motion-safe:transition-colors sm:p-6 ${borderClassName}`}
     >
       <header className="stack-4">
         {/* The available sign-in methods and the session state speak for themselves; no badge is needed for either. */}

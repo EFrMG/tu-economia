@@ -136,7 +136,7 @@ const entity = (
   id: searchParams?.view ? `${id}:${searchParams.view}` : id,
   title,
   aliases,
-  target: { pathname, searchParams, hash: id, focusId: id },
+  target: { pathname, searchParams, hash: id },
 });
 
 /** Cards first, in page order, so a broad term such as "inflación" lists the headline figure before the breakdown tables. */

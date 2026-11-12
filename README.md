@@ -37,7 +37,7 @@ Exchange rates, indicators, activity data, company filings, equity quotations, n
 
 ##### 2.1.1.1 Search Entities
 
-The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, the Acciones and Tasas panels, and every indicator card, table, chart view and calculator (canasta básica, salarios, inflation by division and region, the gap chart, the converter, EMAE). From another page, a result opens its destination at the matching element: the URL carries its id as the hash, and the terminal shell scrolls to it. Single tickers, companies and lenders are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
+The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, the Acciones and Tasas panels, and every indicator card, table, chart view and calculator (canasta básica, salarios, inflation by division and region, the gap chart, the converter, EMAE). A result opens its destination at the matching element, from another page or the current one: the URL carries its id as the hash, the terminal shell scrolls to it and moves focus there when the element can take it, and the element highlights its border (`useAnchorHighlight`; see "Anchor highlight" in [DESIGN.md](DESIGN.md)). Choosing the same result again replaces the history entry and restarts the highlight. Single tickers, companies and lenders are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
 
 The shared model is `app/lib/search-entities.ts`, the rate index `app/lib/exchange-rate-search.ts` and the panel index `app/lib/equity-search.ts`.
 

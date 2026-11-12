@@ -5,6 +5,7 @@ import { TrendIndicator } from "~/components/ui/TrendIndicator";
 import { UnavailableStatus } from "~/components/ui/UnavailableNotice";
 import { CopyableCard } from "~/components/features/CopyableCard";
 import { Skeleton } from "~/components/ui/Skeleton";
+import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
 import { RATE_PRESENTATION } from "./rate-presentation";
 
 interface ExchangeRateCardProps {
@@ -25,13 +26,14 @@ const ExchangeRateCard = ({
   loading = false,
 }: ExchangeRateCardProps) => {
   const { title, icon: Icon, glow } = RATE_PRESENTATION[casa];
+  const borderClassName = useAnchorHighlight(id);
 
   return (
     <CopyableCard
       id={id}
       copyLabel={`Copiar cotización de ${title}`}
       text={rate ? formatExchangeRateCardText(title, rate, footnote) : null}
-      className="overflow-hidden border border-base-700 bg-surface-950 p-4 transition-colors duration-200 focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50"
+      className={`overflow-hidden border bg-surface-950 p-4 transition-colors duration-200 focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50 ${borderClassName}`}
     >
       {glow && (
         <div

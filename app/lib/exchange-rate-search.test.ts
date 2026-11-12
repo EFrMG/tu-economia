@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EXCHANGE_RATE_SEARCH_RESULTS,
   rateCardId,
-  searchableRateCasa,
   searchExchangeRates,
 } from "./exchange-rate-search";
 
@@ -23,9 +23,13 @@ describe("exchange-rate search", () => {
     expect(searchExchangeRates("MEP").map(({ id }) => id)).toEqual(["bolsa"]);
   });
 
-  it("keeps URL selections constrained to rates displayed by the dashboard", () => {
-    expect(searchableRateCasa("blue")).toBe("blue");
-    expect(searchableRateCasa("indicadores")).toBeNull();
+  it("names each card's element id", () => {
     expect(rateCardId("cripto")).toBe("exchange-rate-cripto");
+  });
+
+  it("opens the Dólar page at the rate card", () => {
+    expect(
+      EXCHANGE_RATE_SEARCH_RESULTS.find(({ id }) => id === "bolsa")?.target,
+    ).toEqual({ pathname: "/dolar", hash: "exchange-rate-bolsa" });
   });
 });
