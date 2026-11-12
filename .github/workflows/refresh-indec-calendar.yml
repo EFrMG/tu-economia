@@ -43,7 +43,7 @@ jobs:
             Automated download of INDEC's semester diffusion calendar, converted
             to text with `pdftotext -layout`.
 
-            **Manual step required:** review the new file under `sources/INDEC/`,
+            **Manual step required:** review the new file under `docs/sources/INDEC/`,
             update `app/lib/indec-calendar.ts` (semester, expiry date and the
             release dates for IPC, canasta, salarios and EMAE) and run
             `pnpm test`. The freshness test in `indec-calendar.test.ts` fails

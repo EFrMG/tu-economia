@@ -2,7 +2,7 @@
 
 Operational rules for working in this repository.
 
-[README.md](README.md) has the product philosophy, setup and route overview; [docs/README.md](docs/README.md) indexes the feature and operations guides (deployment, accounts, billing, prices, news sources); the full working design reference is [DESIGN.md](DESIGN.md).
+[README.md](README.md) has the product philosophy, setup and route overview; [docs/README.md](docs/README.md) indexes the feature and operations guides (deployment, accounts, billing, prices, news sources) and describes `docs/sources/`, the archived provider manuals; the full working design reference is [DESIGN.md](DESIGN.md).
 
 ## Product and voice
 

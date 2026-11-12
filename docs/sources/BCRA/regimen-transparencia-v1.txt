@@ -1,0 +1,1440 @@
+Régimen de Transparencia
+v1.0
+Tabla de contenido
+Tabla de contenido ..................................................................................................................................... 2
+Documentación de la API de Régimen de Transparencia .................................................................... 3
+   Introducción ............................................................................................................................................ 3
+   Control de Tráfico ................................................................................................................................... 3
+   Autenticación .......................................................................................................................................... 3
+   Endpoints ................................................................................................................................................. 3
+       Cajas de ahorros ................................................................................................................. 3
+       Paquetes de productos ........................................................................................................ 5
+       Plazos fijos ........................................................................................................................ 10
+       Préstamos prendarios ....................................................................................................... 13
+       Préstamos hipotecarios..................................................................................................... 19
+       Préstamos personales ....................................................................................................... 24
+       Tarjetas de crédito ............................................................................................................. 29
+       Autenticación .................................................................................................................... 33
+Historial de versiones .............................................................................................................................. 34
+
+
+
+
+                                           APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 2
+Documentación de la API de Régimen de Transparencia
+
+Introducción
+La API del Régimen de Transparencia brinda acceso estandarizado a la información que las
+entidades financieras deben publicar según la normativa del BCRA. Permite consultar productos,
+tasas, comisiones y demás datos regulados, facilitando la integración con sistemas internos y la
+actualización automática de la información requerida. A continuación, se describen los endpoints
+disponibles.
+
+
+
+Control de Tráfico
+A fin de no saturar las comunicaciones, se establecen distintas reglas de control del tráfico
+proveniente de los clientes basado en las direcciones IP.
+
+
+Autenticación
+No requerida.
+
+
+
+Endpoints
+A continuación, se presentan los endpoints disponibles en la API. Cada endpoint incluye
+información sobre su propósito, el método HTTP que utiliza, los parámetros necesarios, un
+ejemplo de la respuesta que se puede esperar y el detalle de los campos que se retornan.
+
+
+
+Cajas de ahorros
+Endpoint para obtener la lista completa de cajas de ahorro, o bien las cajas de ahorro ofrecidas
+por una entidad específica filtrando por su código.
+
+Header Request
+
+ Nombre              Tipo            Tipo Parámetro          Descripción                   Default
+ N/A
+
+
+Parameters Request
+
+ Nombre              Tipo            Tipo Parámetro          Descripción                   Default
+ codigoEntidad       Int             Query                   ID de la entidad financiera
+
+
+
+
+                            APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 3
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/CajasAhorros
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/CajasAhorros?codigoEntidad=11
+
+
+Ejemplo Response OK
+ {
+     "status": 200,
+     "results": [
+       {
+         "codigoEntidad": 7,
+         "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+         "fechaInformacion": "2019-07-10",
+         "procesoSimplificadoDebidaDiligencia": "SI"
+       },
+       {
+         "codigoEntidad": 11,
+         "descripcionEntidad": "BANCO DE LA NACION ARGENTINA",
+         "fechaInformacion": "2017-03-27",
+         "procesoSimplificadoDebidaDiligencia": "SI"
+       }, …
+     ]
+ }
+
+ {
+     "status": 200,
+     "results": [
+       {
+         "codigoEntidad": 11,
+         "descripcionEntidad": "BANCO DE LA NACION ARGENTINA",
+         "fechaInformacion": "2017-03-27",
+         "procesoSimplificadoDebidaDiligencia": "SI"
+       }
+     ]
+ }
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+
+
+                            APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 4
+ Propiedades                                                    Descripción
+ CodigoEntidad                                                  Código numérico identificador de la entidad
+                                                                financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                             Nombre oficial o razón social de la entidad
+                                                                financiera asociada al código informado.
+ FechaInformacion                                               Fecha de actualización de los datos provistos
+                                                                por la entidad dentro del Régimen de
+                                                                Transparencia.
+ ProcesoSimplificadoDebidaDiligencia                            ¿Estableció el proceso simplificado de debida
+                                                                diligencia de identificación del cliente para su
+                                                                apertura?
+                                                                     • Si
+                                                                     • No
+
+
+
+Ejemplo Response Not Found
+
+ {
+     "status": 404,
+     "errorMessages": [
+     "No se encontraron datos para su consulta."
+     ]
+ }
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+
+Paquetes de productos
+Endpoint para obtener la lista completa de paquetes de productos, o bien los paquetes ofrecidos
+por una entidad específica filtrando por su código.
+
+Header Request
+
+
+
+                                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 5
+Nombre            Tipo            Tipo Parámetro          Descripción                   Default
+N/A
+
+
+Parameters Request
+
+Nombre            Tipo            Tipo Parámetro          Descripción                   Default
+codigoEntidad     Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+GET api.bcra.gob.ar/transparencia/v1.0/PaquetesProductos
+
+
+GET api.bcra.gob.ar/transparencia/v1.0/PaquetesProductos?codigoEntidad=14
+
+
+Ejemplo Response OK
+{
+ "status": 200,
+ "results": [
+   {
+     "comisionMaximaMantenimiento": 725,
+     "ingresoMinimoMensual": 20100,
+     "antiguedadLaboralMinimaMeses": 3,
+     "edadMaximaSolicitada": 59,
+     "beneficiarios": "Personas humanas Monotributistas",
+     "segmento": "Básico",
+     "productosIntegrantes": "CAJA DE AHORRO DOLARES, TARJETA DE CREDITO, TARJETA
+DE CREDITO, CUENTA CORRIENTE",
+     "codigoEntidad": 7,
+     "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+     "fechaInformacion": "2019-07-10",
+     "nombreCompleto": "SERVICIO CLASSIC",
+     "nombreCorto": "CLASSIC",
+     "territorioValidez": "0",
+     "masInformacion": null
+   },
+   {
+     "comisionMaximaMantenimiento": 380.69,
+     "ingresoMinimoMensual": 12500,
+
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 6
+      "antiguedadLaboralMinimaMeses": 0,
+      "edadMaximaSolicitada": 100,
+      "beneficiarios": "Clientes que acrediten sueldos en la entidad",
+      "segmento": "Básico",
+      "productosIntegrantes": "CUENTA SUELDO TARJETA DE CREDITO INTERNACIONAL
+NATIVA MASTERCARD Y/O NATIVA VISA Y OPTATIVO PREACUERDO DE PRESTAMO
+PERSONAL",
+      "codigoEntidad": 11,
+      "descripcionEntidad": "BANCO DE LA NACION ARGENTINA",
+      "fechaInformacion": "2019-06-04",
+      "nombreCompleto": "PAQUETE DE SERVICIOS CUENTA NACION SIMPLE",
+      "nombreCorto": "CTA NACION SIMPLE",
+      "territorioValidez": "0",
+      "masInformacion": null
+    }, …
+  ]
+}
+
+{
+ "status": 200,
+ "results": [
+   {
+     "comisionMaximaMantenimiento": 770,
+     "ingresoMinimoMensual": 56000,
+     "antiguedadLaboralMinimaMeses": 0,
+     "edadMaximaSolicitada": 100,
+     "beneficiarios": "Personas humanas Responsables Inscriptos",
+     "segmento": "Premium platinum",
+     "productosIntegrantes": "CAJA DE AHORROS EN DOLARES, CUENTA CORRIENTE CON
+ACUERDO DE GIRO EN DESCUBIERTO SUJETO A EVALUACION CREDITICIA, TARJETA DE
+CREDITO VISA Y MASTERCARD PLATINUM Y TARJETA DE DEBITO",
+     "codigoEntidad": 14,
+     "descripcionEntidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES",
+     "fechaInformacion": "2019-05-08",
+     "nombreCompleto": "EVOLUCION",
+     "nombreCorto": "EVOLUCION",
+     "territorioValidez": "1",
+     "masInformacion": "COMISION DE MANTENIMIENTO MENSUAL Y RENOVACION
+ANUAL DE LA TARJETA DE CREDITO BONIFICADAS. COMISION DE MANTENIMIENTO
+BASICO MENSUAL DEL PAQUETE BONIFICADO POR EL TERMINO DE UN AÑO PARA
+NUEVAS CONTRATACIONES HASTA EL 31.12.2019 INCLUSIVE. "
+
+
+
+
+                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 7
+     },
+     {
+       "comisionMaximaMantenimiento": 600,
+       "ingresoMinimoMensual": 23000,
+       "antiguedadLaboralMinimaMeses": 0,
+       "edadMaximaSolicitada": 100,
+       "beneficiarios": "Clientes que acrediten sueldos en la entidad",
+       "segmento": "Premium gold",
+       "productosIntegrantes": "CAJA DE AHORROS EN DOLARES, CUENTA CORRIENTE CON
+ ACUERDO DE GIRO EN DESCUBIERTO SUJETO A EVALUACION CREDITICIA, TARJETA DE
+ CREDITO VISA Y MASTERCARD GOLD Y TARJETA DE DEBITO",
+       "codigoEntidad": 14,
+       "descripcionEntidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES",
+       "fechaInformacion": "2019-05-08",
+       "nombreCompleto": "CRECIMIENTO",
+       "nombreCorto": "CRECIMIENTO",
+       "territorioValidez": "1",
+       "masInformacion": "COMISION DE MANTENIMIENTO MENSUAL Y RENOVACION
+ ANUAL DE LA TARJETA DE CREDITO BONIFICADAS. COMISION DE MANTENIMIENTO
+ BASICO MENSUAL DEL PAQUETE BONIFICADO POR EL TERMINO DE UN AÑO PARA
+ NUEVAS CONTRATACIONES HASTA EL 31.12.2019 INCLUSIVE. "
+     }, …
+   ]
+ }
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                                        Descripción
+ CodigoEntidad                                      Código numérico identificador de la entidad
+                                                    financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                 Nombre oficial o razón social de la entidad
+                                                    financiera asociada al código informado.
+ FechaInformacion                                   Fecha de actualización de los datos provistos
+                                                    por la entidad dentro del Régimen de
+                                                    Transparencia.
+ NombreCompleto                                     Nombre completo del Paquete de Productos.
+ NombreCorto                                        Nombre corto del Paquete de Productos.
+ ComisionMaximaMantenimiento                        Comisión máxima por servicio de
+                                                    mantenimiento de paquete.
+ IngresoMinimoMensual                               Ingreso mínimo mensual solicitado.
+ AntiguedadLaboralMinimaMeses                       Antigüedad laboral mínima en meses.
+ EdadMaximaSolicitada                               Edad máxima solicitada.
+
+
+
+                          APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 8
+Beneficiarios                                                  Beneficiarios:
+                                                                   • Personas humanas en relación de
+                                                                       dependencia
+                                                                   • Personas humanas Monotributistas
+                                                                   • Personas humanas Responsables
+                                                                       Inscriptos
+                                                                   • Empleados públicos
+                                                                   • Clientes con cuenta en la Entidad
+                                                                   • Clientes que acrediten sueldos en la
+                                                                       Entidad
+                                                                   • Beneficiarios de cuentas de Seguridad
+                                                                       Social
+                                                                   • Personas jurídicas
+                                                                   • PyMEs
+Segmento                                                       Segmento:
+                                                                   • Básico
+                                                                   • Premium gold
+                                                                   • Premium black
+                                                                   • Premium signature
+ProductosIntegrantes                                           Productos que integran el Paquete.
+TerritorioValidez                                              Territorio de validez de la oferta: Se
+                                                               seleccionarán las provincias que
+                                                               correspondan.
+MasInformacion                                                 Campo de texto con información adicional
+                                                               relativa a características, promociones,
+                                                               bonificaciones y otros beneficios asociados
+                                                               al Paquete de Productos.
+
+Ejemplo Response Not Found
+
+{
+    "status": 404,
+    "errorMessages": [
+    "No se encontraron datos para su consulta."
+    ]
+}
+
+
+Ejemplo Response Server Error
+
+{
+    "status": 500,
+    "errorMessages": [
+        "Ocurrió un error al procesar la solicitud."
+
+
+
+                                     APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 9
+     ]
+ }
+
+
+
+
+Plazos fijos
+Endpoint para obtener la lista completa de plazos fijos, o bien los plazos fijos ofrecidos por una
+entidad específica filtrando por su código.
+
+Header Request
+
+ Nombre               Tipo            Tipo Parámetro          Descripción                   Default
+ N/A
+
+
+Parameters Request
+
+ Nombre               Tipo            Tipo Parámetro          Descripción                   Default
+ codigoEntidad        Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/PlazosFijos
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/PlazosFijos?codigoEntidad=303
+
+
+Ejemplo Response OK
+ {
+     "status": 200,
+     "results": [
+       {
+         "denominacion": null,
+         "montoMinimoInvertir": 1000,
+         "plazoMinimoInvertirDias": 1,
+         "canalConstitucion": "Línea telefónica",
+         "tasaEfectivaAnualMinima": 10.47,
+         "codigoEntidad": 7,
+         "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+         "fechaInformacion": "2019-07-16",
+
+
+
+                            APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 10
+          "nombreCompleto": "PLAZOFIJOTRADICIONAL",
+          "nombreCorto": "PFTRADICIONAL",
+          "territorioValidez": "Todo el territorio nacional",
+          "masInformacion": null
+        },
+        {
+          "denominacion": null,
+          "montoMinimoInvertir": 1000,
+          "plazoMinimoInvertirDias": 4,
+          "canalConstitucion": "Línea telefónica",
+          "tasaEfectivaAnualMinima": 3.79,
+          "codigoEntidad": 7,
+          "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+          "fechaInformacion": "2019-07-16",
+          "nombreCompleto": "PLAZOFIJOPRECANCELABLE",
+          "nombreCorto": "PFPRECANCELABLE",
+          "territorioValidez": "Todo el territorio nacional",
+          "masInformacion": null
+        }, …
+    ]
+}
+
+{
+    "status": 200,
+    "results": [
+      {
+        "denominacion": null,
+        "montoMinimoInvertir": 1000,
+        "plazoMinimoInvertirDias": 1,
+        "canalConstitucion": "Todos los canales",
+        "tasaEfectivaAnualMinima": 15.01,
+        "codigoEntidad": 303,
+        "descripcionEntidad": "BANCO FINANSUR S.A.",
+        "fechaInformacion": "2017-06-08",
+        "nombreCompleto": "PLAZO FIJO",
+        "nombreCorto": "P. FIJO",
+        "territorioValidez": "Todo el territorio nacional",
+        "masInformacion": null
+      }
+    ]
+
+
+
+                             APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 11
+ }
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                                        Descripción
+ CodigoEntidad                                      Código numérico identificador de la entidad
+                                                    financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                 Nombre oficial o razón social de la entidad
+                                                    financiera asociada al código informado.
+ FechaInformacion                                   Fecha de actualización de los datos provistos
+                                                    por la entidad dentro del Régimen de
+                                                    Transparencia.
+ NombreCompleto                                     Nombre completo del tipo de Plazo Fijo.
+ NombreCorto                                        Nombre corto del tipo de Plazo Fijo.
+ Denominacion                                       Denominación:
+                                                        • Pesos
+                                                        • Dólares estadounidenses
+                                                        • Euros
+                                                        • UVAs
+                                                        • UVIs
+ MontoMinimoInvertir                                Monto mínimo a invertir.
+ PlazoMinimoInvertirDias                            Plazo mínimo a invertir:
+                                                        • 30
+                                                        • 60
+                                                        • 90
+                                                        • 180
+                                                        • 360
+ CanalConstitucion                                  Canal de constitución del plazo fijo:
+                                                        • Home banking
+                                                        • Cajero automático
+                                                        • Terminal de autoservicio
+                                                        • Línea telefónica
+                                                        • Ventanilla de sucursal
+ TasaEfectivaAnualMinima                            Tasa efectiva anual mínima.
+ TerritorioValidez                                  Territorio de validez de la oferta: Se
+                                                    seleccionarán las provincias que
+                                                    correspondan.
+ MasInformacion                                     Campo de texto con información adicional
+                                                    relativa a características, promociones,
+                                                    bonificaciones, y otros beneficios asociados
+                                                    al Plazo Fijo. Los datos correspondientes a
+                                                    plazo y monto deberán informarse en el
+                                                    campo previsto para ello.
+
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 12
+Ejemplo Response Not Found
+
+ {
+     "status": 404,
+     "errorMessages": [
+     "No se encontraron datos para su consulta."
+     ]
+ }
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+
+Préstamos prendarios
+Endpoint para obtener la lista completa de préstamos prendarios, o bien los préstamos
+prendarios ofrecidos por una entidad específica filtrando por su código.
+
+Header Request
+
+Nombre                          Tipo            Tipo Parámetro          Descripción                   Default
+N/A
+
+
+Parameters Request
+
+Nombre                          Tipo            Tipo Parámetro          Descripción                   Default
+codigoEntidad                   Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Prendarios
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Prendarios?codigoEntidad=44096
+
+
+
+
+                                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 13
+Ejemplo Response OK
+{
+    "status": 200,
+    "results": [
+      {
+        "relacionMontoTasacion": 90,
+        "destinoFondos": "Adquisición automotores 0 km",
+        "montoMinimoOtorgable": 500000,
+        "denominacion": "Pesos",
+        "montoMaximoOtorgable": 39200000,
+        "plazoMaximoOtorgable": 60,
+        "ingresoMinimoMensual": 310000,
+        "antiguedadLaboralMinimaMeses": 3,
+        "edadMaximaSolicitada": 70,
+        "relacionCuotaIngreso": 40,
+        "beneficiario": "Clientes con cuenta en la entidad",
+        "cargoMaximoCancelacionAnticipada": 5,
+        "tasaEfectivaAnualMaxima": 72.86,
+        "tipoTasa": "Fija",
+        "costoFinancieroEfectivoTotalMaximo": 93.32,
+        "cuotaInicial": 1215,
+        "codigoEntidad": 7,
+        "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "fechaInformacion": "2025-04-11",
+        "nombreCompleto": "PRESTAMOPRENDARIO",
+        "nombreCorto": "PRENDARIO",
+        "territorioValidez": "Todo el territorio nacional",
+        "masInformacion": "ANTIGUEDAD PRENDA 0 A 3 AÑOS"
+      },
+      {
+        "relacionMontoTasacion": 90,
+        "destinoFondos": "Adquisición automotores 0 km",
+        "montoMinimoOtorgable": 500000,
+        "denominacion": "UVA",
+        "montoMaximoOtorgable": 39200000,
+        "plazoMaximoOtorgable": 60,
+        "ingresoMinimoMensual": 310000,
+        "antiguedadLaboralMinimaMeses": 3,
+        "edadMaximaSolicitada": 70,
+        "relacionCuotaIngreso": 40,
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 14
+          "beneficiario": "Clientes con cuenta en la entidad",
+          "cargoMaximoCancelacionAnticipada": 5,
+          "tasaEfectivaAnualMaxima": 20.75,
+          "tipoTasa": "Fija",
+          "costoFinancieroEfectivoTotalMaximo": 25.57,
+          "cuotaInicial": 965,
+          "codigoEntidad": 7,
+          "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+          "fechaInformacion": "2025-04-11",
+          "nombreCompleto": "PRESTAMOPRENDARIOUVA",
+          "nombreCorto": "PRENDARIOUVA",
+          "territorioValidez": "Todo el territorio nacional",
+          "masInformacion": "ANTIGUEDAD PRENDA 0 A 3 AÑOS"
+        }, …
+    ]
+}
+
+{
+    "status": 200,
+    "results": [
+      {
+        "relacionMontoTasacion": 70,
+        "destinoFondos": "Adquisición para capital de trabajo",
+        "montoMinimoOtorgable": 15000,
+        "denominacion": "Dólares estadounidenses",
+        "montoMaximoOtorgable": 10266281,
+        "plazoMaximoOtorgable": 60,
+        "ingresoMinimoMensual": 0,
+        "antiguedadLaboralMinimaMeses": 36,
+        "edadMaximaSolicitada": 100,
+        "relacionCuotaIngreso": 25,
+        "beneficiario": "MiPyMEs",
+        "cargoMaximoCancelacionAnticipada": 2,
+        "tasaEfectivaAnualMaxima": 5.04,
+        "tipoTasa": "Fija",
+        "costoFinancieroEfectivoTotalMaximo": 5.79,
+        "cuotaInicial": 1200,
+        "codigoEntidad": 44096,
+        "descripcionEntidad": "JOHN DEERE CREDIT COMPAÑÍA FINANCIERA S.A.",
+        "fechaInformacion": "2025-12-01",
+
+
+
+                            APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 15
+    "nombreCompleto": "PRENDARIO NUEVO USD FIJA 4,90 GASTOS 1,50 5 ANOS TASA
+LLENA 8,90 LTV 70,00",
+    "nombreCorto": "5PDNU PN USD 4,90 5A SUB",
+    "territorioValidez": "Todo el territorio nacional",
+    "masInformacion": "MONTO MAXIMO OTORGABLE: 25 POR CIENTO RPC SEPTIEMBRE
+2025 EN USD. MONTO MINIMO A OTORGAR MENOR A 15000 USD DE MANERA
+EXCEPCIONAL. TASA EFVA. ANUAL Y COSTO FINANCIERO TOTAL CALCULADOS CON
+VTOS SEMESTRALES. VARIABLE DE ACUERDO A LAS FECHA DE DESEMBOLSO. NO
+INCLUYE IVA POR NO SER UN COSTO PARA LOS CLIENTES. CUOTA INICIAL: VTO 6 MESES
+DE OTORGADO EL PRESTAMO. RELACION CUOTA INGRESO: VALOR MINIMO ACEPTADO,
+RESULTA DE DIVIDIR MARGEN BRUTO Y TOTAL DE CUOTAS DE PRESTAMOS DEL
+CLIENTE. INCLUIDO EL QUE ESTA GESTIONANDO EN LA CIA"
+  },
+  {
+    "relacionMontoTasacion": 70,
+    "destinoFondos": "Adquisición para capital de trabajo",
+    "montoMinimoOtorgable": 15000,
+    "denominacion": "Dólares estadounidenses",
+    "montoMaximoOtorgable": 10266281,
+    "plazoMaximoOtorgable": 36,
+    "ingresoMinimoMensual": 0,
+    "antiguedadLaboralMinimaMeses": 36,
+    "edadMaximaSolicitada": 100,
+    "relacionCuotaIngreso": 25,
+    "beneficiario": "Personas jurídicas",
+    "cargoMaximoCancelacionAnticipada": 2,
+    "tasaEfectivaAnualMaxima": 0,
+    "tipoTasa": "Fija",
+    "costoFinancieroEfectivoTotalMaximo": 0.87,
+    "cuotaInicial": 3000,
+    "codigoEntidad": 44096,
+    "descripcionEntidad": "JOHN DEERE CREDIT COMPAÑÍA FINANCIERA S.A.",
+    "fechaInformacion": "2025-12-01",
+    "nombreCompleto": "PRENDARIO NUEVO USD FIJA 0,00 GASTOS 1,50 3 ANOS TASA
+LLENA 10,75 LTV 70,00",
+    "nombreCorto": "3PDP2 PN USD 0 3A SUB",
+    "territorioValidez": "Todo el territorio nacional",
+    "masInformacion": "MONTO MAXIMO OTORGABLE: 25 POR CIENTO RPC SEPTIEMBRE
+2025 EN USD. MONTO MINIMO A OTORGAR MENOR A 15000 USD DE MANERA
+EXCEPCIONAL. TASA EFVA. ANUAL Y COSTO FINANCIERO TOTAL CALCULADOS CON
+VTOS SEMESTRALES. VARIABLE DE ACUERDO A LAS FECHA DE DESEMBOLSO. NO
+INCLUYE IVA POR NO SER UN COSTO PARA LOS CLIENTES. CUOTA INICIAL: VTO 6 MESES
+DE OTORGADO EL PRESTAMO. RELACION CUOTA INGRESO: VALOR MINIMO ACEPTADO,
+
+
+
+                    APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 16
+ RESULTA DE DIVIDIR MARGEN BRUTO Y TOTAL DE CUOTAS DE PRESTAMOS DEL
+ CLIENTE. INCLUIDO EL QUE ESTA GESTIONANDO EN LA CIA"
+     }, …
+   ]
+ }
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                                        Descripción
+ CodigoEntidad                                      Código numérico identificador de la entidad
+                                                    financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                 Nombre oficial o razón social de la entidad
+                                                    financiera asociada al código informado.
+ FechaInformacion                                   Fecha de actualización de los datos provistos
+                                                    por la entidad dentro del Régimen de
+                                                    Transparencia.
+ NombreCompleto                                     Nombre completo del Préstamo Prendario.
+ NombreCorto                                        Nombre corto del Préstamo Prendario.
+ Denominacion                                       Denominación:
+                                                        • Pesos
+                                                        • Dólares estadounidenses
+ MontoMaximoOtorgable                               Monto máximo otorgable del préstamo.
+ MontoMinimoOtorgable                               Monto mínimo otorgable del préstamo.
+ PlazoMaximoOtorgable                               Plazo máximo otorgable (meses).
+ IngresoMinimoMensual                               Ingreso mínimo mensual solicitado.
+ AntiguedadLaboralMinimaMeses                       Antigüedad laboral mínima (meses).
+ EdadMaximaSolicitada                               Edad máxima solicitada.
+ RelacionCuotaIngreso                               Relación cuota/ingreso (%).
+ RelacionMontoTasacion                              Relación monto/tasación (%).
+ DestinoFondos                                      Destino de los fondos:
+                                                        • Adquisición de automotores
+                                                        • Adquisición de automotores (Marcas
+                                                            con convenios con la entidad, ver en
+                                                            más Información)
+                                                        • Adquisición de motocicletas
+                                                        • Adquisición para capital de trabajo
+ Beneficiario                                       Beneficiario:
+                                                        • Personas humanas en relación de
+                                                            dependencia
+                                                        • Personas humanas Monotributistas
+                                                        • Personas humanas Responsables
+                                                            Inscriptos
+                                                        • Empleados públicos
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 17
+                                                              •  Clientes con cuenta en la entidad
+                                                              •  Clientes que acrediten sueldos en la
+                                                                 Entidad
+                                                             • Beneficiarios de cuentas de Seguridad
+                                                                 Social
+                                                             • Personas jurídicas
+                                                             • PyMEs
+CargoMaximoCancelacionAnticipada                         Cargo máximo por cancelación anticipada:
+                                                         número (0 – 99%).
+TasaEfectivaAnualMaxima                                  Tasa efectiva anual máxima.
+TipoTasa                                                 Tipo de Tasa:
+                                                             • Fija
+                                                             • Variable
+                                                             • Mixta
+CostoFinancieroEfectivoTotalMaximo                       Costo financiero efectivo total máximo.
+CuotaInicial                                             Cuota inicial a plazo máximo cada $10.000.
+TerritorioValidez                                        Territorio de validez de la oferta: Se
+                                                         seleccionarán las provincias que
+                                                         correspondan.
+MasInformacion                                           Campo de texto con información adicional
+                                                         relativa a condiciones particulares del
+                                                         Préstamo, promociones, bonificaciones y
+                                                         otros beneficios. Si el préstamo es a tasa
+                                                         variable o mixta, es obligatorio informar aquí
+                                                         las condiciones de ajuste y variabilidad de la
+                                                         tasa. Si tiene convenios de tasas
+                                                         preferenciales, indicar aquí las marcas y/o
+                                                         modelos dentro
+                                                         del convenio.
+
+Ejemplo Response Not Found
+
+{
+    "status": 404,
+    "errorMessages": [
+    "No se encontraron datos para su consulta."
+    ]
+}
+
+
+Ejemplo Response Server Error
+
+{
+    "status": 500,
+
+
+
+                              APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 18
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+Préstamos hipotecarios
+Endpoint para obtener la lista completa de préstamos hipotecarios, o bien los préstamos
+hipotecarios ofrecidos por una entidad específica filtrando por su código.
+
+Header Request
+
+ Nombre                         Tipo            Tipo Parámetro          Descripción                   Default
+ N/A
+
+
+Parameters Request
+
+ Nombre                         Tipo            Tipo Parámetro          Descripción                   Default
+ codigoEntidad                  Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Hipotecarios
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Hipotecarios?codigoEntidad=93
+
+
+Ejemplo Response OK
+ {
+     "status": 200,
+     "results": [
+       {
+         "relacionMontoTasacion": 70,
+         "destinoFondos": "Vivienda propia, única y permanente",
+         "denominacion": "Pesos",
+         "montoMaximoOtorgable": 1000000,
+         "plazoMaximoOtorgable": 120,
+         "ingresoMinimoMensual": 26000,
+         "antiguedadLaboralMinimaMeses": 12,
+
+
+
+
+                                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 19
+    "edadMaximaSolicitada": 76,
+    "relacionCuotaIngreso": 35,
+    "beneficiario": "Todos los beneficiarios",
+    "cargoMaximoCancelacionAnticipada": 3,
+    "tasaEfectivaAnualMaxima": 69.47,
+    "tipoTasa": "Variable",
+    "costoFinancieroEfectivoTotalMaximo": 69.47,
+    "cuotaInicial": 4615.88,
+    "codigoEntidad": 7,
+    "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+    "fechaInformacion": "2019-07-17",
+    "nombreCompleto": "PRESTAMOHIPOTECARIOTRADICIONALCOMPRADEVIVIENDA",
+    "nombreCorto": "PRESTHIPOTRADICIONAL",
+    "territorioValidez": "0",
+    "masInformacion": "TECBP MAS 5PUNTOS LA TASA DE INTERES VARIARE POR
+TRIMESTRE CALENDARIO DE ACUERDO AL PROMEDIO DE LA TASA DEL TRIMESTRE
+INMEDIATO ANTERIOR. LA TASA DE INTERES SERA EQUIVALENTE A EL PROMEDIO DE LA
+TASA ENCUESTA CORREGIDA BANCOS PRIVADOS (TEC BP)."
+  },
+  {
+    "relacionMontoTasacion": 30,
+    "destinoFondos": "Vivienda adicional o 2da vivienda",
+    "denominacion": "Pesos",
+    "montoMaximoOtorgable": 1000000,
+    "plazoMaximoOtorgable": 120,
+    "ingresoMinimoMensual": 26000,
+    "antiguedadLaboralMinimaMeses": 12,
+    "edadMaximaSolicitada": 76,
+    "relacionCuotaIngreso": 35,
+    "beneficiario": "Todos los beneficiarios",
+    "cargoMaximoCancelacionAnticipada": 3,
+    "tasaEfectivaAnualMaxima": 69.47,
+    "tipoTasa": "Variable",
+    "costoFinancieroEfectivoTotalMaximo": 69.47,
+    "cuotaInicial": 4615.88,
+    "codigoEntidad": 7,
+    "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+    "fechaInformacion": "2019-07-17",
+    "nombreCompleto": "PRESTAMOHIPOTECARIOTRADICIONALREFACCION",
+    "nombreCorto": "PRESTHIPOTRADICIONAL",
+    "territorioValidez": "0",
+
+
+
+                    APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 20
+      "masInformacion": "TECBPMAS 5PUNTOS MAS IVA SOBRE INTERESES. LA TASA DE
+INTERES VARIARA POR TRIMESTRE CALENDARIO DE ACUERDO AL PROMEDIO DE LA
+TASA DEL TRIMESTRE INMEDIATO ANTERIOR. LA TASA DE INTERES SERA EQUIVALENTE
+A EL PROMEDIO DE LA TASA ENCUESTA CORREGIDA BANCOS PRIVADOS (TEC BP)."
+    }, …
+  ]
+}
+
+{
+ "status": 200,
+ "results": [
+   {
+     "relacionMontoTasacion": 70,
+     "destinoFondos": "Vivienda propia, única y permanente",
+     "denominacion": "UVA",
+     "montoMaximoOtorgable": 5000000,
+     "plazoMaximoOtorgable": 360,
+     "ingresoMinimoMensual": 0,
+     "antiguedadLaboralMinimaMeses": 24,
+     "edadMaximaSolicitada": 64,
+     "relacionCuotaIngreso": 25,
+     "beneficiario": "Empleados públicos",
+     "cargoMaximoCancelacionAnticipada": 3,
+     "tasaEfectivaAnualMaxima": 8.19,
+     "tipoTasa": "Fija",
+     "costoFinancieroEfectivoTotalMaximo": 8.33,
+     "cuotaInicial": 719.3,
+     "codigoEntidad": 93,
+     "descripcionEntidad": "BANCO DE LA PAMPA SOCIEDAD DE ECONOMÍA MIXTA",
+     "fechaInformacion": "2018-05-04",
+     "nombreCompleto": "PRESTAMO HIPOTECARIO UVA",
+     "nombreCorto": "SEGM SUELDOS II",
+     "territorioValidez": "4",
+     "masInformacion": "EL CFT NO INCLUYE SEGURO CONTRA DANOS A LA PROPIEDAD.
+INGRESO MINIMO SEGUN EVALUACION CREDITICIA Y MONTO SOLICITADO."
+   },
+   {
+     "relacionMontoTasacion": 70,
+     "destinoFondos": "Vivienda propia, única y permanente",
+     "denominacion": "UVA",
+     "montoMaximoOtorgable": 5000000,
+
+
+
+                    APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 21
+       "plazoMaximoOtorgable": 360,
+       "ingresoMinimoMensual": 0,
+       "antiguedadLaboralMinimaMeses": 24,
+       "edadMaximaSolicitada": 64,
+       "relacionCuotaIngreso": 20,
+       "beneficiario": "Clientes con cuenta en la entidad",
+       "cargoMaximoCancelacionAnticipada": 3,
+       "tasaEfectivaAnualMaxima": 8.19,
+       "tipoTasa": "Fija",
+       "costoFinancieroEfectivoTotalMaximo": 8.19,
+       "cuotaInicial": 719.3,
+       "codigoEntidad": 93,
+       "descripcionEntidad": "BANCO DE LA PAMPA SOCIEDAD DE ECONOMÍA MIXTA",
+       "fechaInformacion": "2018-05-04",
+       "nombreCompleto": "PRESTAMO HIPOTECARIO UVA",
+       "nombreCorto": "MERCADO ABIERTO",
+       "territorioValidez": "1",
+       "masInformacion": "EL CFT NO INCLUYE SEGURO CONTRA DANOS A LA PROPIEDAD.
+ INGRESO MINIMO SEGUN EVALUACION CREDITICIA Y MONTO SOLICITADO."
+     }, …
+   ]
+ }
+
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                                        Descripción
+ CodigoEntidad                                      Código numérico identificador de la entidad
+                                                    financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                 Nombre oficial o razón social de la entidad
+                                                    financiera asociada al código informado.
+ FechaInformacion                                   Fecha de actualización de los datos provistos
+                                                    por la entidad dentro del Régimen de
+                                                    Transparencia.
+ NombreCompleto                                     Nombre completo del Préstamo Hipotecario.
+ NombreCorto                                        Nombre corto del Préstamo Hipotecario.
+ Denominacion                                       Denominación:
+                                                        • Pesos
+                                                        • Dólares estadounidenses
+ MontoMaximoOtorgable                               Monto máximo otorgable del préstamo.
+ PlazoMaximoOtorgable                               Plazo máximo otorgable (meses).
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 22
+IngresoMinimoMensual                            Ingreso mínimo mensual solicitado.
+AntiguedadLaboralMinimaMeses                    Antigüedad laboral mínima (meses).
+EdadMaximaSolicitada                            Edad máxima solicitada.
+RelacionCuotaIngreso                            Relación cuota/ingreso (%).
+RelacionMontoTasacion                           Relación monto/tasación (%).
+DestinoFondos                                   Destino de los fondos:
+                                                    • Vivienda propia, única y permanente
+                                                    • Vivienda adicional o 2da vivienda
+                                                    • Construcción
+                                                    • Refacción o mejora
+                                                    • Adquisición de terreno
+                                                    • Cambio de vivienda
+                                                    • Financiación de otros destinos sobre
+                                                        vivienda única
+Beneficiario                                    Beneficiarios:
+                                                    • Personas humanas en relación de
+                                                        dependencia
+                                                    • Personas humanas Monotributistas
+                                                    • Personas humanas Responsables
+                                                        Inscriptos
+                                                    • Empleados públicos
+                                                    • Clientes con cuenta en la entidad
+                                                    • Clientes que acrediten sueldos en la
+                                                        entidad
+CargoMaximoCancelacionAnticipada                Cargo máximo por cancelación anticipada:
+                                                número (0 – 99,99%).
+TasaEfectivaAnualMaxima                         Tasa efectiva anual máxima.
+TipoTasa                                        Tipo de Tasa:
+                                                    • Fija
+                                                    • Variable
+                                                    • Mixta
+CostoFinancieroEfectivoTotalMaximo              Costo financiero efectivo total máximo.
+CuotaInicial                                    Cuota inicial a plazo máximo cada $100.000.
+TerritorioValidez                               Territorio de validez de la oferta: Se
+                                                seleccionarán las provincias que
+                                                correspondan.
+MasInformacion                                  Campo de texto con información adicional
+                                                relativa a condiciones particulares del
+                                                préstamo, promociones, bonificaciones y
+                                                otros beneficios. Si el préstamo es a tasa
+                                                variable o mixta, es obligatorio informar aquí
+                                                las condiciones de ajuste y variabilidad de la
+                                                tasa.
+
+
+
+                     APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 23
+Ejemplo Response Not Found
+
+ {
+     "status": 404,
+     "errorMessages": [
+     "No se encontraron datos para su consulta."
+     ]
+ }
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+
+Préstamos personales
+Endpoint para obtener la lista completa de préstamos personales, o bien los préstamos
+personales ofrecidos por una entidad específica filtrando por su código.
+
+Header Request
+
+Nombre                          Tipo            Tipo Parámetro          Descripción                   Default
+N/A
+
+
+Parameters Request
+
+Nombre                          Tipo            Tipo Parámetro          Descripción                   Default
+codigoEntidad                   Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Personales
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/Prestamos/Personales?codigoEntidad=55236
+
+
+
+                                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 24
+Ejemplo Response OK
+{
+    "status": 200,
+    "results": [
+      {
+        "montoMinimoOtorgable": 500,
+        "denominacion": "UVA",
+        "montoMaximoOtorgable": 2000000,
+        "plazoMaximoOtorgable": 24,
+        "ingresoMinimoMensual": 310000,
+        "antiguedadLaboralMinimaMeses": 0,
+        "edadMaximaSolicitada": 80,
+        "relacionCuotaIngreso": 30,
+        "beneficiario": "Todos los beneficiarios",
+        "cargoMaximoCancelacionAnticipada": 4,
+        "tasaEfectivaAnualMaxima": 29.33,
+        "tipoTasa": "Fija",
+        "costoFinancieroEfectivoTotalMaximo": 36.42,
+        "cuotaInicial": 956,
+        "codigoEntidad": 7,
+        "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "fechaInformacion": "2025-08-19",
+        "nombreCompleto": "PRESTAMOPERSONALUVA",
+        "nombreCorto": "PPUVA",
+        "territorioValidez": "0",
+        "masInformacion": null
+      },
+      {
+        "montoMinimoOtorgable": 500,
+        "denominacion": "Pesos",
+        "montoMaximoOtorgable": 24800000,
+        "plazoMaximoOtorgable": 72,
+        "ingresoMinimoMensual": 310000,
+        "antiguedadLaboralMinimaMeses": 0,
+        "edadMaximaSolicitada": 80,
+        "relacionCuotaIngreso": 30,
+        "beneficiario": "Todos los beneficiarios",
+        "cargoMaximoCancelacionAnticipada": 4,
+
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 25
+          "tasaEfectivaAnualMaxima": 246.71,
+          "tipoTasa": "Fija",
+          "costoFinancieroEfectivoTotalMaximo": 343.18,
+          "cuotaInicial": 1357,
+          "codigoEntidad": 7,
+          "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+          "fechaInformacion": "2025-08-19",
+          "nombreCompleto": "PRESTAMOPERSONAL",
+          "nombreCorto": "PP",
+          "territorioValidez": "0",
+          "masInformacion": null
+        }, …
+    ]
+}
+
+{
+    "status": 200,
+    "results": [
+      {
+        "montoMinimoOtorgable": 5000,
+        "denominacion": "Pesos",
+        "montoMaximoOtorgable": 100000,
+        "plazoMaximoOtorgable": 12,
+        "ingresoMinimoMensual": 70000,
+        "antiguedadLaboralMinimaMeses": 12,
+        "edadMaximaSolicitada": 65,
+        "relacionCuotaIngreso": 20,
+        "beneficiario": "Personas humanas Monotributistas",
+        "cargoMaximoCancelacionAnticipada": 0,
+        "tasaEfectivaAnualMaxima": 264,
+        "tipoTasa": "Fija",
+        "costoFinancieroEfectivoTotalMaximo": 267.67,
+        "cuotaInicial": 0,
+        "codigoEntidad": 55236,
+        "descripcionEntidad": "Dourat S.R.L.",
+        "fechaInformacion": "2023-05-29",
+        "nombreCompleto": "MONOTRIBUTOEFECTIVO",
+        "nombreCorto": "MVSE2",
+        "territorioValidez": "2",
+        "masInformacion": null
+
+
+
+                            APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 26
+         },
+         {
+           "montoMinimoOtorgable": 5000,
+           "denominacion": "Pesos",
+           "montoMaximoOtorgable": 100000,
+           "plazoMaximoOtorgable": 6,
+           "ingresoMinimoMensual": 30000,
+           "antiguedadLaboralMinimaMeses": 6,
+           "edadMaximaSolicitada": 75,
+           "relacionCuotaIngreso": 20,
+           "beneficiario": "Personas humanas en relación de dependencia",
+           "cargoMaximoCancelacionAnticipada": 0,
+           "tasaEfectivaAnualMaxima": 252,
+           "tipoTasa": "Fija",
+           "costoFinancieroEfectivoTotalMaximo": 255.5,
+           "cuotaInicial": 0,
+           "codigoEntidad": 55236,
+           "descripcionEntidad": "Dourat S.R.L.",
+           "fechaInformacion": "2023-05-29",
+           "nombreCompleto": "RECIBOEFECTIVO",
+           "nombreCorto": "RVES2",
+           "territorioValidez": "2",
+           "masInformacion": null
+         }, …
+     ]
+ }
+
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                                             Descripción
+ CodigoEntidad                                           Código numérico identificador de la entidad
+                                                         financiera informante, asignado por el BCRA.
+ DescripcionEntidad                                      Nombre oficial o razón social de la entidad
+                                                         financiera asociada al código informado.
+ FechaInformacion                                        Fecha de actualización de los datos provistos
+                                                         por la entidad dentro del Régimen de
+                                                         Transparencia.
+ NombreCompleto                                          Nombre completo del Préstamo Personal.
+ NombreCorto                                             Nombre corto del Préstamo Personal.
+ Denominacion                                            Denominación:
+
+
+
+                              APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 27
+                                                    • Pesos
+                                                    • Dólares estadounidenses
+MontoMaximoOtorgable                            Monto máximo otorgable del préstamo.
+MontoMinimoOtorgable                            Monto mínimo otorgable del préstamo.
+PlazoMaximoOtorgable                            Plazo máximo otorgable (meses).
+IngresoMinimoMensual                            Ingreso mínimo mensual solicitado.
+AntiguedadLaboralMinimaMeses                    Antigüedad laboral mínima (meses).
+EdadMaximaSolicitada                            Edad máxima solicitada.
+RelacionCuotaIngreso                            Relación cuota/ingreso (%).
+Beneficiario                                    Beneficiarios:
+                                                    • Personas humanas en relación de
+                                                        dependencia
+                                                    • Personas humanas Monotributistas
+                                                    • Personas humanas Responsables
+                                                        Inscriptos
+                                                    • Empleados públicos
+                                                    • Clientes con cuenta en la entidad
+                                                    • Clientes que acrediten sueldos en la
+                                                        entidad
+                                                    • Beneficiarios de cuentas de Seguridad
+                                                        Social.
+CargoMaximoCancelacionAnticipada                Cargo máximo por cancelación anticipada:
+                                                número (0 – 99%).
+TasaEfectivaAnualMaxima                         Tasa efectiva anual máxima.
+TipoTasa                                        Tipo de Tasa:
+                                                    • Fija
+                                                    • Variable
+                                                    • Mixta
+CostoFinancieroEfectivoTotalMaximo              Costo financiero efectivo total máximo.
+CuotaInicial                                    Cuota inicial a plazo máximo cada $10.000.
+TerritorioValidez                               Territorio de validez de la oferta: Se
+                                                seleccionarán las provincias que
+                                                correspondan.
+MasInformacion                                  Campo de texto con información adicional
+                                                relativa a condiciones particulares del
+                                                préstamo, promociones, bonificaciones y
+                                                otros beneficios. Si el préstamo es a tasa
+                                                variable o mixta, es obligatorio informar aquí
+                                                las condiciones de ajuste y variabilidad de la
+                                                tasa.
+
+Ejemplo Response Not Found
+
+
+
+                     APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 28
+ {
+     "status": 404,
+     "errorMessages": [
+     "No se encontraron datos para su consulta."
+     ]
+ }
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+
+Tarjetas de crédito
+Endpoint para obtener la lista completa de tarjetas de crédito, o bien las tarjetas ofrecidas por
+una entidad específica filtrando por su código.
+
+Header Request
+
+ Nombre                         Tipo            Tipo Parámetro          Descripción                   Default
+ N/A
+
+
+Parameters Request
+
+ Nombre                         Tipo            Tipo Parámetro          Descripción                   Default
+ codigoEntidad                  Int             Query                   ID de la entidad financiera
+
+
+HTTP Request
+
+ GET api.bcra.gob.ar/transparencia/v1.0/TarjetasCredito
+
+
+ GET api.bcra.gob.ar/transparencia/v1.0/TarjetasCredito?codigoEntidad=341
+
+
+
+
+                                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 29
+Ejemplo Response OK
+{
+    "status": 200,
+    "results": [
+      {
+        "comisionMaximaAdministracionMantenimiento": 31500,
+        "comisionMaximaRenovacion": 457600,
+        "tasaEfectivaAnualMaximaFinanciacion": 184.5,
+        "tasaEfectivaAnualMaximaAdelantoEfectivo": 184.5,
+        "ingresoMinimoMensual": 999999,
+        "antiguedadLaboralMinimaMeses": 6,
+        "edadMaximaSolicitada": 100,
+        "segmento": "Premium gold",
+        "codigoEntidad": 7,
+        "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "fechaInformacion": "2025-11-17",
+        "nombreCompleto": "AMERICAN EXPRESS PLATINUM",
+        "nombreCorto": "AMEX PLATINUM",
+        "territorioValidez": "Todo el territorio nacional",
+        "masInformacion": "EL INGRESO MENSUAL MINIMO ES 2.150.000 PESOS"
+      },
+      {
+        "comisionMaximaAdministracionMantenimiento": 21500,
+        "comisionMaximaRenovacion": 326000,
+        "tasaEfectivaAnualMaximaFinanciacion": 184.5,
+        "tasaEfectivaAnualMaximaAdelantoEfectivo": 184.5,
+        "ingresoMinimoMensual": 900000,
+        "antiguedadLaboralMinimaMeses": 6,
+        "edadMaximaSolicitada": 100,
+        "segmento": "Premium gold",
+        "codigoEntidad": 7,
+        "descripcionEntidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "fechaInformacion": "2025-11-17",
+        "nombreCompleto": "VISA GOLD",
+        "nombreCorto": "VISA GOLD",
+        "territorioValidez": "Todo el territorio nacional",
+        "masInformacion": "0"
+      }, …
+    ]
+}
+
+
+
+                        APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 30
+{
+    "status": 200,
+    "results": [
+      {
+        "comisionMaximaAdministracionMantenimiento": 7982.7,
+        "comisionMaximaRenovacion": 93444.97,
+        "tasaEfectivaAnualMaximaFinanciacion": 171.27,
+        "tasaEfectivaAnualMaximaAdelantoEfectivo": 171.27,
+        "ingresoMinimoMensual": 900,
+        "antiguedadLaboralMinimaMeses": 3,
+        "edadMaximaSolicitada": 80,
+        "segmento": "Internacional",
+        "codigoEntidad": 341,
+        "descripcionEntidad": "BANCO MASVENTAS S.A.",
+        "fechaInformacion": "2025-10-03",
+        "nombreCompleto": "000DVISA INTERNACIONAL",
+        "nombreCorto": "VISA INT",
+        "territorioValidez": "Provincia de Salta",
+        "masInformacion": "000A"
+      },
+      {
+        "comisionMaximaAdministracionMantenimiento": 7982.7,
+        "comisionMaximaRenovacion": 186941.38,
+        "tasaEfectivaAnualMaximaFinanciacion": 171.27,
+        "tasaEfectivaAnualMaximaAdelantoEfectivo": 171.27,
+        "ingresoMinimoMensual": 900,
+        "antiguedadLaboralMinimaMeses": 3,
+        "edadMaximaSolicitada": 80,
+        "segmento": "Premium gold",
+        "codigoEntidad": 341,
+        "descripcionEntidad": "BANCO MASVENTAS S.A.",
+        "fechaInformacion": "2025-10-03",
+        "nombreCompleto": "000DMASTERCARD GOLD",
+        "nombreCorto": "MC GOL",
+        "territorioValidez": "Provincia de Salta",
+        "masInformacion": "000A"
+      }, …
+    ]
+}
+
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 31
+A continuación, se detallan los campos retornados en el servicio:
+
+ Propiedades                               Descripción
+ CodigoEntidad                             Código numérico identificador de la
+                                           entidad financiera informante, asignado
+                                           por el BCRA.
+ DescripcionEntidad                        Nombre oficial o razón social de la entidad
+                                           financiera asociada al código informado.
+ FechaInformacion                          Fecha de actualización de los datos
+                                           provistos por la entidad dentro del Régimen
+                                           de Transparencia.
+ NombreCompleto                            Nombre completo de la Tarjeta de Crédito.
+ NombreCorto                               Nombre corto de la Tarjeta de Crédito.
+ ComisionMaximaAdministracionMantenimiento Comisión máxima por Administración y
+                                           Mantenimiento de cuenta (mensual, precio
+                                           de tarifario, sin bonificaciones).
+ ComisionMaximaRenovacion                  Comisión máxima por servicio de
+                                           renovación, (anual, precio de tarifario, sin
+                                           bonificaciones).
+ TasaEfectivaAnualMaximaFinanciacion       Tasa Efectiva Anual máxima de interés
+                                           compensatorio por financiación de saldo.
+ TasaEfectivaAnualMaximaAdelantoEfectivo   Tasa Efectiva Anual máxima de interés por
+                                           adelanto en efectivo.
+ IngresoMinimoMensual                      Ingreso mínimo mensual solicitado.
+ AntiguedadLaboralMinimaMeses              Antigüedad laboral mínima (meses).
+ EdadMaximaSolicitada                      Edad máxima solicitada.
+ Segmento                                  Segmento:
+                                               • Nacional
+                                               • Internacional
+                                               • Premium gold
+                                               • Premium black
+                                               • Premium signature
+ TerritorioValidez                         Territorio de validez de la oferta: Se
+                                           seleccionarán las provincias que
+                                           correspondan.
+ MasInformacion                            Campo de texto con información adicional
+                                           relativa a características, promociones,
+                                           bonificaciones y otros beneficios
+                                           asociados a la Tarjeta de Crédito.
+
+Ejemplo Response Not Found
+
+
+                         APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 32
+ {
+     "status": 404,
+     "errorMessages": [
+     "No se encontraron datos para su consulta."
+     ]
+ }
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Ocurrió un error al procesar la solicitud."
+     ]
+ }
+
+
+
+
+Autenticación
+No requerida.
+
+
+
+
+                                     APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 33
+Historial de versiones
+Versión Fecha de          Fecha de              Observación
+        Lanzamiento       Desactivación
+V1.0    12/12/2025
+
+
+
+
+                      APIs Públicas – Régimen de Transparencia | Manual para el Desarrollador | BCRA | 34
+

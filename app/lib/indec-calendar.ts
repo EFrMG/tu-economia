@@ -4,7 +4,7 @@
  * `indec-calendar.test.ts` fails once the covered semester ends.
  *
  * Source: https://www.indec.gob.ar/ftp/cuadros/publicaciones/calendario_2sem2026.pdf
- * (converted to text as `DOCS/calendario_2sem2026.txt`).
+ * (converted to text as `docs/sources/INDEC/calendario_2sem2026.txt`).
  *
  * The calendar also lists pobreza (semestral) and mercado de trabajo
  * (trimestral), which can be added here when those surfaces land. */

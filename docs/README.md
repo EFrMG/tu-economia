@@ -2,6 +2,8 @@
 
 Feature and operations guides. Overview, setup and commands are in the [root README](../README.md), coding rules in [AGENTS.md](../AGENTS.md) and the design system in [DESIGN.md](../DESIGN.md).
 
+[`sources/`](sources/) archives the provider material the data modules are written against, converted to text for reference: the BCRA API manuals behind [market-data.md](market-data.md) and [transparency-rates.md](transparency-rates.md), and the INDEC semester calendar behind `app/lib/indec-calendar.ts`. The files are documentation only; no code reads them at runtime.
+
 | Document | Read it when you are |
 | --- | --- |
 | [cloudflare-deployment.md](cloudflare-deployment.md) | Deploying the Worker, or running your own copy |

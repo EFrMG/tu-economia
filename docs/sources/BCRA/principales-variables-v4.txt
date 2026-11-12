@@ -1,0 +1,459 @@
+Variables Monetarias v4.0
+Tabla de contenido
+Tabla de contenido ..................................................................................................................................... 2
+Documentación de la API de Central de Información ........................................................................... 3
+   Introducción ............................................................................................................................................ 3
+   Control de Tráfico ................................................................................................................................... 3
+   Autenticación .......................................................................................................................................... 3
+   Endpoints ................................................................................................................................................. 3
+       Monetarias........................................................................................................................... 3
+       Datos de Variables Monetarias. ............................................................................................ 6
+       Metodología ......................................................................................................................... 9
+Historial de versiones .............................................................................................................................. 12
+
+
+
+
+                                                         APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 2
+Documentación de la API de Central de Información
+
+Introducción
+La API de Estadísticas monetarias proporciona acceso a recursos relacionados con la información
+de variables monetarias publicadas por el BCRA. A continuación, se describen los endpoints
+disponibles.
+
+
+
+Control de Tráfico
+A fin de no saturar las comunicaciones, se establecen distintas reglas de control del tráfico
+proveniente de los clientes basado en las direcciones IP.
+
+
+Autenticación
+No requerida.
+
+
+
+Endpoints
+A continuación, se presentan los endpoints disponibles en la API. Cada endpoint incluye
+información sobre su propósito, el método HTTP que utiliza, los parámetros necesarios y un
+ejemplo de la respuesta que se puede esperar.
+
+
+
+Monetarias
+Método para obtener la lista de todas las variables monetarias publicadas por el BCRA.
+
+Header Request
+
+ Nombre             Tipo         Tipo Parámetro          Descripción                  Default
+ Accept-Language    String                               Los idiomas configurados     es-AR
+                                                         actualmente “es-AR” y
+                                                         “en-US”.
+ Accept-Encoding    String                               Es posible modificar el
+                                                         tipo de algoritmo de
+                                                         compresión: gzip o br
+
+
+
+
+                                  APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 3
+Parameters Request
+
+Nombre                   Tipo     Tipo Parámetro                    Descripción                          Default
+idVariable               Int      Query                                                                  No filtra
+categoria                String   Query                             No es necesario ingresar toda el     No filtra
+                                                                    literal.
+tipoSerie                String   Query                             No es necesario ingresar toda el     No filtra
+                                                                    literal.
+periodicidad             String   Query                             Diaria: D                            No filtra
+                                                                    Mensual: M
+                                                                    Trimestral: T o Q (Quarterly)
+unidadExpresion          String   Query                             No es necesario ingresar toda el     No filtra
+                                                                    literal.
+offset                   Int      Query                             Registros que debe descartar para    0
+                                                                    el paginado.
+limit                    Int      Query                                                                  1000
+
+
+HTTP Request
+
+GET api.bcra.gob.ar/estadisticas/v4.0/monetarias
+
+
+
+Ejemplo Response OK
+"status": 200,
+ "metadata": {
+  "resultset": {
+      "count": 1183,
+      "offset": 0,
+      "limit": 1000
+  }
+ },
+ "results": [
+  {
+      "idVariable": 1,
+      "descripcion": "Reservas internacionales",
+      "categoria": "Principales Variables",
+      "tipoSerie": "Saldos",
+      "periodicidad": "D",
+      "unidadExpresion": "En millones de USD",
+      "moneda": "ME",
+      "primerFechaInformada": "2024-05-30",
+
+
+
+
+                                              APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 4
+      "ultFechaInformada": "2025-05-26",
+      "ultValorInformado": 38384
+   },
+ ….
+
+
+A continuación, se detallan los campos retornados en el servicio:
+Metadata/Resulset:
+
+         Count
+         Cantidad de registros disponible para la consulta.
+
+         Offset
+         Cantidad de registros a descartar para el paginado.
+
+         Limit
+         Cantidad máxima de registros que retornará la consulta en el paginado en el caso que lo
+         tuviera.
+
+Results:
+       IdVariable
+       Valor único por variable el mismo se utilizará para realizar la consulta detallada por rango
+       de fecha y/o obtener las metodologías.
+
+         Descripción
+         Nombre de la variable monetaria.
+
+         Categoría
+         El mismo indica la clasificación de la variable monetaria.
+
+         TipoSerie
+         Corresponde a la caracterización económica de la variable
+
+         Periodicidad
+         Frecuencia que se generan la variable.
+         Diaria: D
+         Mensual: M
+         Trimestral: T o Q (Quarterly)
+
+
+         UnidadExpresion
+         Corresponde a la unidad de medición de la variable económica.
+
+
+
+
+                                           APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 5
+              Moneda
+              Vale la pena aclarar que no se está hablando en códigos de monedas ISO.
+              ML = Moneda local
+              ME = Monedas Extranjera
+              MEyML= Combinación de ambas
+              ARS= Pesos Argentinos
+              USD= En dólar
+
+              PrimerFechaInformada
+              Corresponde a la primera fecha informada de la variable que se esté analizando.
+
+              UltFechaInformada
+              Corresponde a la última fecha generada.
+
+              UltValorInformado
+              Corresponde al último valor generado.
+
+
+
+Ejemplo Response Server Error
+
+ {
+     "status": 500,
+     "errorMessages": [
+         "Se produjo un error al ejecutar la acción."
+     ]
+ }
+
+
+Datos de Variables Monetarias.
+Método que obtener la evolución de los valores para la variable monetaria en un rango de
+fechas. Para un mejor rendimiento en la respuesta, se recomienda incluir el filtro de fechas
+desde y hasta en las consultas.
+
+Header Request
+
+ Nombre                        Tipo            Tipo Parámetro           Descripción                  Default
+ Accept-Encoding               String                                   Es posible modificar el
+                                                                        tipo de algoritmo de
+                                                                        compresión: gzip o br
+
+
+
+
+                                                 APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 6
+Parameters Request
+
+Nombre             Tipo        Tipo Parámetro          Descripción                  Default
+idVariable         Int         Path                    ID de la variable deseada,
+                                                       la misma se puede
+                                                       consultar por el endpoint
+                                                       detallado anteriormente.
+
+
+desde              Date        Query                   Fecha de inicio del rango    Fecha mínima de la
+                                                       de búsqueda (ISO 8601 –      serie o principal
+                                                       YYYY-MM-DD).                 variable buscada.
+hasta              Date        Query                   Fecha de Fin del rango de    Fecha máxima de la
+                                                       búsqueda (ISO 8601 –         serie o principal
+                                                       YYYY-MM-DD).                 variable buscada.
+offset             Int         Query                   Registros que debe           0
+                                                       descartar para el
+                                                       paginado.
+limit              Int         Query                   Registros que retornará el   1000
+                                                       servicio. El valor máximo
+                                                       es 3000.
+
+
+
+
+HTTP Request
+
+GET api.bcra.gob.ar/estadisticas/v4.0/monetarias/{IdVariable}
+
+
+GET api.bcra.gob.ar/estadisticas/v4.0/monetarias/{IdVariable}?desde={yyyy-MM-dd}&
+hasta={yyyy-MM-dd}
+
+
+GET api.bcra.gob.ar/estadisticas/v4.0/monetarias/{IdVariable}?desde={yyyy-MM-dd}&
+hasta={yyyy-MM-dd}&limit=10&offset=20
+
+
+
+Ejemplo Response OK
+
+"status": 200,
+ "metadata": {
+  "resultset": {
+   "count": 239,
+   "offset": 0,
+   "limit": 1000
+
+
+
+
+                                APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 7
+   }
+  },
+  "results": [
+   {
+       "idVariable": 1,
+       "detalle": [
+        {
+            "fecha": "2025-05-26",
+            "valor": 38384
+        },
+        {
+            "fecha": "2025-05-23",
+            "valor": 38428
+        },
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+Metadata/Resulset:
+
+             Count
+             Cantidad de registros disponible para la consulta.
+
+             Offset
+             Cantidad de registros a descartar para el paginado.
+
+             Limit
+             Cantidad máxima de registros que retornará la consulta en el paginado en el caso que lo
+             tuviera.
+
+Results:
+
+             IdVariable
+             Id único por variable.
+
+             Fecha
+             Fecha del registro.
+
+             Valor
+             Valor de la variable para la fecha informada.
+
+
+
+
+Ejemplo Response Server Error
+
+
+
+                                         APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 8
+ {
+         "status": 500,
+         "errorMessages": [
+         "Se produjo un error al ejecutar la acción."
+         ]
+ }
+
+
+
+Ejemplos Response Bad Resquest
+
+ GET api.bcra.gob.ar/estadisticas/v3.0/monetarias/45?hasta=2024-11-
+ 011&desde=2024-11-30
+
+ {
+     "status": 400,
+     "errorMessages": [
+      "Parámetro erróneo: Validar formato fecha hasta."
+     ]
+ }
+
+
+Ejemplo Response Not Found
+
+ GET api.bcra.gob.ar/estadisticas/v3.0/monetarias/11111
+
+ {
+     "status": 404,
+     "errorMessages": [
+     "IdVariable invalida."
+     ]
+ }
+
+
+
+Metodología
+Método para obtener las metodologías correspondientes a cada variable informada.
+
+Header Request
+
+ Nombre                        Tipo            Tipo Parámetro           Descripción                  Default
+ Accept-Encoding               String                                   Es posible modificar el
+                                                                        tipo de algoritmo de
+                                                                        compresión: gzip o br
+
+
+
+
+                                                 APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 9
+Parameters Request
+
+Nombre               Tipo        Tipo Parámetro            Descripción                            Default
+idVariable           Int         Path                      Si no se informa se obtendrá
+                                                           todas las metodologías.
+offset               Int         Query                     Registros que debe descartar para      0
+                                                           el paginado.
+limit                Int         Query                     Registros que debe descartar para      250
+                                                           el paginado.
+
+
+
+
+HTTP Request
+
+GET api.bcra.gob.ar/estadisticas/v4.0/metodologia
+
+
+
+Ejemplo Response OK
+
+"status": 200,
+ "metadata": {
+  "resultset": {
+      "count": 2,
+      "offset": 0,
+      "limit": 250
+  }
+ },
+ "results": [
+  {
+      "id": 1,
+    "detalle": "Las reservas internacionales son los activos en moneda extranjera que posee un país,
+generalmente administrados por su banco central, y cumplen funciones fundamentales para la estabilidad
+económica. Estas reservas suelen estar compuestas por divisas (como dólares, euros o yuanes), oro, derechos
+especiales de giro (DEG) y depósitos u otros activos líquidos en el exterior. Su principal objetivo es respaldar la
+solvencia externa del país, permitir intervenciones en el mercado cambiario para suavizar la volatilidad del
+tipo de cambio, y garantizar el cumplimiento de obligaciones internacionales, como el pago de deuda externa.
+En contextos de crisis o incertidumbre económica, el nivel de reservas es un indicador clave de la capacidad
+de un país para sostener su política monetaria y defender su moneda."
+  },
+
+
+
+
+                                         APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 10
+HTTP Request
+
+ GET api.bcra.gob.ar/estadisticas/v4.0/metodologia/{IdVariable}
+
+
+Ejemplo Response OK
+
+ "results": [
+   {
+       "id": 1,
+     "detalle": "Las reservas internacionales son los activos en moneda extranjera que posee un país,
+ generalmente administrados por su banco central, y cumplen funciones fundamentales para la estabilidad
+ económica. Estas reservas suelen estar compuestas por divisas (como dólares, euros o yuanes), oro, derechos
+ especiales de giro (DEG) y depósitos u otros activos líquidos en el exterior. Su principal objetivo es respaldar la
+ solvencia externa del país, permitir intervenciones en el mercado cambiario para suavizar la volatilidad del
+ tipo de cambio, y garantizar el cumplimiento de obligaciones internacionales, como el pago de deuda externa.
+ En contextos de crisis o incertidumbre económica, el nivel de reservas es un indicador clave de la capacidad
+ de un país para sostener su política monetaria y defender su moneda."
+   },
+
+
+
+A continuación, se detallan los campos retornados en el servicio:
+
+Metadata/Resulset: Solo cuando se consulta las metodologías.
+
+           Count
+           Cantidad de registros disponible para la consulta.
+
+           Offset
+           Cantidad de registros a descartar para el paginado.
+
+           Limit
+           Cantidad máxima de registros que retornará la consulta en el paginado en el caso que lo
+           tuviera.
+
+Results:
+
+           Id
+           Id único por variable.
+
+           Detalle
+           Corresponde al metadato de como esta compuesta la variable en análisis.
+
+
+
+
+                                          APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 11
+Historial de versiones
+Versión Fecha de      Fecha de            Observación
+        Lanzamiento   Desactivación
+V1.0    29/04/2024    15/06/2024
+V2.0    17/05/2024    01/06/2025          Se agrega tipado en los datos.
+V3.0    17/12/2024                        Se agregan nuevas series y su categorización.
+V4.0                                      Se agregan variables, cambios en estructura y
+                                          nuevo endpoints para consultar las
+                                          metodologías correspondientes a cada variable.
+
+
+
+
+                          APIs Públicas – Estadísticas Monetarias | Manual de Desarrollo | BCRA | 12
+

@@ -4,7 +4,7 @@ INDEC publishes one calendar PDF per semester at
 https://www.indec.gob.ar/ftp/cuadros/publicaciones/calendario_{1|2}sem{YYYY}.pdf
 This script tries the covering, next and previous semester URLs in that order,
 downloads the first that answers, and converts it with `pdftotext -layout`
-(poppler-utils) into sources/INDEC/. The parsing into app/lib/indec-calendar.ts
+(poppler-utils) into docs/sources/INDEC/. The parsing into app/lib/indec-calendar.ts
 stays manual; the resulting file is a reminder to check the new dates.
 
 Only the standard library is used. Run with `python3 -I` (3.11+); requires
@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_OUT_DIR = REPO / "sources" / "INDEC"
+DEFAULT_OUT_DIR = REPO / "docs" / "sources" / "INDEC"
 
 # INDEC publishes on the Argentine calendar.
 ARGENTINA = dt.timezone(dt.timedelta(hours=-3))
@@ -89,7 +89,7 @@ def main() -> int:
         "--out-dir",
         type=Path,
         default=DEFAULT_OUT_DIR,
-        help="Directory to write the converted text into (default: sources/INDEC).",
+        help="Directory to write the converted text into (default: docs/sources/INDEC).",
     )
     args = parser.parse_args()
 
