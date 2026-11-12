@@ -27,12 +27,31 @@ interface SupportDialogProps {
 
 type CopyState = "idle" | "copied" | "failed";
 
+/** The panel and the backdrop fade out together, faster than either fades in; matches `duration-120` below. */
+const CLOSE_MS = 120;
+
+/** Opacity fades only: the panel arrives quickly and the backdrop, with its blur, settles in more slowly. Both leave at the same, faster pace. */
+const panelFadeClassName = (leaving: boolean) =>
+  leaving
+    ? "opacity-0 duration-120 ease-in-swift"
+    : "opacity-100 duration-200 ease-out-swift starting:opacity-0";
+
+const backdropFadeClassName = (leaving: boolean) =>
+  leaving
+    ? "opacity-0 duration-120 ease-in-swift"
+    : "opacity-100 duration-700 ease-out-swift starting:opacity-0";
+
 const SupportDialog = ({
   open,
   onClose,
   returnFocusRef,
 }: SupportDialogProps) => {
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  // The dialog stays mounted after `open` turns false until its fade-out ends.
+  const [mounted, setMounted] = useState(open);
+  if (open && !mounted) setMounted(true);
+
+  const leaving = mounted && !open;
 
   const panelRef = useRef<HTMLDivElement>(null);
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -111,6 +130,20 @@ const SupportDialog = ({
     };
   }, [open, returnFocusRef]);
 
+  useEffect(() => {
+    if (open || !mounted) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMounted(false);
+
+      return;
+    }
+
+    const timer = window.setTimeout(() => setMounted(false), CLOSE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [open, mounted]);
+
   const copyAlias = async () => {
     try {
       await navigator.clipboard.writeText(MERCADO_PAGO_ALIAS);
@@ -124,7 +157,7 @@ const SupportDialog = ({
     copyTimeout.current = setTimeout(() => setCopyState("idle"), 2000);
   };
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   const copyFeedback =
     copyState === "copied"
@@ -140,9 +173,14 @@ const SupportDialog = ({
         : "Mercado Pago Alias";
 
   return createPortal(
-    <div className="fixed inset-0 z-60 overflow-y-auto bg-base-950/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-60 overflow-y-auto" inert={leaving}>
+      {/* A layer of its own, so its slower fade does not hold back the panel's. */}
       <div
-        className="flex min-h-full items-center justify-center p-4"
+        className={`fixed inset-0 bg-base-950/85 backdrop-blur-xs transition-opacity ${backdropFadeClassName(leaving)}`}
+        aria-hidden="true"
+      />
+      <div
+        className="relative flex min-h-full items-center justify-center p-4"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose();
         }}
@@ -154,7 +192,7 @@ const SupportDialog = ({
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           tabIndex={-1}
-          className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto border border-base-700 bg-surface-950 focus:outline-none"
+          className={`max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto border border-base-700 bg-surface-950 transition-opacity focus:outline-none ${panelFadeClassName(leaving)}`}
         >
           <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-base-700 bg-surface-950 p-3 sm:p-6">
             <div className="flex min-w-0 items-start gap-4">
