@@ -273,9 +273,6 @@ function SourceRow({ source }: { source: StatusSource }) {
 /** Shared by the page, its hydration fallback and its error state, so the page keeps its title in all three. */
 const ApiStatusHeader = () => (
   <header className="stack-4 border-b border-base-700 pb-10">
-    <p className="font-mono text-label-caps text-primary-text-100 uppercase">
-      Transparencia de datos
-    </p>
     <h1 className="font-heading text-headline-lg text-text-100">
       Estado de fuentes
     </h1>
