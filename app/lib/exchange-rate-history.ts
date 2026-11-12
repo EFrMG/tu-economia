@@ -116,6 +116,11 @@ export function gapPeriodChange(points: HistoricalGapPoint[]) {
 
 export type HistoricalChartView = "quotes" | "gap";
 
+/** `?view=` on `/dolar`; anything but `gap` shows the quotes. */
+export const chartViewFromSearchParam = (
+  value: string | null,
+): HistoricalChartView => (value === "gap" ? "gap" : "quotes");
+
 export function chartPeriodFromSearchParam(value: string | null): ChartPeriod {
   const parsed = Number(value);
   return CHART_PERIODS.includes(parsed as ChartPeriod)

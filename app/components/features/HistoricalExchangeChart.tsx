@@ -517,12 +517,13 @@ const HistoricalExchangeChart = ({
 
       <div className="mt-5 flex justify-end border-t border-base-700 pt-4">
         <Link
-          to={`${view === "gap" ? "/dashboard" : "/analisis"}?period=${period}`}
+          to={`?view=${view === "gap" ? "quotes" : "gap"}&period=${period}`}
+          preventScrollReset
           className="block w-fit font-mono text-data-label text-primary-text-100 focus-visible:outline-none hocus:underline"
         >
           {view === "gap"
-            ? "Ver cotizaciones históricas ↗"
-            : "Ver análisis de la brecha ↗"}
+            ? "Ver cotizaciones históricas"
+            : "Ver brecha histórica"}
         </Link>
       </div>
     </section>

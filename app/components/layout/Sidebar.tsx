@@ -3,7 +3,7 @@ import type { IconType } from "react-icons";
 import {
   MdFavorite,
   MdOutlineAccountBalanceWallet,
-  MdOutlineAnalytics,
+  MdOutlineAttachMoney,
   MdOutlineCandlestickChart,
   MdOutlineClose,
   MdOutlineDashboard,
@@ -12,6 +12,7 @@ import {
   MdOutlineNewspaper,
   MdOutlinePercent,
   MdOutlineQueryStats,
+  MdOutlineShoppingCart,
 } from "react-icons/md";
 import { NavLink, useLocation } from "react-router";
 import { Wordmark } from "~/components/ui/Wordmark";
@@ -32,15 +33,20 @@ interface NavItem {
 
 /** `/acciones` is named for what it shows: stock quotations only while BYMA's are enabled. */
 const primaryNav = (equitiesBymaEnabled: boolean): NavItem[] => [
-  { label: "Dashboard", icon: MdOutlineDashboard, to: "/dashboard" },
-  { label: "Análisis", icon: MdOutlineAnalytics, to: "/analisis" },
-  { label: "Indicadores", icon: MdOutlineQueryStats, to: "/indicadores" },
+  { label: "Resumen", icon: MdOutlineDashboard, to: "/dashboard" },
+  { label: "Dólar", icon: MdOutlineAttachMoney, to: "/dolar" },
+  {
+    label: "Precios e ingresos",
+    icon: MdOutlineShoppingCart,
+    to: "/precios",
+  },
+  { label: "Tasas y ahorro", icon: MdOutlinePercent, to: "/tasas" },
+  { label: "Actividad", icon: MdOutlineQueryStats, to: "/actividad" },
   {
     label: accionesLabel(equitiesBymaEnabled),
     icon: MdOutlineCandlestickChart,
     to: "/acciones",
   },
-  { label: "Tasas", icon: MdOutlinePercent, to: "/tasas" },
   { label: "Noticias", icon: MdOutlineNewspaper, to: "/noticias" },
   {
     label: "Mi economía",

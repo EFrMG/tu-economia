@@ -196,12 +196,12 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               se guarda en la URL para poder compartirlo.
             </p>
             <p>
-              En Análisis, el gráfico de brecha compara solo cierres Blue y
-              Oficial de la misma fecha: (Blue / Oficial − 1) × 100. El cambio
-              del período resta la primera brecha disponible de la última y se
-              expresa en puntos porcentuales. Las fechas sin ambos cierres no se
-              calculan ni se completan con valores de otros días. El período se
-              guarda en la URL de ambas páginas.
+              En la sección Dólar, el gráfico de brecha compara solo cierres
+              Blue y Oficial de la misma fecha: (Blue / Oficial − 1) × 100. El
+              cambio del período resta la primera brecha disponible de la última
+              y se expresa en puntos porcentuales. Las fechas sin ambos cierres
+              no se calculan ni se completan con valores de otros días. La vista
+              elegida y el período se guardan en la URL.
             </p>
           </div>
         </section>
@@ -215,18 +215,20 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              La sección Indicadores agrupa las series por tema: precios
-              (inflación mensual, interanual y esperada a 12 meses), tasas de
-              interés (depósitos a 30 días, BADLAR, TAMAR y préstamos
-              personales), dólar y sector externo (reservas internacionales,
-              dólar minorista, dólar mayorista de referencia y riesgo país),
-              dinero (base monetaria y variación interanual del M2 privado) y
-              unidades de actualización (UVA, UVI, CER e ICL). También presenta
-              el estimador mensual de actividad económica (EMAE). Cada tarjeta
-              indica su unidad y presenta el valor tal como lo informa la serie,
-              sin conversiones de escala o frecuencia. Las tasas se expresan
-              como nominales anuales. Ninguna de ellas equivale a una tasa de
-              política monetaria.
+              Las series se presentan en la sección de su tema: Precios e
+              ingresos muestra la inflación mensual, interanual y esperada a 12
+              meses; Tasas y ahorro, las tasas de interés (depósitos a 30 días,
+              BADLAR, TAMAR y préstamos personales) y las unidades de
+              actualización (UVA, UVI, CER e ICL); Dólar, el sector externo
+              (reservas internacionales, dólar minorista, dólar mayorista de
+              referencia y riesgo país); y Actividad, el estimador mensual de
+              actividad económica (EMAE) y el dinero (base monetaria y variación
+              interanual del M2 privado). El Resumen reúne algunas cifras clave
+              con un enlace a cada sección. Cada tarjeta indica su unidad y
+              presenta el valor tal como lo informa la serie, sin conversiones
+              de escala o frecuencia. Las tasas se expresan como nominales
+              anuales. Ninguna de ellas equivale a una tasa de política
+              monetaria.
             </p>
             <p>
               Todas las series, salvo el riesgo país, se consultan directamente

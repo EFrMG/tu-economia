@@ -281,7 +281,7 @@ function loadCountryRisk() {
   return cache.get("country-risk", CACHE_TTL_MS, fetchCountryRisk);
 }
 
-/** Shares the validated inflation history between the Análisis calculators and the inflation resource. */
+/** Shares the validated inflation history between the purchasing-power and deposit calculators and the inflation resource. */
 export function getMonthlyInflationHistory(): Promise<IndicatorPoint[]> {
   return cache.get(`bcra:history:${INFLATION_VARIABLE}`, CACHE_TTL_MS, () =>
     fetchSeriesHistory(INFLATION_VARIABLE),

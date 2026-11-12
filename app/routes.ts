@@ -24,11 +24,12 @@ export default [
   ]),
   layout("layouts/terminal.tsx", [
     route("dashboard", "routes/dashboard.tsx"),
-    route("analisis", "routes/analisis.tsx"),
-    route("noticias", "routes/noticias.tsx"),
-    route("indicadores", "routes/indicadores.tsx"),
-    route("acciones", "routes/acciones.tsx"),
+    route("dolar", "routes/dolar.tsx"),
+    route("precios", "routes/precios.tsx"),
     route("tasas", "routes/tasas.tsx"),
+    route("actividad", "routes/actividad.tsx"),
+    route("acciones", "routes/acciones.tsx"),
+    route("noticias", "routes/noticias.tsx"),
     route("mi-economia", "routes/mi-economia.tsx"),
   ]),
 ] satisfies RouteConfig;

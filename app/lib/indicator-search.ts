@@ -1,9 +1,13 @@
-import { INDICATOR_DEFINITIONS, type IndicatorId } from "~/lib/indicators";
+import {
+  INDICATOR_DEFINITIONS,
+  indicatorGroupPathname,
+  type IndicatorId,
+} from "~/lib/indicators";
 import type { SearchEntity } from "~/lib/search-entities";
 
 export type IndicatorSearchResult = SearchEntity<"indicator">;
 
-/** The element id of an `/indicadores` card, which search scrolls to. */
+/** The element id of an indicator card, which search scrolls to. */
 export const indicatorCardId = (id: IndicatorId) => `indicador-${id}`;
 
 /** Common names a visitor may type for each card, beyond its title. */
@@ -27,14 +31,37 @@ const CARD_ALIASES: Record<IndicatorId, readonly string[]> = {
   icl: ["icl", "alquileres", "contratos de locacion"],
 };
 
-/** Tables and panels of `/indicadores`, by the id of their section. */
+/** Tables, charts and calculators, by their page and the id of their section. */
 const SECTIONS: readonly {
   id: string;
+  pathname: string;
+  searchParams?: Readonly<Record<string, string>>;
   title: string;
   aliases: readonly string[];
 }[] = [
   {
+    id: "currency-converter-title",
+    pathname: "/dolar",
+    title: "Conversor de pesos y dólares",
+    aliases: ["conversor", "convertir", "calculadora de dolar"],
+  },
+  {
+    id: "historical-chart-title",
+    pathname: "/dolar",
+    searchParams: { view: "gap" },
+    title: "Brecha histórica",
+    aliases: ["brecha", "brecha cambiaria", "blue vs oficial"],
+  },
+  {
+    id: "historical-chart-title",
+    pathname: "/dolar",
+    searchParams: { view: "quotes" },
+    title: "Evolución histórica del dólar",
+    aliases: ["historico", "cotizaciones historicas", "evolucion del dolar"],
+  },
+  {
     id: "canasta-basica",
+    pathname: "/precios",
     title: "Canasta básica",
     aliases: [
       "cba",
@@ -49,6 +76,7 @@ const SECTIONS: readonly {
   },
   {
     id: "salarios",
+    pathname: "/precios",
     title: "Salarios",
     aliases: [
       "salario",
@@ -60,6 +88,7 @@ const SECTIONS: readonly {
   },
   {
     id: "inflacion-por-rubro",
+    pathname: "/precios",
     title: "Inflación por rubro y región",
     aliases: [
       "ipc por rubro",
@@ -76,7 +105,20 @@ const SECTIONS: readonly {
     ],
   },
   {
+    id: "poder-adquisitivo",
+    pathname: "/precios",
+    title: "Poder adquisitivo",
+    aliases: ["equivalencia", "actualizar por inflacion", "ajustar por ipc"],
+  },
+  {
+    id: "depositos-e-inflacion",
+    pathname: "/tasas",
+    title: "Depósitos frente a la inflación",
+    aliases: ["retorno real", "plazo fijo vs inflacion", "rendimiento real"],
+  },
+  {
     id: "activity-title",
+    pathname: "/actividad",
     title: "Actividad económica (EMAE)",
     aliases: ["emae", "actividad", "estimador mensual de actividad economica"],
   },
@@ -86,12 +128,15 @@ const entity = (
   id: string,
   title: string,
   aliases: readonly string[],
+  pathname: string,
+  searchParams?: Readonly<Record<string, string>>,
 ): IndicatorSearchResult => ({
   kind: "indicator",
-  id,
+  // Two views of one chart share its element id, so the view keeps their keys apart.
+  id: searchParams?.view ? `${id}:${searchParams.view}` : id,
   title,
   aliases,
-  target: { pathname: "/indicadores", hash: id, focusId: id },
+  target: { pathname, searchParams, hash: id, focusId: id },
 });
 
 /** Cards first, in page order, so a broad term such as "inflación" lists the headline figure before the breakdown tables. */
@@ -101,7 +146,10 @@ export const INDICATOR_SEARCH_RESULTS: readonly IndicatorSearchResult[] = [
       indicatorCardId(definition.id),
       definition.title,
       CARD_ALIASES[definition.id],
+      indicatorGroupPathname(definition.group),
     ),
   ),
-  ...SECTIONS.map(({ id, title, aliases }) => entity(id, title, aliases)),
+  ...SECTIONS.map(({ id, pathname, searchParams, title, aliases }) =>
+    entity(id, title, aliases, pathname, searchParams),
+  ),
 ];

@@ -1,15 +1,19 @@
 const BCRA_SERIES_URL = "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias";
 const BUSINESS_DAYS = "Diaria, en días con publicación";
 
+/** `pathname` is the page that shows the group's cards; search and the Resumen figures link there. */
 export const INDICATOR_GROUPS = [
-  { id: "prices", title: "Precios" },
-  { id: "rates", title: "Tasas de interés" },
-  { id: "external", title: "Dólar y sector externo" },
-  { id: "money", title: "Dinero" },
-  { id: "units", title: "Unidades de actualización" },
+  { id: "prices", title: "Inflación", pathname: "/precios" },
+  { id: "rates", title: "Tasas de interés", pathname: "/tasas" },
+  { id: "units", title: "Unidades de actualización", pathname: "/tasas" },
+  { id: "external", title: "Dólar y sector externo", pathname: "/dolar" },
+  { id: "money", title: "Dinero", pathname: "/actividad" },
 ] as const;
 
 export type IndicatorGroupId = (typeof INDICATOR_GROUPS)[number]["id"];
+
+export const indicatorGroupPathname = (group: IndicatorGroupId) =>
+  INDICATOR_GROUPS.find(({ id }) => id === group)!.pathname;
 
 interface IndicatorDefinitionShape {
   id: string;

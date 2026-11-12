@@ -25,7 +25,7 @@ export const RouteError = ({ title, detail, note }: RouteErrorProps) => (
         Actualizar página
       </Button>
       <Button href="/dashboard" variant="outline">
-        Volver al Dashboard
+        Volver al Resumen
       </Button>
     </div>
   </section>

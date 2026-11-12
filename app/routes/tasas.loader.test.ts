@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { loader } from "./tasas";
+import { loader, shouldRevalidate } from "./tasas";
+
+vi.mock("~/lib/indicators.server", () => ({
+  getIndicators: vi.fn(async () => []),
+  getMonthlyInflationHistory: vi.fn(async () => []),
+  getDepositRateHistory: vi.fn(async () => []),
+}));
 
 const run = (path: string) =>
   loader({
@@ -48,6 +54,45 @@ describe("tasas loader", () => {
         "/tasas.data?panel=tarjetas&segmento=x&_routes=routes%2Ftasas",
       ),
     ).toBe("/tasas?panel=tarjetas");
+  });
+
+  it("keeps the deposit calculator's inputs and the preview when it redirects the panels' query", () => {
+    expect(
+      redirectOf("/tasas?depositAmount=5000&depositMonth=2026-09"),
+    ).toBeNull();
+
+    expect(
+      redirectOf(
+        "/tasas?panel=tarjetas&segmento=x&depositAmount=5000&preview=unavailable",
+      ),
+    ).toBe("/tasas?panel=tarjetas&depositAmount=5000&preview=unavailable");
+  });
+
+  it("keeps loaded data when only the deposit calculator's inputs change", () => {
+    const navigation = (current: string, next: string) =>
+      ({
+        currentUrl: new URL(current),
+        nextUrl: new URL(next),
+        defaultShouldRevalidate: true,
+      }) as Parameters<typeof shouldRevalidate>[0];
+
+    expect(
+      shouldRevalidate(
+        navigation(
+          "https://example.com/tasas?depositAmount=1",
+          "https://example.com/tasas?depositAmount=2&depositMonth=2026-09",
+        ),
+      ),
+    ).toBe(false);
+
+    expect(
+      shouldRevalidate(
+        navigation(
+          "https://example.com/tasas",
+          "https://example.com/tasas?panel=tarjetas",
+        ),
+      ),
+    ).toBe(true);
   });
 
   it("turns a page past the last into the last page", () => {

@@ -13,7 +13,7 @@ Operational rules for working in this repository.
 - `app/`: the React Router v8 application.
   - `app/routes.ts`: the single route manifest. Every route is declared there; nothing auto-registers.
   - `app/routes/`: route modules. `*.ts` files (without JSX) are resource endpoints: `robots.ts`, `sitemap.ts`, `inflation-history.ts`, `prices-api.ts`, and the account, billing and storage handlers (`auth-api.ts`, `account-api.ts`, `billing-api.ts`, `billing-webhook-api.ts`, `finance-export-api.ts`). `*.tsx` files are pages.
-  - `app/layouts/`: page shells: `marketing.tsx` wraps the public pages (home, `api-status`, `docs`, `privacy`, `terms`); `terminal.tsx` wraps the dashboard app (`dashboard`, `analisis`, `noticias`, `indicadores`, `acciones`, `tasas`, `mi-economia`).
+  - `app/layouts/`: page shells: `marketing.tsx` wraps the public pages (home, `api-status`, `docs`, `privacy`, `terms`); `terminal.tsx` wraps the dashboard app (`dashboard` (Resumen), `dolar`, `precios`, `tasas`, `actividad`, `acciones`, `noticias`, `mi-economia`).
   - `app/components/ui/`: atomized, reusable primitives (Button, Card, Sparkline) with zero side effects.
   - `app/components/features/`: domain components (ExchangeRateCard, PersonalFinanceTracker).
   - `app/components/layout/`: page chrome (Navbar, Sidebar, TopBar, Footer).

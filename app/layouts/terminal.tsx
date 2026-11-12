@@ -124,14 +124,10 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
   }, [navOpen, supportOpen]);
 
   useEffect(() => {
-    if (previousPathname.current === location.pathname) return;
-
+    const pathnameChanged = previousPathname.current !== location.pathname;
     previousPathname.current = location.pathname;
 
-    const params = new URLSearchParams(location.search);
-    if (params.has("rate")) return;
-
-    // A search result names the section to open at; every table renders its frame, with that id, while its data loads.
+    // A search result names the section to open at, also on the same page with another query; each target renders, with that id, while its data loads.
     const target = location.hash
       ? document.getElementById(decodeURIComponent(location.hash.slice(1)))
       : null;
@@ -141,6 +137,11 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
 
       return;
     }
+
+    if (!pathnameChanged) return;
+
+    const params = new URLSearchParams(location.search);
+    if (params.has("rate")) return;
 
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname, location.search, location.hash]);

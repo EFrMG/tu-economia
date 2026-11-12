@@ -38,7 +38,7 @@ Before enabling accounts on the deployed Worker:
 
 GitHub Actions runs `pnpm test` and a Wrangler dry run (`pnpm exec wrangler deploy --dry-run`), which validates the Worker bundle without Cloudflare credentials. Run it locally after `pnpm build`.
 
-On a deployed URL, check `/dashboard`, `/indicadores`, `/noticias`, `/privacy` and that the fonts load, and on `/acciones`:
+On a deployed URL, check `/dashboard`, `/dolar`, `/precios`, `/tasas`, `/actividad`, `/noticias`, `/privacy` and that the fonts load, and on `/acciones`:
 
 - the Empresas list fills in, every issuer resolves (none reads "no identificado"), and the report links open documents on sec.gov; then one company (`/acciones?panel=empresas&empresa=YPF`) shows its filings and figures. The SEC throttles some cloud addresses, so a 403 here means the Worker is being refused;
 - `/api-status` shows a "SEC EDGAR" row that is not `failed`;

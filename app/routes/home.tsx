@@ -133,7 +133,7 @@ export default function Home() {
             <ScrollFeature
               id="Noticias"
               title="Noticias económicas"
-              description="Titulares recientes de medios argentinos. El dashboard muestra un avance de las últimas noticias."
+              description="Titulares recientes de medios argentinos. El resumen muestra un avance de las últimas noticias."
               points={[
                 "iProfesional, Clarín y Página/12",
                 "Enlace directo a cada publicación original",
