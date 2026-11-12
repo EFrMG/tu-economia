@@ -135,16 +135,25 @@ const EconomicNewsSection = ({ news, showAll = false }: NewsSectionProps) => {
   const allSourcesUnavailable =
     news.unavailableSources.length === NEWS_SOURCES.length;
 
+  // With every source down there is no listing to follow, so the notice takes the listing's place, as when the feed fails outright.
+  if (allSourcesUnavailable) {
+    return (
+      <section aria-labelledby="news-heading">
+        <NewsHeading showAll={showAll} />
+        <div className="grid min-h-[calc(2*10rem+1*1rem)] gap-4 lg:grid-cols-2">
+          <div className="lg:col-span-2">
+            <UnavailableNotice>
+              No fue posible consultar {unavailableNames} en este momento.
+            </UnavailableNotice>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section aria-labelledby="news-heading">
       <NewsHeading showAll={showAll} />
-      {news.unavailableSources.length > 0 ? (
-        <UnavailableNotice className={hasItems ? "mb-4" : ""}>
-          {allSourcesUnavailable
-            ? `No fue posible consultar ${unavailableNames} en este momento.`
-            : `No se pudo actualizar ${unavailableNames}. Las demás fuentes siguen disponibles.`}
-        </UnavailableNotice>
-      ) : null}
       {hasItems ? (
         <div className="grid min-h-[calc(2*10rem+1*1rem)] gap-4 lg:grid-cols-2">
           {(showAll ? news.items : news.items.slice(0, MAX_VISIBLE_ITEMS)).map(
@@ -153,16 +162,18 @@ const EconomicNewsSection = ({ news, showAll = false }: NewsSectionProps) => {
             ),
           )}
         </div>
-      ) : allSourcesUnavailable ? (
-        <div
-          className="grid min-h-[calc(2*10rem+1*1rem)] gap-4 lg:grid-cols-2"
-          aria-hidden="true"
-        />
       ) : (
         <p className="border border-base-700 bg-surface-950 px-4 py-5 text-body-sm text-text-200">
           No hay publicaciones recientes para mostrar.
         </p>
       )}
+      {/* A partial failure follows the listing, so the publications that did load lead the section. */}
+      {news.unavailableSources.length > 0 ? (
+        <UnavailableNotice className="mt-4">
+          No se pudo actualizar {unavailableNames}. Las demás fuentes siguen
+          disponibles.
+        </UnavailableNotice>
+      ) : null}
     </section>
   );
 };
