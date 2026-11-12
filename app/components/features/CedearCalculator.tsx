@@ -386,7 +386,7 @@ const CedearCalculator = ({ form, rates }: CedearCalculatorProps) => {
         />
       </div>
 
-      <div className="stack-5 border border-base-700 bg-surface-950 p-4 sm:p-5">
+      <div className="stack-4 border border-base-700 bg-surface-950 p-4 sm:p-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Field
             id={`${id}-precio`}

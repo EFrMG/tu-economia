@@ -100,8 +100,8 @@ const PriceRow = ({
     <div className="min-h-0 overflow-hidden">
       <div className="flex items-center gap-2 py-3 pr-2 pl-4">
         <div className="grid min-w-0 flex-1 gap-x-6 gap-y-2 sm:grid-cols-[minmax(0,1fr)_20rem] sm:items-center">
-          <div className="stack-1 min-w-0">
-            <h3 className="text-body-lg wrap-break-word text-text-100">
+          <div className="stack-2 min-w-0">
+            <h3 className="text-body-lg leading-tight wrap-break-word text-text-100">
               {product.name}
             </h3>
             <p className="font-mono text-label-caps text-text-400 uppercase">
@@ -112,7 +112,7 @@ const PriceRow = ({
             </p>
           </div>
 
-          <div className="stack-1 min-w-0 sm:text-right">
+          <div className="stack-2 min-w-0 sm:text-right">
             {chains === undefined ? (
               <>
                 <Skeleton className="h-6 w-28 sm:ml-auto" />

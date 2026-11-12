@@ -60,7 +60,7 @@ The wordmark combines the Geist brand name with a geometric TE monogram. The fav
 The layout uses a **Fixed Grid Strategy** to instill architectural stability.
 
 - **Base Unit:** 4px (`--spacing`). All metrics are multiples of this unit; data-dense layouts step in multiples of 8px.
-- **Vertical rhythm (`stack`, `stack-*`):** Gap steps are multiples of 8px, even steps only. The canonical ladder: `stack-2` (8px) for tight label/value pairs and header title-with-subtitle groups, `stack-4` (16px) for card and panel internals, `stack-6` (24px, also the bare `stack` default) for loose panel internals, `stack-8` (32px) between sections inside a page, and `stack-10`/`stack-12` (40/48px) for page-level rhythm. Odd steps (`stack-1`, `stack-3`, `stack-5`, …) are not used. `stack-0` (Sidebar) and `stack-48` (marketing hero) are reserved special cases.
+- **Vertical rhythm (`stack`, `stack-*`):** Gap steps are multiples of 8px, even steps only. The canonical ladder: `stack-2` (8px) for tight label/value pairs and header title-with-subtitle groups, `stack-4` (16px) for card and panel internals, `stack-6` (24px, also the bare `stack` default) for loose panel internals, `stack-8` (32px) between sections inside a page, and `stack-10`/`stack-12` (40/48px) for page-level rhythm. Odd steps (`stack-1`, `stack-3`, `stack-5`, …) are not used, except `stack-1` (4px) in the mobile cells of `FinanceMonthBar.tsx`, where `stack-0` is too tight and `stack-2` makes the sticky header too tall. `stack-0` (Sidebar) and `stack-48` (marketing hero) are reserved special cases.
 - **Container Max:** 1200px, both the terminal canvas and marketing pages use `--container-terminal` through `.page-container`.
 - **Gutter:** 16px.
 - **Margins:**
