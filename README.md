@@ -79,7 +79,7 @@ The project is pnpm-managed; `mise.toml` and `packageManager` in `package.json` 
 
 > To validate the Worker bundle and assets without publishing, run `mise exec -- pnpm exec wrangler deploy --dry-run` after building.
 
-Before committing, run `mise exec -- pnpm test`. It groups formatting, lint, typecheck, unit tests, and the build in one command.
+Before committing, run `mise exec -- pnpm test`. It groups formatting, lint, the TypeScript and Python type checks, unit tests, the Python script tests, and the build in one command.
 
 #### 2.3.1 Configuration
 

@@ -12,7 +12,7 @@ import json
 import os
 import subprocess
 import sys
-from typing import Optional
+from typing import NoReturn, Optional
 
 import cla
 
@@ -37,7 +37,7 @@ def annotate(message: str) -> str:
     return f"::error::{escaped}"
 
 
-def reject(messages: list[str]) -> None:
+def reject(messages: list[str]) -> NoReturn:
     for message in messages:
         print(annotate(message))
 
@@ -106,6 +106,10 @@ def main() -> None:
         reject(problems)
 
     version = cla.cla_version(cla_bytes)
+
+    # archive_errors has already rejected a CLA.md without a version.
+    assert version is not None
+
     commit_rows = gh_lines(f"repos/{repo}/pulls/{number}/commits", COMMITS_JQ)
 
     if len(commit_rows) >= COMMITS_API_LIMIT:

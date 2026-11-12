@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from collections import Counter
 from pathlib import Path
+from typing import Literal, overload
 
 REPO = Path(__file__).resolve().parent.parent
 OUTPUT = REPO / "app/lib/transparency-rates.generated.json"
@@ -119,6 +120,10 @@ class InvalidRow(ValueError):
     pass
 
 
+@overload
+def text(row: dict, key: str, required: Literal[True] = True) -> str: ...
+@overload
+def text(row: dict, key: str, required: bool) -> str | None: ...
 def text(row: dict, key: str, required: bool = True) -> str | None:
     value = row.get(key)
 
@@ -131,6 +136,10 @@ def text(row: dict, key: str, required: bool = True) -> str | None:
     return re.sub(r"\s+", " ", value).strip()
 
 
+@overload
+def number(row: dict, key: str, required: Literal[True] = True) -> float: ...
+@overload
+def number(row: dict, key: str, required: bool) -> float | None: ...
 def number(row: dict, key: str, required: bool = True) -> float | None:
     value = row.get(key)
 

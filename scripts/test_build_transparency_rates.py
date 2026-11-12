@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("build_transparency_rates", Path(__file__).with_name("build-transparency-rates.py"))
+assert spec is not None and spec.loader is not None
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
 

@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("build_price_basket", Path(__file__).with_name("build-price-basket.py"))
+assert spec is not None and spec.loader is not None
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
 

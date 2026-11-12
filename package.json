@@ -10,12 +10,13 @@
     "preview": "vite preview",
     "deploy": "wrangler deploy",
     "typecheck": "react-router typegen && tsc",
+    "typecheck:scripts": "pyright",
     "lint": "eslint .",
     "format": "prettier --write app workers eslint.config.mjs react-router.config.ts vite.config.ts wrangler.jsonc",
     "format:check": "prettier --check app workers eslint.config.mjs react-router.config.ts vite.config.ts wrangler.jsonc",
     "test:unit": "vitest run",
     "test:scripts": "python3 -m unittest discover -s scripts",
-    "test": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test:unit && pnpm run test:scripts && pnpm run build"
+    "test": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run typecheck:scripts && pnpm run test:unit && pnpm run test:scripts && pnpm run build"
   },
   "dependencies": {
     "better-auth": "1.7.10",

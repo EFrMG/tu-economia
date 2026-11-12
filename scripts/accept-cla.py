@@ -16,11 +16,12 @@ import json
 import re
 import subprocess
 import sys
+from typing import NoReturn
 
 import cla
 
 
-def fail(message: str, exit_code: int = 1) -> None:
+def fail(message: str, exit_code: int = 1) -> NoReturn:
     print(f"Error: {message}", file=sys.stderr)
     raise SystemExit(exit_code)
 

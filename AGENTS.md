@@ -21,7 +21,7 @@ Operational rules for working in this repository.
   - `app/css/`: the Tailwind CSS v4 files described under "Styling and design" below.
 - `workers/app.ts`: the Cloudflare Worker entry (the request handler and the daily retention cron); `wrangler.jsonc` configures the runtime.
 - `migrations/`: Cloudflare D1 SQL migrations (personal finance, auth, billing).
-- `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`.
+- `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`. Pyright type-checks them with `pyrightconfig.json` at the root.
 - `cla/`: `accepted/` holds the contributors' acceptance records and `versions/` the published CLA texts; see "License and CLA" below.
 - `docs/`: feature and operations guides, indexed in `docs/README.md`.
 - `build/client/assets/*.css`: generated CSS; the only place Tailwind reports unknown classes.
@@ -76,7 +76,7 @@ Operational rules for working in this repository.
 
 ## Verification
 
-Run before declaring implementation work complete (formatting, lint, typecheck, unit tests, Python script tests and build):
+Run before declaring implementation work complete (formatting, lint, TypeScript and Python type checks, unit tests, Python script tests and build):
 
 ```sh
 mise exec -- pnpm test
