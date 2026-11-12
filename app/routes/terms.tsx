@@ -7,7 +7,7 @@ export function meta() {
   return pageMeta({
     title: "Términos del servicio",
     description:
-      "Condiciones de la suscripción a Tu Economía: precio, mes gratis, cobro, cancelación, período de solo lectura y conservación de los registros.",
+      "Condiciones de la suscripción a Tu Economía: precio, mes gratis, cobro, cancelación, período de solo lectura y conservación de los registros, y uso permitido de los datos del servicio.",
     path: "/terms",
   });
 }
@@ -23,11 +23,11 @@ export default function Terms() {
         </h1>
         <p className="max-w-2xl text-body-lg text-text-300">
           Estas condiciones describen el alcance del servicio, el precio de la
-          suscripción, cómo se cobra y qué ocurre con sus registros cuando
-          finaliza.
+          suscripción, cómo se cobra, qué ocurre con sus registros cuando
+          finaliza y qué uso puede darse a los datos del servicio.
         </p>
         <p className="font-mono text-data-label text-text-400">
-          Última actualización: 4 de noviembre de 2026
+          Última actualización: 12 de noviembre de 2026
         </p>
       </header>
 
@@ -48,8 +48,10 @@ export default function Terms() {
               una suscripción activa.
             </p>
             <p>
-              Estos términos rigen esa suscripción. Al marcar la aceptación y
-              continuar en Mercado Pago, usted confirma que los leyó y los
+              Estos términos rigen esa suscripción. La sección «Interfaces y
+              datos del servicio» se aplica además a cualquier persona que
+              acceda al servicio, tenga o no una cuenta. Al marcar la aceptación
+              y continuar en Mercado Pago, usted confirma que los leyó y los
               acepta. Si no está de acuerdo, no complete la inscripción.
             </p>
             <p>
@@ -235,6 +237,49 @@ export default function Terms() {
             <p>
               Los registros que usted ingresa son suyos. Nos autoriza a
               almacenarlos y procesarlos únicamente para prestar el servicio.
+            </p>
+          </div>
+        </section>
+
+        <section className={sectionClass} aria-labelledby="interfaces-title">
+          <h2
+            id="interfaces-title"
+            className="font-heading text-headline-md text-text-100"
+          >
+            Interfaces y datos del servicio
+          </h2>
+          <div className="mt-4 stack-4 text-body-sm text-text-300">
+            <p>
+              Las direcciones que comienzan con /api/ y /resources/, y las
+              respuestas de datos que cargan las páginas, son interfaces
+              internas de Tu Economía. Existen únicamente para mostrar el
+              contenido del propio servicio: no constituyen una API pública ni
+              se ofrecen para su uso por terceros.
+            </p>
+            <p>
+              No está permitido utilizar esas interfaces, ni los datos que
+              entregan, para mostrar, reproducir o redistribuir información
+              fuera de Tu Economía, ya sea en otros sitios, aplicaciones,
+              widgets, bots o servicios, con o sin fines comerciales. Tampoco
+              está permitido obtener el contenido de las páginas por medios
+              automatizados con ese fin.
+            </p>
+            <p>
+              Las cotizaciones, los indicadores y las noticias provienen de
+              fuentes públicas que tienen sus propias condiciones de uso. Si
+              necesita esos datos para otro fin, consúltelos directamente en las
+              fuentes que se detallan en la{" "}
+              <Link
+                to="/docs"
+                className="text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
+              >
+                documentación
+              </Link>
+              .
+            </p>
+            <p>
+              Podemos limitar o bloquear el acceso que incumpla estas
+              condiciones.
             </p>
           </div>
         </section>
