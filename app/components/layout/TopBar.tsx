@@ -7,6 +7,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router";
 import { equityPanelSearchResults } from "~/lib/equity-search";
 import { EXCHANGE_RATE_SEARCH_RESULTS } from "~/lib/exchange-rate-search";
+import { RATES_PANEL_SEARCH_RESULTS } from "~/lib/rates-search";
 import {
   searchEntities,
   searchEntityKey,
@@ -20,6 +21,7 @@ function searchIndex(equitiesBymaEnabled: boolean): readonly SearchEntity[] {
   return [
     ...EXCHANGE_RATE_SEARCH_RESULTS,
     ...equityPanelSearchResults(equitiesBymaEnabled),
+    ...RATES_PANEL_SEARCH_RESULTS,
   ];
 }
 

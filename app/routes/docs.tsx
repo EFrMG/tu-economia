@@ -503,6 +503,49 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           </div>
         </section>
 
+        <section className={sectionClass} aria-labelledby="rates-title">
+          <h2
+            id="rates-title"
+            className="font-heading text-headline-md text-text-100"
+          >
+            Tasas
+          </h2>
+          <div className="mt-4 stack-4 text-body-sm text-text-300">
+            <p>
+              La sección Tasas compara préstamos personales en pesos y tarjetas
+              de crédito por entidad, con los datos que cada entidad informa al{" "}
+              <a
+                className={sourceLinkClass}
+                href="https://www.bcra.gob.ar/apis-banco-central/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                BCRA
+              </a>{" "}
+              en el Régimen de Transparencia. Para los préstamos se muestran el
+              costo financiero total (CFT) y la tasa efectiva anual (TEA)
+              máximos, el plazo máximo y los montos; para las tarjetas, las
+              tasas efectivas anuales máximas de financiación y de adelanto en
+              efectivo y las comisiones de mantenimiento y renovación, sin
+              bonificaciones.
+            </p>
+            <p>
+              Son valores máximos: la tasa que ofrece una entidad puede ser
+              menor según el perfil de quien la solicita. Por eso la tabla
+              compara solo los productos que cumplen los filtros elegidos
+              (perfil, plazo, monto, segmento y provincia) y muestra, por
+              entidad, el de menor costo. Cada fila indica la fecha en que la
+              entidad lo informó.
+            </p>
+            <p>
+              Los datos se consultan una vez por semana. Se muestran los
+              préstamos en pesos y los productos informados en los últimos doce
+              meses. Un CFT máximo menor al 10% se señala como valor
+              inusualmente bajo, para confirmarlo con la entidad.
+            </p>
+          </div>
+        </section>
+
         <section className={sectionClass} aria-labelledby="personal-title">
           <h2
             id="personal-title"

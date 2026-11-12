@@ -69,7 +69,7 @@ export const EquityPanelSwitch = ({ bymaEnabled }: EquityPanelSwitchProps) => {
 
 /** Without an alignment: Tailwind emits `text-right` after `text-left` and `text-center`, so a cell that composed two of them would always end up right-aligned. */
 export const headBaseClassName =
-  "px-4 py-3 align-bottom font-mono font-normal text-label-caps whitespace-nowrap text-text-200 uppercase";
+  "px-4 py-3 align-bottom font-mono text-label-caps whitespace-nowrap text-text-200 uppercase";
 
 export const headClassName = `${headBaseClassName} text-right`;
 

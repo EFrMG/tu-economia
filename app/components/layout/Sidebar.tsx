@@ -10,6 +10,7 @@ import {
   MdOutlineFavoriteBorder,
   MdOutlineHelpOutline,
   MdOutlineNewspaper,
+  MdOutlinePercent,
   MdOutlineQueryStats,
 } from "react-icons/md";
 import { NavLink, useLocation } from "react-router";
@@ -39,6 +40,7 @@ const primaryNav = (equitiesBymaEnabled: boolean): NavItem[] => [
     icon: MdOutlineCandlestickChart,
     to: "/acciones",
   },
+  { label: "Tasas", icon: MdOutlinePercent, to: "/tasas" },
   { label: "Noticias", icon: MdOutlineNewspaper, to: "/noticias" },
   {
     label: "Mi economía",

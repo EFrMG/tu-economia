@@ -13,7 +13,7 @@ Operational rules for working in this repository.
 - `app/`: the React Router v8 application.
   - `app/routes.ts`: the single route manifest. Every route is declared there; nothing auto-registers.
   - `app/routes/`: route modules. `*.ts` files (without JSX) are resource endpoints: `robots.ts`, `sitemap.ts`, `inflation-history.ts`, `prices-api.ts`, and the account, billing and storage handlers (`auth-api.ts`, `account-api.ts`, `billing-api.ts`, `billing-webhook-api.ts`, `finance-export-api.ts`). `*.tsx` files are pages.
-  - `app/layouts/`: page shells: `marketing.tsx` wraps the public pages (home, `api-status`, `docs`, `privacy`, `terms`); `terminal.tsx` wraps the dashboard app (`dashboard`, `analisis`, `noticias`, `indicadores`, `acciones`, `mi-economia`).
+  - `app/layouts/`: page shells: `marketing.tsx` wraps the public pages (home, `api-status`, `docs`, `privacy`, `terms`); `terminal.tsx` wraps the dashboard app (`dashboard`, `analisis`, `noticias`, `indicadores`, `acciones`, `tasas`, `mi-economia`).
   - `app/components/ui/`: atomized, reusable primitives (Button, Card, Sparkline) with zero side effects.
   - `app/components/features/`: domain components (ExchangeRateCard, PersonalFinanceTracker).
   - `app/components/layout/`: page chrome (Navbar, Sidebar, TopBar, Footer).
@@ -21,7 +21,7 @@ Operational rules for working in this repository.
   - `app/css/`: the Tailwind CSS v4 files described under "Styling and design" below.
 - `workers/app.ts`: the Cloudflare Worker entry (the request handler and the daily retention cron); `wrangler.jsonc` configures the runtime.
 - `migrations/`: Cloudflare D1 SQL migrations (personal finance, auth, billing).
-- `scripts/`: the maintainer-run Python build of the Precios data (`build-price-basket.py`, `price-basket.json`; see `docs/product-price-feed.md`) and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py` and `test_cla.py`.
+- `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`.
 - `cla/`: `accepted/` holds the contributors' acceptance records and `versions/` the published CLA texts; see "License and CLA" below.
 - `docs/`: feature and operations guides, indexed in `docs/README.md`.
 - `build/client/assets/*.css`: generated CSS; the only place Tailwind reports unknown classes.

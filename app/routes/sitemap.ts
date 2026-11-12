@@ -6,6 +6,7 @@ const INDEXED_PATHS = [
   "/analisis",
   "/indicadores",
   "/acciones",
+  "/tasas",
   "/noticias",
   "/docs",
   "/terms",
