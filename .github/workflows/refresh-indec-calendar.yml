@@ -1,0 +1,52 @@
+name: Refresh INDEC calendar
+
+# Downloads INDEC's semester diffusion calendar, converts it to text and opens a
+# pull request with the result. The parsing into app/lib/indec-calendar.ts stays
+# manual: the PR is the reminder to check the new dates and update the table.
+# See "Next-release dates" in todo.md and app/lib/indec-calendar.ts.
+on:
+  schedule:
+    - cron: "0 9 15 6,12 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-indec-calendar
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Install poppler-utils (pdftotext)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download and convert the latest calendar
+        run: python3 -I scripts/refresh-indec-calendar.py
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Add INDEC diffusion calendar text"
+          title: "INDEC diffusion calendar: new semester available"
+          body: |
+            Automated download of INDEC's semester diffusion calendar, converted
+            to text with `pdftotext -layout`.
+
+            **Manual step required:** review the new file under `sources/INDEC/`,
+            update `app/lib/indec-calendar.ts` (semester, expiry date and the
+            release dates for IPC, canasta, salarios and EMAE) and run
+            `pnpm test`. The freshness test in `indec-calendar.test.ts` fails
+            once the previous semester has expired.
+          branch: refresh-indec-calendar
+          delete-branch: true

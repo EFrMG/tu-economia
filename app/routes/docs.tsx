@@ -284,8 +284,8 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               interanual del mismo mes. La tabla de inflación muestra el IPC por
               división, por categoría (núcleo, regulados, estacionales, bienes y
               servicios) y por región. Cada tabla indica el mes al que
-              corresponde y se conserva en memoria del servidor por hasta una
-              hora.
+              corresponde, la fecha de la próxima publicación según el
+              calendario semestral del INDEC, y se conserva en memoria del hora.
             </p>
             <p>
               El panel de actividad utiliza las series del EMAE de{" "}

@@ -27,6 +27,7 @@ import {
   type PriceRow,
   type WagesData,
 } from "~/lib/indec";
+import { formatReleaseDate, nextRelease } from "~/lib/indec-calendar";
 
 const linkClassName =
   "shrink-0 self-end font-mono sm:self-start text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline";
@@ -92,15 +93,20 @@ const Head = ({ first, figures, pinned = false }: HeadProps) => (
 const Period = ({
   period,
   place,
+  nextRelease: nextReleaseDate,
 }: {
   period: string | null;
   place?: string;
+  nextRelease?: string | null;
 }) =>
   period === null ? (
     <Skeleton className="h-3 w-32" />
   ) : (
     <span className="first-letter:uppercase">
       {formatIndecPeriod(period)}
+      {nextReleaseDate
+        ? ` (Próxima: ${formatReleaseDate(nextReleaseDate)})`
+        : null}
       {place ? ` · ${place}` : null}
     </span>
   );
@@ -149,7 +155,11 @@ const BasketsTable = ({ data }: { data: Part<BasketsData> }) => (
     caption="Valor mensual de la canasta básica alimentaria y de la canasta básica total en Gran Buenos Aires, por adulto equivalente y para un hogar de cuatro personas, con su variación mensual e interanual."
     meta={
       data === null ? undefined : (
-        <Period period={data?.period ?? null} place="Gran Buenos Aires" />
+        <Period
+          period={data?.period ?? null}
+          place="Gran Buenos Aires"
+          nextRelease={nextRelease("canasta")?.releaseDate ?? null}
+        />
       )
     }
     loading={data === undefined}
@@ -209,7 +219,14 @@ const WagesTable = ({ data }: { data: Part<WagesData> }) => (
     id="salarios"
     title="Salarios"
     caption="Variación mensual e interanual del índice de salarios por sector, y la variación interanual descontada la inflación del mismo mes."
-    meta={data === null ? undefined : <Period period={data?.period ?? null} />}
+    meta={
+      data === null ? undefined : (
+        <Period
+          period={data?.period ?? null}
+          nextRelease={nextRelease("salarios")?.releaseDate ?? null}
+        />
+      )
+    }
     loading={data === undefined}
     head={
       <Head
@@ -272,7 +289,14 @@ const PricesTable = ({ data }: { data: Part<ConsumerPricesData> }) => (
     id="inflacion-por-rubro"
     title="Inflación por rubro y región"
     caption="Variación mensual e interanual del índice de precios al consumidor: nivel general, divisiones y categorías a nivel nacional, y nivel general de cada región."
-    meta={data === null ? undefined : <Period period={data?.period ?? null} />}
+    meta={
+      data === null ? undefined : (
+        <Period
+          period={data?.period ?? null}
+          nextRelease={nextRelease("ipc")?.releaseDate ?? null}
+        />
+      )
+    }
     loading={data === undefined}
     head={
       <Head

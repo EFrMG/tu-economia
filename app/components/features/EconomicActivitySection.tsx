@@ -23,6 +23,7 @@ import {
   type EconomicActivity,
 } from "~/lib/economic-activity";
 import { useAnchorHighlight } from "~/lib/use-anchor-highlight";
+import { formatReleaseDate, nextRelease } from "~/lib/indec-calendar";
 
 interface EconomicActivitySectionProps {
   activity: EconomicActivity | null;
@@ -164,6 +165,9 @@ const EconomicActivitySection = ({
               </p>
               <p className="font-mono text-data-label text-text-400">
                 Período: {formatActivityMonth(latest.date)}
+                {nextRelease("emae")
+                  ? ` (Próxima: ${formatReleaseDate(nextRelease("emae")!.releaseDate)})`
+                  : null}
               </p>
             </div>
             <div className="stack-2 border border-base-700 bg-base-900 p-4">
