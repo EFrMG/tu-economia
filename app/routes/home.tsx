@@ -10,6 +10,7 @@ import {
   HiOutlineBriefcase,
   HiOutlineCheckCircle,
   HiOutlineCollection,
+  HiOutlineCreditCard,
   HiOutlineCurrencyDollar,
   HiOutlineNewspaper,
   HiOutlinePresentationChartLine,
@@ -19,7 +20,7 @@ import {
 export function meta() {
   return pageMeta({
     description:
-      "Cotizaciones del dólar, indicadores, análisis histórico, empresas, noticias y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
+      "Cotizaciones del dólar, indicadores del BCRA, tasas de préstamos y tarjetas por entidad, análisis histórico, empresas, noticias y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
     path: "/",
   });
 }
@@ -41,7 +42,9 @@ export default function Home() {
               El mercado argentino.
             </h1>
             <p className="block max-w-2xl text-center text-body-lg text-text-300 md:text-marketing-lead">
-              <span>Cotizaciones, indicadores, empresas y noticias.</span>{" "}
+              <span>
+                Cotizaciones, indicadores, tasas, empresas y noticias.
+              </span>{" "}
               <br />
               <span>Registre sus ahorros y gastos en un solo lugar.</span>
               <br /> <span>Información clara en un contexto volátil.</span>
@@ -93,16 +96,27 @@ export default function Home() {
             <ScrollFeature
               id="Indicadores"
               title="Inflación e indicadores"
-              description="Inflación, tasas, UVA, riesgo país y actividad económica."
+              description="Las series del BCRA agrupadas por tema, con la inflación, las tasas de referencia y la actividad económica."
               points={[
-                "Inflación mensual e interanual",
-                "Depósitos a 30 días, UVA y riesgo país",
-                "EMAE: variación interanual y mensual desestacionalizada",
-                "Equivalencia de un monto según el IPC",
-                "Retorno real frente a la inflación",
+                "Inflación mensual, interanual y esperada a 12 meses",
+                "Depósitos a 30 días, BADLAR, TAMAR y préstamos personales",
+                "Reservas, dólar minorista y mayorista, riesgo país",
+                "Base monetaria, M2 privado, UVA, UVI, CER e ICL",
+                "EMAE, equivalencia según el IPC y retorno real",
               ]}
               icon={<HiOutlinePresentationChartLine />}
               reverse
+            />
+            <ScrollFeature
+              id="Tasas"
+              title="Préstamos y tarjetas"
+              description="Lo que cada entidad informa al BCRA sobre sus préstamos personales y tarjetas de crédito, para comparar entre las que corresponden a su perfil."
+              points={[
+                "Costo financiero total y tasa efectiva anual máximos",
+                "Filtros por perfil, plazo, monto y provincia",
+                "Tasas y comisiones de tarjetas por segmento",
+              ]}
+              icon={<HiOutlineCreditCard />}
             />
             <ScrollFeature
               id="Empresas"
@@ -114,6 +128,7 @@ export default function Home() {
                 "Precio teórico con CCL o MEP",
               ]}
               icon={<HiOutlineBriefcase />}
+              reverse
             />
             <ScrollFeature
               id="Noticias"
@@ -124,7 +139,6 @@ export default function Home() {
                 "Enlace directo a cada publicación original",
               ]}
               icon={<HiOutlineNewspaper />}
-              reverse
             />
             <ScrollFeature
               id="Mi economía"
@@ -136,6 +150,7 @@ export default function Home() {
                 "Precios de consumo por ciudad y cadena",
               ]}
               icon={<HiOutlineCollection />}
+              reverse
             />
           </div>
         </div>
