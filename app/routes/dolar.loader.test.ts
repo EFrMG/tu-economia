@@ -158,7 +158,7 @@ describe("dolar revalidation", () => {
       defaultShouldRevalidate: true,
     }) as Parameters<typeof shouldRevalidate>[0];
 
-  it("keeps loader data while only the chart's period or view changes", () => {
+  it("keeps loader data while only the chart's period or view, or the selected rate, changes", () => {
     expect(
       shouldRevalidate(
         navigation(
@@ -173,6 +173,15 @@ describe("dolar revalidation", () => {
         navigation(
           "https://example.com/dolar?period=30",
           "https://example.com/dolar?period=30&view=gap",
+        ),
+      ),
+    ).toBe(false);
+
+    expect(
+      shouldRevalidate(
+        navigation(
+          "https://example.com/dolar?rate=blue",
+          "https://example.com/dolar?rate=cripto",
         ),
       ),
     ).toBe(false);

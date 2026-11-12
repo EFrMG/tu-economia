@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import {
   Await,
   isRouteErrorResponse,
@@ -24,6 +24,7 @@ import {
   argentinaCalendarDate,
   chartViewFromSearchParam,
 } from "~/lib/exchange-rate-history";
+import { rateCardId, searchableRateCasa } from "~/lib/exchange-rate-search";
 import { getIndicators } from "~/lib/indicators.server";
 import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
 import { pageMeta } from "~/lib/meta";
@@ -80,7 +81,7 @@ export function loader({ request }: Route.LoaderArgs) {
   return { market, indicators: getIndicators() };
 }
 
-/** The chart's period and view are presentation state: the history already loaded covers every period. */
+/** The chart's period and view, and the rate card selected by search, are presentation state: the history already loaded covers every period. */
 export function shouldRevalidate({
   currentUrl,
   nextUrl,
@@ -97,7 +98,7 @@ export function shouldRevalidate({
   const current = new URLSearchParams(currentUrl.searchParams);
   const next = new URLSearchParams(nextUrl.searchParams);
 
-  for (const key of ["period", "view"]) {
+  for (const key of ["period", "view", "rate"]) {
     current.delete(key);
     next.delete(key);
   }
@@ -124,8 +125,7 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
       rates={market?.rates ?? null}
       loading={loading}
       title="Dólar"
-      lead="Cotizaciones del mercado argentino, conversor y evolución histórica."
-      withConverter
+      lead="Cotizaciones del mercado argentino y su evolución histórica."
     >
       <HistoricalExchangeChart
         points={history?.historicalChart ?? []}
@@ -166,6 +166,27 @@ export default function Dolar({ loaderData }: Route.ComponentProps) {
   );
 
   useFailedDataRetry(retryNeeded);
+
+  const [searchParams] = useSearchParams();
+  const selectedCasa = searchableRateCasa(searchParams.get("rate"));
+
+  useEffect(() => {
+    if (!selectedCasa) return;
+
+    const target = document.getElementById(rateCardId(selectedCasa));
+    if (!target) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    target.scrollIntoView({
+      behavior: reducedMotion ? "auto" : "smooth",
+      block: "center",
+    });
+
+    target.focus({ preventScroll: true });
+  }, [selectedCasa]);
 
   return (
     <div className="stack-10">

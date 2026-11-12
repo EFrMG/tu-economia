@@ -17,7 +17,7 @@ import {
 import { Wordmark } from "~/components/ui/Wordmark";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 
-/** Quotations first, so a term that matches both keeps the dashboard rates on top; the Acciones panels follow the BYMA flag. */
+/** Quotations first, so a term that matches both keeps the rate cards on top; the Acciones panels follow the BYMA flag. */
 function searchIndex(equitiesBymaEnabled: boolean): readonly SearchEntity[] {
   return [
     ...EXCHANGE_RATE_SEARCH_RESULTS,

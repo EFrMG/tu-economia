@@ -41,7 +41,7 @@ const SECTIONS: readonly {
 }[] = [
   {
     id: "currency-converter-title",
-    pathname: "/dolar",
+    pathname: "/dashboard",
     title: "Conversor de pesos y dólares",
     aliases: ["conversor", "convertir", "calculadora de dolar"],
   },

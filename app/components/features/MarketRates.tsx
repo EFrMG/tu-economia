@@ -37,19 +37,22 @@ interface MarketRatesProps {
   title: string;
   /** The lead under the title; replaced by a stale-data line while stale. */
   lead: string;
-  /** The converter between the header and the grid, on the Dólar page. */
+  /** The converter under the header, on the Resumen. */
   withConverter?: boolean;
+  /** The other four quotations, on the Dólar page. */
+  withGrid?: boolean;
   /** Content after the grid, inside the same busy region. */
   children?: ReactNode;
 }
 
-/** The blue highlight beside the page title, then the other four quotations. */
+/** The blue highlight beside the page title, then the converter, the other four quotations, or both. */
 export const MarketRates = ({
   rates,
   loading = false,
   title,
   lead,
   withConverter = false,
+  withGrid = true,
   children,
 }: MarketRatesProps) => {
   const isStale = rates?.freshness.status === "stale";
@@ -92,37 +95,39 @@ export const MarketRates = ({
         />
       ) : null}
 
-      <section>
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase">
-            ARS-USD
-          </h2>
-          {/* While stale, the quote time already dates the values shown; the line turns amber and says so instead of a separate notice. */}
-          {rates ? (
-            <span
-              className={`font-mono text-data-label ${isStale ? "text-tertiary-text-400" : "text-text-400"}`}
-              role={isStale ? "status" : undefined}
-            >
-              Última actualización:{" "}
-              {rates.updatedAt ? `${rates.updatedAt} ART` : "s/d"}
-              {isStale ? " (sin actualizar)" : null}
-            </span>
-          ) : null}
-        </div>
+      {withGrid ? (
+        <section>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 className="shrink-0 border-b border-primary-500/30 pb-1 font-mono text-label-caps whitespace-nowrap text-text-200 uppercase">
+              ARS-USD
+            </h2>
+            {/* While stale, the quote time already dates the values shown; the line turns amber and says so instead of a separate notice. */}
+            {rates ? (
+              <span
+                className={`font-mono text-data-label ${isStale ? "text-tertiary-text-400" : "text-text-400"}`}
+                role={isStale ? "status" : undefined}
+              >
+                Última actualización:{" "}
+                {rates.updatedAt ? `${rates.updatedAt} ART` : "s/d"}
+                {isStale ? " (sin actualizar)" : null}
+              </span>
+            ) : null}
+          </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {MARKET_GRID_CASAS.map((casa) => (
-            <ExchangeRateCard
-              key={casa}
-              casa={casa}
-              rate={gridByCasa.get(casa) ?? null}
-              footnote={rates ? footnoteFor(casa, rates.brecha) : ""}
-              id={rateCardId(casa)}
-              loading={loading}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {MARKET_GRID_CASAS.map((casa) => (
+              <ExchangeRateCard
+                key={casa}
+                casa={casa}
+                rate={gridByCasa.get(casa) ?? null}
+                footnote={rates ? footnoteFor(casa, rates.brecha) : ""}
+                id={rateCardId(casa)}
+                loading={loading}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {children}
     </div>

@@ -6,7 +6,7 @@ import { getDashboardRates } from "~/lib/exchange-rates.server";
 import { getIndecData } from "~/lib/indec.server";
 import { getIndicators } from "~/lib/indicators.server";
 import { workerEnvContext } from "~/lib/worker-context";
-import { loader, shouldRevalidate } from "./dashboard";
+import { loader } from "./dashboard";
 
 vi.mock("~/lib/economic-news.server", () => ({ getEconomicNews: vi.fn() }));
 vi.mock("~/lib/exchange-rates.server", () => ({ getDashboardRates: vi.fn() }));
@@ -56,45 +56,5 @@ describe("resumen loader", () => {
     expect(getIndicators).not.toHaveBeenCalled();
     expect(getIndecData).not.toHaveBeenCalled();
     expect(getEconomicNews).not.toHaveBeenCalled();
-  });
-});
-
-describe("resumen revalidation", () => {
-  const navigation = (current: string, next: string, formMethod?: string) =>
-    ({
-      currentUrl: new URL(current),
-      nextUrl: new URL(next),
-      formMethod,
-      defaultShouldRevalidate: true,
-    }) as Parameters<typeof shouldRevalidate>[0];
-
-  it("keeps loader data when only the selected rate changes, and revalidates otherwise", () => {
-    expect(
-      shouldRevalidate(
-        navigation(
-          "https://example.com/dashboard?rate=blue",
-          "https://example.com/dashboard?rate=cripto",
-        ),
-      ),
-    ).toBe(false);
-
-    expect(
-      shouldRevalidate(
-        navigation(
-          "https://example.com/dashboard",
-          "https://example.com/dashboard",
-        ),
-      ),
-    ).toBe(true);
-
-    expect(
-      shouldRevalidate(
-        navigation(
-          "https://example.com/dashboard?rate=blue",
-          "https://example.com/dashboard?rate=oficial",
-          "POST",
-        ),
-      ),
-    ).toBe(true);
   });
 });

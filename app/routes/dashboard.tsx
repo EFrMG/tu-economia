@@ -1,10 +1,5 @@
-import { Suspense, useEffect, useMemo } from "react";
-import {
-  Await,
-  isRouteErrorResponse,
-  useSearchParams,
-  type ShouldRevalidateFunctionArgs,
-} from "react-router";
+import { Suspense, useMemo } from "react";
+import { Await, isRouteErrorResponse } from "react-router";
 
 import type { Route } from "./+types/dashboard";
 import {
@@ -20,7 +15,6 @@ import { RouteFooter } from "~/components/ui/RouteFooter";
 import { getEconomicNews } from "~/lib/economic-news.server";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import { getDashboardRates } from "~/lib/exchange-rates.server";
-import { rateCardId, searchableRateCasa } from "~/lib/exchange-rate-search";
 import { UNAVAILABLE_INDEC_DATA } from "~/lib/indec";
 import { getIndecData } from "~/lib/indec.server";
 import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
@@ -64,31 +58,6 @@ export function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-/** `?rate=` only selects a card already on the page. */
-export function shouldRevalidate({
-  currentUrl,
-  nextUrl,
-  formMethod,
-  defaultShouldRevalidate,
-}: ShouldRevalidateFunctionArgs) {
-  if (
-    formMethod ||
-    currentUrl.pathname !== nextUrl.pathname ||
-    currentUrl.search === nextUrl.search
-  )
-    return defaultShouldRevalidate;
-
-  const current = new URLSearchParams(currentUrl.searchParams);
-  const next = new URLSearchParams(nextUrl.searchParams);
-
-  current.delete("rate");
-  next.delete("rate");
-
-  return current.toString() === next.toString()
-    ? false
-    : defaultShouldRevalidate;
-}
-
 const ResumenRates = ({
   rates,
   loading = false,
@@ -101,6 +70,8 @@ const ResumenRates = ({
     loading={loading}
     title="Resumen."
     lead="Cotizaciones y cifras clave del mercado argentino. Datos claros, sin ruido."
+    withConverter
+    withGrid={false}
   />
 );
 
@@ -134,27 +105,6 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
   );
 
   useFailedDataRetry(retryNeeded);
-
-  const [searchParams] = useSearchParams();
-  const selectedCasa = searchableRateCasa(searchParams.get("rate"));
-
-  useEffect(() => {
-    if (!selectedCasa) return;
-
-    const target = document.getElementById(rateCardId(selectedCasa));
-    if (!target) return;
-
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    target.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
-      block: "center",
-    });
-
-    target.focus({ preventScroll: true });
-  }, [selectedCasa]);
 
   const keyFigures = useMemo(
     () => Promise.all([loaderData.indicators, loaderData.indec]),

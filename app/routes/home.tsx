@@ -88,7 +88,6 @@ export default function Home() {
               description="Las cinco referencias del mercado en una sola pantalla, con su evolución, la brecha contra el Oficial y las series del BCRA sobre el sector externo."
               points={[
                 "Blue, Oficial, MEP, CCL y Cripto, con compra, venta y variación diaria",
-                "Conversor de pesos y dólares",
                 "Cierres y brecha Blue–Oficial de 7, 30 o 90 días",
                 "Dólar mayorista, reservas y riesgo país",
               ]}

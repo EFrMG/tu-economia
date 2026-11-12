@@ -7,7 +7,7 @@ export interface ExchangeRateSearchResult extends SearchEntity<"exchange-rate"> 
   id: SearchableRateCasa;
 }
 
-/** The first, intentionally small search index: quotations already shown on the dashboard. */
+/** The first, intentionally small search index: the quotations on the Dólar page. */
 export const EXCHANGE_RATE_SEARCH_RESULTS: readonly ExchangeRateSearchResult[] =
   [
     rateEntity("blue", "USD Blue", ["blue", "dolar blue", "usd blue"]),
@@ -33,7 +33,7 @@ function rateEntity(
     title,
     aliases,
     target: {
-      pathname: "/dashboard",
+      pathname: "/dolar",
       searchParams: { rate: id },
       focusId: rateCardId(id),
     },
