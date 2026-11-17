@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { authFromEnv } from "./auth.server";
 import { handleBilling, handleBillingWebhook } from "./billing.server";
@@ -1103,6 +1103,16 @@ describe("account deletion", () => {
 });
 
 describe("subscription entitlement", () => {
+  // The provider fixtures carry fixed trial and payment dates, so these tests run on the day they were written; only `Date` is faked, so async work keeps real timers.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("preserves canceled trial access to its exact end and rejects expired or pending records", () => {
     const row = {
       user_id: "synthetic",
