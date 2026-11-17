@@ -3,6 +3,7 @@ import { useFetcher } from "react-router";
 
 import { money } from "~/components/features/FinanceFields";
 import { Button } from "~/components/ui/Button";
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import { MdAdd, MdCheck } from "react-icons/md";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 import { Skeleton } from "~/components/ui/Skeleton";
@@ -100,7 +101,7 @@ const PriceRow = ({
     <div className="min-h-0 overflow-hidden">
       <div className="flex items-center gap-2 py-3 pr-2 pl-4">
         <div className="grid min-w-0 flex-1 gap-x-6 gap-y-2 sm:grid-cols-[minmax(0,1fr)_20rem] sm:items-center">
-          <div className="stack-2 min-w-0">
+          <div className="stack-0 min-w-0 sm:stack-2">
             <h3 className="text-body-lg leading-tight wrap-break-word text-text-100">
               {product.name}
             </h3>
@@ -112,7 +113,7 @@ const PriceRow = ({
             </p>
           </div>
 
-          <div className="stack-2 min-w-0 sm:text-right">
+          <div className="stack-0 min-w-0 sm:stack-2 sm:text-right">
             {chains === undefined ? (
               <>
                 <Skeleton className="h-6 w-28 sm:ml-auto" />
@@ -649,7 +650,8 @@ export const FinancePricesTab = () => {
             rel="noopener noreferrer"
             className={footerLinkClassName}
           >
-            Datos SEPA ↗
+            Datos SEPA
+            <ExternalLinkIcon />
           </a>
           <a
             href="https://creativecommons.org/licenses/by/4.0/deed.es"
@@ -657,7 +659,8 @@ export const FinancePricesTab = () => {
             rel="noopener noreferrer"
             className={footerLinkClassName}
           >
-            Licencia CC BY 4.0 ↗
+            Licencia CC BY 4.0
+            <ExternalLinkIcon />
           </a>
           <a
             href="https://www.preciosclaros.gob.ar/"
@@ -665,7 +668,8 @@ export const FinancePricesTab = () => {
             rel="noopener noreferrer"
             className={footerLinkClassName}
           >
-            Precios Claros ↗
+            Precios Claros
+            <ExternalLinkIcon />
           </a>
         </div>
       </footer>

@@ -13,6 +13,7 @@ import {
 import { UnavailableNotice } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { ChartSkeleton } from "~/components/ui/ChartSkeleton";
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import {
   ACTIVITY_CSV_URL,
   ACTIVITY_METHOD_URL,
@@ -286,7 +287,8 @@ const EconomicActivitySection = ({
           rel="noopener noreferrer"
           className="w-fit text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
         >
-          Ver metodología del EMAE ↗
+          Ver metodología del EMAE
+          <ExternalLinkIcon />
         </a>
         <a
           href={ACTIVITY_CSV_URL}
@@ -294,7 +296,8 @@ const EconomicActivitySection = ({
           rel="noopener noreferrer"
           className="w-fit text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
         >
-          Descargar serie publicada ↗
+          Descargar serie publicada
+          <ExternalLinkIcon />
         </a>
       </div>
     </section>

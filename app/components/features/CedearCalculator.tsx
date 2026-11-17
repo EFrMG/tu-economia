@@ -345,11 +345,9 @@ const CedearCalculator = ({ form, rates }: CedearCalculatorProps) => {
   const rateInvalid = manual && form.rateText!.trim() !== "" && rate === null;
 
   const pending =
-    result.theoretical === null
-      ? "Complete el precio del subyacente, el ratio y el tipo de cambio para obtener el precio teórico."
-      : market === null
-        ? "Ingrese el precio de mercado del CEDEAR para compararlo con el precio teórico."
-        : null;
+    result.theoretical !== null && market === null
+      ? "Ingrese el precio de mercado del CEDEAR para compararlo con el precio teórico."
+      : null;
 
   return (
     <section

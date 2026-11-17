@@ -1,4 +1,5 @@
 import { CopyableCard } from "~/components/features/CopyableCard";
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { indicatorCardId } from "~/lib/indicator-search";
 import {
@@ -78,7 +79,8 @@ const IndicatorCard = ({
           tabIndex={loading ? -1 : undefined}
           className="relative z-40 block w-fit font-mono text-data-label text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
         >
-          Ver la serie en la fuente ↗
+          Ver la serie en la fuente
+          <ExternalLinkIcon />
         </a>
       </div>
     </CopyableCard>

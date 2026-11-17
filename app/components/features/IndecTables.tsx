@@ -11,6 +11,7 @@ import {
   Unavailable,
   UnavailableBody,
 } from "~/components/features/EquityTables";
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import { Skeleton } from "~/components/ui/Skeleton";
 import {
   BASKETS,
@@ -40,11 +41,14 @@ const Change = ({ value }: { value: number | null }) => (
   <Figure value={value === null ? null : formatChange(value)} />
 );
 
+/** Long labels wrap within a capped width, so the pinned column leaves room for the figures on narrow screens. */
 const RowHeader = ({ label, detail }: { label: string; detail?: string }) => (
-  <th scope="row" className={`${stickyClassName} px-4 font-normal`}>
-    <span className="block text-body-sm text-text-100">{label}</span>
+  <th scope="row" className={`${stickyClassName} px-4 py-2 font-normal`}>
+    <span className="block max-w-36 text-body-sm leading-tight text-text-100 sm:max-w-56 md:max-w-72">
+      {label}
+    </span>
     {detail ? (
-      <span className="block font-mono text-data-label text-text-400">
+      <span className="block max-w-36 font-mono text-data-label text-text-400 sm:max-w-56 md:max-w-72">
         {detail}
       </span>
     ) : null}
@@ -127,7 +131,8 @@ const Notes = ({
       rel="noopener noreferrer"
       className={linkClassName}
     >
-      Ver el servicio en el INDEC ↗
+      Ver el servicio en el INDEC
+      <ExternalLinkIcon />
     </a>
   </div>
 );

@@ -72,7 +72,7 @@ const itemBase =
 
 const itemIdle = "text-text-200 hover:text-text-100";
 const itemActive = "text-primary-text-100";
-const itemTarget = "bg-surface-900";
+const itemTarget = "bg-surface-900/50";
 const itemDisabled = "text-text-400 cursor-not-allowed";
 
 interface SidebarProps {
@@ -217,10 +217,11 @@ const Sidebar = ({
             className="pointer-events-none absolute top-0 bottom-0 left-4 w-px bg-base-700/60"
             aria-hidden="true"
           />
+          {/* Anchored to the rail's centre (its left edge plus half its 1px width) and pulled back by half its own width. */}
           <div
-            className={`pointer-events-none absolute left-3 z-20 h-6 w-1.5 rounded-full bg-primary-500 duration-250 ease-out motion-safe:transition-[transform,opacity] ${indicator ? "opacity-100" : "opacity-0"}`}
+            className={`pointer-events-none absolute left-[calc(--spacing(4)+0.5px)] z-20 h-6 w-1.5 rounded-full bg-primary-500 duration-250 ease-out motion-safe:transition-[transform,opacity] ${indicator ? "opacity-100" : "opacity-0"}`}
             style={{
-              transform: `translateY(${indicator ? indicator.top + (indicator.height - 24) / 2 : 0}px)`,
+              transform: `translate(-50%, ${indicator ? indicator.top + (indicator.height - 24) / 2 : 0}px)`,
             }}
             aria-hidden="true"
           />
