@@ -39,6 +39,9 @@ PACKAGE_URL = "https://datos.produccion.gob.ar/api/3/action/package_show?id=sepa
 ALLOWED_HOSTS = {"datos.produccion.gob.ar"}
 MAX_DOWNLOAD_BYTES = 1_000_000_000
 
+# Identifies the script instead of urllib's default `Python-urllib/<version>`, which some hosts refuse.
+USER_AGENT = "TuEconomia/1.0 (build-price-basket)"
+
 # Archive limits. A real day is ~17 commerce ZIPs of three CSVs each, the largest CSV ~520 MB at a ratio of ~6.
 MAX_OUTER_ENTRIES = 200
 MAX_INNER_ENTRIES = 10
@@ -285,7 +288,8 @@ def matches(patterns, text: str) -> bool:
 
 
 def command_download(args):
-    with urllib.request.urlopen(check_url(PACKAGE_URL), timeout=60) as response:
+    request = urllib.request.Request(check_url(PACKAGE_URL), headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=60) as response:
         check_url(response.geturl())
         package = json.load(response)["result"]
 
@@ -305,7 +309,8 @@ def command_download(args):
     partial = target.with_suffix(".part")
     received = 0
 
-    with urllib.request.urlopen(url, timeout=600) as response, open(partial, "wb") as out:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=600) as response, open(partial, "wb") as out:
         check_url(response.geturl())
 
         while chunk := response.read(1 << 20):
