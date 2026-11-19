@@ -48,7 +48,9 @@ The *Precios* tab of *Mi economía* shows what common products cost at the super
 
 ## Refreshing (monthly)
 
-The `Refresh prices` workflow (`.github/workflows/refresh-prices.yml`) runs these steps on the 3rd of every month and on demand from the Actions tab. It commits to the branch as `github-actions[bot]` only if `pnpm test` and a Wrangler dry run pass, and commits nothing when the basket is unchanged. A failure, such as a basket GTIN that left the archive or a source that refuses the runner, fails the run and sends an email; then do the steps below by hand. The push needs no branch protection rule on `master` blocking `github-actions[bot]`.
+The refresh is a manual routine, run from a machine in Argentina around the 3rd of each month. `datos.produccion.gob.ar` answers `403 Forbidden` to GitHub-hosted runners. A self-hosted runner was ruled out because the repository is public and its pull-request workflows could run on it.
+
+`scripts/refresh-prices.sh [work-directory]` runs `download`, `aggregate` and `build` below, then `pnpm test` and a Wrangler dry run, and lists the changed generated files. The work directory defaults to `$SEPA_WORK`, then `${TMPDIR:-/tmp}/sepa`, must be outside the repository and owned by you. When `build` fails on a GTIN that left the archive, it prints the `candidates` and `build` commands to finish by hand.
 
 The build is a standard-library Python script (3.11 or later), never run in the Worker. The archive is untrusted input: the download is accepted only over HTTPS from `datos.produccion.gob.ar` (checked after redirects, capped at 1 GB), and both ZIP levels are checked for entry count, declared size and compression ratio before anything is decompressed.
 

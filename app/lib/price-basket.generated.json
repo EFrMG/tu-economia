@@ -1,8 +1,8 @@
 {
   "generatedBy": "scripts/build-price-basket.py",
-  "archive": "sepa_viernes.zip",
-  "sourceDate": "2026-11-06",
-  "searchIndex": "/precios/catalogo-2026-11-06.json",
+  "archive": "sepa_miercoles.zip",
+  "sourceDate": "2026-11-18",
+  "searchIndex": "/precios/catalogo-2026-11-18.json",
   "defaults": [
     "7790742348302",
     "pan-lactal",
