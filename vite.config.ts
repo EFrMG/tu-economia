@@ -10,7 +10,13 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     ...(mode === "test"
       ? []
-      : [cloudflare({ viteEnvironment: { name: "ssr" } })]),
+      : [
+          cloudflare({
+            viteEnvironment: { name: "ssr" },
+            // Off by default: the Workers AI binding is always remote and needs a Wrangler login; it is only used by the Boletín digest.
+            remoteBindings: process.env.CLOUDFLARE_REMOTE_BINDINGS === "true",
+          }),
+        ]),
     tailwindcss(),
     reactRouter(),
   ],

@@ -2,6 +2,7 @@ import { Link } from "react-router";
 
 import type { Route } from "./+types/docs";
 import { accionesLabel, isEquitiesBymaEnabled } from "~/lib/acciones-panels";
+import { isBoletinDigestEnabled } from "~/lib/boletin";
 import { pageMeta } from "~/lib/meta";
 import {
   ACTIVITY_CSV_URL,
@@ -20,10 +21,13 @@ export function meta() {
   });
 }
 
-/** The Acciones section describes the BYMA panels only while they are shown. */
+/** The Acciones section describes the BYMA panels only while they are shown, and the Boletín Oficial section exists only while its digest does. */
 export function loader({ context }: Route.LoaderArgs) {
+  const env = context.get(workerEnvContext);
+
   return {
-    equitiesBymaEnabled: isEquitiesBymaEnabled(context.get(workerEnvContext)),
+    equitiesBymaEnabled: isEquitiesBymaEnabled(env),
+    boletinDigestEnabled: isBoletinDigestEnabled(env),
   };
 }
 
@@ -683,6 +687,50 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
             </p>
           </div>
         </section>
+
+        {loaderData.boletinDigestEnabled ? (
+          <section className={sectionClass} aria-labelledby="boletin-title">
+            <h2
+              id="boletin-title"
+              className="font-heading text-headline-md text-text-100"
+            >
+              Boletín Oficial
+            </h2>
+            <div className="mt-4 stack-4 text-body-sm text-text-300">
+              <p>
+                Cada mañana, después de la publicación de la primera sección del{" "}
+                <a
+                  href="https://www.boletinoficial.gob.ar/seccion/primera"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={sourceLinkClass}
+                >
+                  Boletín Oficial de la República Argentina
+                </a>
+                , se seleccionan los decretos y las normas de los organismos que
+                suelen afectar a los hogares: ARCA, Ministerio de Economía y sus
+                secretarías, Energía, los entes reguladores de electricidad y
+                gas, el BCRA, Capital Humano, ANSES y Comercio.
+              </p>
+              <p>
+                Cada norma seleccionada se resume una sola vez con un modelo de
+                lenguaje (gpt-oss-120b, en Cloudflare Workers AI) a partir de su
+                parte dispositiva. Un resumen se descarta, y se muestra solo la
+                referencia oficial, cuando incluye una cifra que no figura en el
+                texto de la norma o un dato personal. Las normas extensas se
+                resumen a partir de sus primeros artículos, y se indica.
+              </p>
+              <p>
+                Se omiten las designaciones, los edictos y los actos sobre
+                personas, y no se almacena ni se muestra ningún dato personal.
+                Los resúmenes son automáticos y pueden contener errores:
+                prevalece siempre el texto oficial, enlazado en cada norma. Se
+                conservan las ediciones de las últimas tres semanas, que pueden
+                recorrerse desde la barra de fechas.
+              </p>
+            </div>
+          </section>
+        ) : null}
       </div>
     </section>
   );

@@ -3,6 +3,10 @@ import { Await, isRouteErrorResponse } from "react-router";
 
 import type { Route } from "./+types/dashboard";
 import {
+  BoletinLoading,
+  BoletinResumenCard,
+} from "~/components/features/BoletinDigest";
+import {
   EconomicNewsSection,
   NewsLoading,
 } from "~/components/features/EconomicNews";
@@ -12,6 +16,8 @@ import {
   marketRatesIncomplete,
 } from "~/components/features/MarketRates";
 import { RouteFooter } from "~/components/ui/RouteFooter";
+import { isBoletinDigestEnabled } from "~/lib/boletin";
+import { getBoletinDigest } from "~/lib/boletin.server";
 import { getEconomicNews } from "~/lib/economic-news.server";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import { getDashboardRates } from "~/lib/exchange-rates.server";
@@ -20,6 +26,7 @@ import { getIndecData } from "~/lib/indec.server";
 import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
 import { getIndicators } from "~/lib/indicators.server";
 import { pageMeta } from "~/lib/meta";
+import { useBoletinDigestEnabled } from "~/lib/use-equities-byma-enabled";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import { workerEnvContext } from "~/lib/worker-context";
@@ -34,8 +41,12 @@ export function meta() {
 }
 
 export function loader({ request, context }: Route.LoaderArgs) {
+  const env = context.get(workerEnvContext);
+  const boletinEnabled = isBoletinDigestEnabled(env);
+
   if (isUnavailablePreview(new URL(request.url).searchParams)) {
     return {
+      boletinEnabled,
       rates: Promise.resolve(null),
       indicators: Promise.resolve(
         INDICATOR_DEFINITIONS.map((definition): IndicatorResult => ({
@@ -45,16 +56,21 @@ export function loader({ request, context }: Route.LoaderArgs) {
       ),
       indec: Promise.resolve(UNAVAILABLE_INDEC_DATA),
       news: Promise.resolve(null),
+      boletin: Promise.resolve(null),
     };
   }
 
   return {
+    boletinEnabled,
     rates: withUpstreamTimeout(10_000, () => getDashboardRates()).catch(
       () => null,
     ),
     indicators: getIndicators(),
-    indec: getIndecData(context.get(workerEnvContext).INDEC_API_TOKEN),
+    indec: getIndecData(env.INDEC_API_TOKEN),
     news: getEconomicNews().catch(() => null),
+    boletin: boletinEnabled
+      ? getBoletinDigest(env).catch(() => null)
+      : Promise.resolve(null),
   };
 }
 
@@ -75,9 +91,14 @@ const ResumenRates = ({
   />
 );
 
-const ResumenFooter = () => (
+const ResumenFooter = ({ boletinEnabled }: { boletinEnabled: boolean }) => (
   <RouteFooter>
-    <p>Fuentes: Dólar API; BCRA; INDEC; Ámbito vía ArgentinaDatos.</p>
+    <p>
+      Fuentes: Dólar API; BCRA; INDEC; Ámbito vía ArgentinaDatos
+      {boletinEnabled
+        ? "; Boletín Oficial de la República Argentina, con resúmenes automáticos."
+        : "."}
+    </p>
   </RouteFooter>
 );
 
@@ -89,11 +110,13 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         loaderData.indicators,
         loaderData.indec,
         loaderData.news,
+        loaderData.boletin,
       ]).then(
-        ([rates, , , news]) =>
+        ([rates, , , news, boletin]) =>
           marketRatesIncomplete(rates) ||
           news === null ||
-          news.unavailableSources.length > 0,
+          news.unavailableSources.length > 0 ||
+          (loaderData.boletinEnabled && boletin === null),
         () => true,
       ),
     [
@@ -101,6 +124,8 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       loaderData.indicators,
       loaderData.indec,
       loaderData.news,
+      loaderData.boletin,
+      loaderData.boletinEnabled,
     ],
   );
 
@@ -135,6 +160,17 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         </Await>
       </Suspense>
 
+      {loaderData.boletinEnabled ? (
+        <Suspense fallback={<BoletinLoading compact />}>
+          <Await
+            resolve={loaderData.boletin}
+            errorElement={<BoletinResumenCard digest={null} />}
+          >
+            {(digest) => <BoletinResumenCard digest={digest} />}
+          </Await>
+        </Suspense>
+      ) : null}
+
       <Suspense fallback={<NewsLoading />}>
         <Await
           resolve={loaderData.news}
@@ -144,18 +180,21 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         </Await>
       </Suspense>
 
-      <ResumenFooter />
+      <ResumenFooter boletinEnabled={loaderData.boletinEnabled} />
     </div>
   );
 }
 
 export function HydrateFallback() {
+  const boletinEnabled = useBoletinDigestEnabled();
+
   return (
     <div className="stack-10">
       <ResumenRates rates={null} loading />
       <KeyFigures />
+      {boletinEnabled ? <BoletinLoading compact /> : null}
       <NewsLoading />
-      <ResumenFooter />
+      <ResumenFooter boletinEnabled={boletinEnabled} />
     </div>
   );
 }

@@ -12,6 +12,8 @@
       "database_id": "63bdef65-144e-45ed-8cb6-df2d880f49cf",
     },
   ],
+  // Workers AI, read as env.AI. Only the Boletín Oficial digest uses it, from the cron; local development reaches the remote service and spends the account's daily Neurons.
+  "ai": { "binding": "AI" },
   // Per client IP on /resources/prices, which forwards product ids to the unofficial Precios Claros API. The limit is per Cloudflare location and approximate; without the binding (local development) nothing is limited.
   "ratelimits": [
     {
@@ -28,6 +30,8 @@
     "BILLING_ENABLED": "true",
     // It stays "false" until BYMA authorizes displaying its data!
     "EQUITIES_BYMA_ENABLED": "false",
+    // The Boletín Oficial digest: the cron steps, the /noticias tab and the Resumen card.
+    "BOLETIN_DIGEST_ENABLED": "true",
   },
   // Workers Logs, matching the dashboard setting so a deploy does not switch them off. Invocation logs record each request's URL and metadata; Cloudflare keeps them for its plan's retention window.
   "observability": {
@@ -37,6 +41,8 @@
       "persist": true,
     },
   },
-  // Daily cleanup of lapsed Mi economía records; it does nothing until FINANCE_STORAGE_ENABLED is set.
-  "triggers": { "crons": ["0 6 * * *"] },
+  // One trigger for every scheduled job: every five minutes from 06:00 to 15:55 UTC.
+  // The 06:00 run is the daily maintenance (lapsed Mi economía records, old Boletín editions); the others are steps of the Boletín Oficial digest.
+  // See app/lib/scheduled-tasks.ts.
+  "triggers": { "crons": ["*/5 6-15 * * *"] },
 }

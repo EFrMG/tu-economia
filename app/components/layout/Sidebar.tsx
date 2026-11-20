@@ -17,6 +17,7 @@ import {
 import { NavLink, useLocation } from "react-router";
 import { Wordmark } from "~/components/ui/Wordmark";
 import { accionesLabel } from "~/lib/acciones-panels";
+import { newsLabel } from "~/lib/boletin";
 
 interface NavItem {
   label: string;
@@ -31,8 +32,11 @@ interface NavItem {
   hoverIconClassName?: string;
 }
 
-/** `/acciones` is named for what it shows: stock quotations only while BYMA's are enabled. */
-const primaryNav = (equitiesBymaEnabled: boolean): NavItem[] => [
+/** `/acciones` is named for what it shows: stock quotations only while BYMA's are enabled; `/noticias` adds "normativa" once the Boletín Oficial panel exists. */
+const primaryNav = (
+  equitiesBymaEnabled: boolean,
+  boletinDigestEnabled: boolean,
+): NavItem[] => [
   { label: "Resumen", icon: MdOutlineDashboard, to: "/dashboard" },
   { label: "Dólar", icon: MdOutlineAttachMoney, to: "/dolar" },
   {
@@ -47,7 +51,11 @@ const primaryNav = (equitiesBymaEnabled: boolean): NavItem[] => [
     icon: MdOutlineCandlestickChart,
     to: "/acciones",
   },
-  { label: "Noticias", icon: MdOutlineNewspaper, to: "/noticias" },
+  {
+    label: newsLabel(boletinDigestEnabled),
+    icon: MdOutlineNewspaper,
+    to: "/noticias",
+  },
   {
     label: "Mi economía",
     icon: MdOutlineAccountBalanceWallet,
@@ -83,6 +91,8 @@ interface SidebarProps {
   drawerRef: Ref<HTMLElement>;
   /** `EQUITIES_BYMA_ENABLED`, from the terminal layout's loader. */
   equitiesBymaEnabled: boolean;
+  /** `BOLETIN_DIGEST_ENABLED`, from the terminal layout's loader. */
+  boletinDigestEnabled: boolean;
 }
 
 const Sidebar = ({
@@ -91,9 +101,10 @@ const Sidebar = ({
   onSupport,
   drawerRef,
   equitiesBymaEnabled,
+  boletinDigestEnabled,
 }: SidebarProps) => {
   const location = useLocation();
-  const nav = primaryNav(equitiesBymaEnabled);
+  const nav = primaryNav(equitiesBymaEnabled, boletinDigestEnabled);
 
   const activePath =
     nav.find((item) => item.to === location.pathname)?.to ?? null;

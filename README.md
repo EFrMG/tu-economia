@@ -73,7 +73,7 @@ The project is pnpm-managed; `mise.toml` and `packageManager` in `package.json` 
 2. Provision pnpm: `mise install`.
 3. Install dependencies: `mise exec -- pnpm install --frozen-lockfile`.
 4. Local D1 (Miniflare) starts empty; see [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
-5. Start the development server: `mise exec -- pnpm dev`.
+5. Start the development server: `mise exec -- pnpm dev`. It runs without remote bindings, so the Boletín Oficial digest cannot summarize locally; `CLOUDFLARE_REMOTE_BINDINGS=true mise exec -- pnpm dev` connects the Workers AI binding, which needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`) and spends the account's daily Neurons.
 
 > For a local production preview, run `mise exec -- pnpm build` followed by `mise exec -- pnpm preview`.
 
@@ -89,11 +89,11 @@ Build variables, runtime variables, secrets and flags are documented in [docs/cl
 
 Production builds ignore these.
 
-| Parameter              | Where                                                                                                                                                                                                                                              | Effect                            |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Parameter              | Where                                                                                                                                                                                                                                                               | Effect                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
 | `?preview=unavailable` | `/dashboard`, `/dolar`, `/precios`, `/tasas`, `/actividad`, `/noticias`, `/acciones` (also `?panel=empresas&empresa=YPF`, `?panel=calculadora` for the manual-rate state, and `?panel=acciones` with BYMA on), `/mi-economia` (inflation and prices), `/api-status` | Simulates unavailable data states |
-| `?preview=sent`        | `/mi-economia?tab=usuario`                                                                                                                                                                                                                         | Shows the "link sent" message     |
-| `?preview=error`       | `/mi-economia?tab=usuario`                                                                                                                                                                                                                         | Shows the retry/error notice      |
+| `?preview=sent`        | `/mi-economia?tab=usuario`                                                                                                                                                                                                                                          | Shows the "link sent" message     |
+| `?preview=error`       | `/mi-economia?tab=usuario`                                                                                                                                                                                                                                          | Shows the retry/error notice      |
 
 To review the route-level error screens, open a path that does not exist (404) or trigger a server error in development (500).
 
@@ -101,20 +101,20 @@ To review the route-level error screens, open a path that does not exist (404) o
 
 Every route, page or endpoint, is declared in `app/routes.ts`.
 
-| Route                | Description                                                                                                                                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/`                  | Home: introduction to the quotations, history and news, with their sources and methodology                                                                                                                                     |
-| `/dashboard`         | Resumen: the blue rate and the quick converter, key figures linking to their pages (inflation, CBT, real wages, country risk) and the news preview                                                                                               |
-| `/dolar`             | Exchange rates, quotes and Blue–Oficial gap over time (`?view=quotes\|gap`, `?period=`), retail and wholesale dollar, reserves and country risk                                                                      |
-| `/precios`           | Precios e ingresos: monthly, yearly and expected inflation, INDEC's canasta básica, wages and IPC by division and region, and the purchasing-power estimate                                                                      |
-| `/actividad`         | EMAE activity, monetary base and private M2                                                                                                                                                                                    |
-| `/acciones`          | Argentine companies listed in the US (SEC EDGAR), a CEDEAR theoretical-price calculator and, while `EQUITIES_BYMA_ENABLED` is on, delayed BYMA quotations; panels and parameters in [docs/market-data.md](docs/market-data.md) |
+| Route                | Description                                                                                                                                                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                  | Home: introduction to the quotations, history and news, with their sources and methodology                                                                                                                                          |
+| `/dashboard`         | Resumen: the blue rate and the quick converter, key figures linking to their pages (inflation, CBT, real wages, country risk) and the news preview                                                                                  |
+| `/dolar`             | Exchange rates, quotes and Blue–Oficial gap over time (`?view=quotes\|gap`, `?period=`), retail and wholesale dollar, reserves and country risk                                                                                     |
+| `/precios`           | Precios e ingresos: monthly, yearly and expected inflation, INDEC's canasta básica, wages and IPC by division and region, and the purchasing-power estimate                                                                         |
+| `/actividad`         | EMAE activity, monetary base and private M2                                                                                                                                                                                         |
+| `/acciones`          | Argentine companies listed in the US (SEC EDGAR), a CEDEAR theoretical-price calculator and, while `EQUITIES_BYMA_ENABLED` is on, delayed BYMA quotations; panels and parameters in [docs/market-data.md](docs/market-data.md)      |
 | `/tasas`             | Tasas y ahorro: reference rates and adjustment units, personal loans and credit cards per lender from the BCRA Régimen de Transparencia ([docs/transparency-rates.md](docs/transparency-rates.md)), deposit-vs-inflation comparison |
-| `/noticias`          | Aggregate of economic news                                                                                                                                                                                                     |
-| `/mi-economia`       | Personal salary, budget and price tracker                                                                                                                                                                                      |
-| `/api-status`        | Health and cache status of every upstream data source                                                                                                                                                                          |
-| `/docs`              | Sources, calculations, update frequency and limits of the data shown                                                                                                                                                           |
-| `/privacy`, `/terms` | Privacy policy and service terms                                                                                                                                                                                               |
+| `/noticias`          | Aggregate of economic news; with `BOLETIN_DIGEST_ENABLED`, a second panel (`?panel=boletin`) of automatic summaries of the Boletín Oficial ([docs/boletin-oficial.md](docs/boletin-oficial.md))                                     |
+| `/mi-economia`       | Personal salary, budget and price tracker                                                                                                                                                                                           |
+| `/api-status`        | Health and cache status of every upstream data source                                                                                                                                                                               |
+| `/docs`              | Sources, calculations, update frequency and limits of the data shown                                                                                                                                                                |
+| `/privacy`, `/terms` | Privacy policy and service terms                                                                                                                                                                                                    |
 
 #### 2.4.1 Mi economía
 

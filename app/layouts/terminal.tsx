@@ -11,13 +11,17 @@ import { Sidebar } from "~/components/layout/Sidebar";
 import { TopBar } from "~/components/layout/TopBar";
 import { SupportDialog } from "~/components/features/SupportDialog";
 import { isEquitiesBymaEnabled } from "~/lib/acciones-panels";
+import { isBoletinDigestEnabled } from "~/lib/boletin";
 import type { TerminalLayoutData } from "~/lib/use-equities-byma-enabled";
 import { workerEnvContext } from "~/lib/worker-context";
 
 /** Deploy-time flags the shell and its pages need on the client; the top-bar search index depends on the BYMA one. */
 export function loader({ context }: Route.LoaderArgs): TerminalLayoutData {
+  const env = context.get(workerEnvContext);
+
   return {
-    equitiesBymaEnabled: isEquitiesBymaEnabled(context.get(workerEnvContext)),
+    equitiesBymaEnabled: isEquitiesBymaEnabled(env),
+    boletinDigestEnabled: isBoletinDigestEnabled(env),
   };
 }
 
@@ -153,6 +157,7 @@ export default function TerminalLayout({ loaderData }: Route.ComponentProps) {
         onSupport={() => setSupportOpen(true)}
         drawerRef={drawerRef}
         equitiesBymaEnabled={loaderData.equitiesBymaEnabled}
+        boletinDigestEnabled={loaderData.boletinDigestEnabled}
       />
 
       <div

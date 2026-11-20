@@ -33,6 +33,7 @@ Before enabling accounts on the deployed Worker:
 3. Apply the migrations to the remote database; see [cloud-finance-setup.md](cloud-finance-setup.md#database).
 4. Leave `AUTH_ACCOUNTS_ENABLED`, `FINANCE_STORAGE_ENABLED` and `BILLING_ENABLED` at `"false"` in `wrangler.jsonc` until the flows in [cloud-finance-setup.md](cloud-finance-setup.md) and [billing.md](billing.md) pass against the deployed Worker. This repository's file enables all three for its own Worker.
 5. Leave `EQUITIES_BYMA_ENABLED` at `"false"`; see [market-data.md](market-data.md#the-byma-gate).
+6. `BOLETIN_DIGEST_ENABLED` is `"true"`: see [boletin-oficial.md](boletin-oficial.md#enabling-and-operating). The `AI` binding it uses needs no setup.
 
 ## Checks
 
@@ -42,6 +43,7 @@ On a deployed URL, check `/dashboard`, `/dolar`, `/precios`, `/tasas`, `/activid
 
 - the Empresas list fills in, every issuer resolves (none reads "no identificado"), and the report links open documents on sec.gov; then one company (`/acciones?panel=empresas&empresa=YPF`) shows its filings and figures. The SEC throttles some cloud addresses, so a 403 here means the Worker is being refused;
 - `/api-status` shows a "SEC EDGAR" row that is not `failed`;
+- with `BOLETIN_DIGEST_ENABLED` on, after a morning's runs `/noticias?panel=boletin` lists the day's notices with their summaries and Resumen shows its Boletín card; with it off, neither exists and the Workers Logs show `{"job":"boletin","step":"disabled"}`;
 - while `EQUITIES_BYMA_ENABLED` is off, the effects listed under [the BYMA gate](market-data.md#the-byma-gate) hold and the Workers Logs show no request to `open.bymadata.com.ar`. If the flag is ever turned on, check the BYMA panel too.
 
 ## Deploying your own copy

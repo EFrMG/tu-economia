@@ -1,6 +1,8 @@
 declare global {
   interface CloudflareEnvironment {
     DB?: D1Database;
+    /** Workers AI; the Boletín Oficial digest summarizes notices with it from the cron. */
+    AI?: Ai;
     /** Caps `/resources/prices` per client IP, since each request can fan out to the unofficial Precios Claros API. */
     PRICES_LIMITER?: RateLimit;
     AUTH_ACCOUNTS_ENABLED?: string;
@@ -10,6 +12,8 @@ declare global {
     BILLING_ENABLED?: string;
     /** The BYMA quotations on `/acciones` stay off until BYMA authorizes displaying its data. */
     EQUITIES_BYMA_ENABLED?: string;
+    /** The Boletín Oficial digest collects and shows nothing until this is "true". */
+    BOLETIN_DIGEST_ENABLED?: string;
     MP_ACCESS_TOKEN?: string;
     MP_WEBHOOK_SECRET?: string;
     AUTH_BASE_URL?: string;

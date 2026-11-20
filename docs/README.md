@@ -14,4 +14,5 @@ Feature and operations guides. Overview, setup and commands are in the [root REA
 | [market-data.md](market-data.md) | Working on exchange rates, indicators, activity data or the Acciones page, or their caching and fallbacks |
 | [transparency-rates.md](transparency-rates.md) | Working on the Tasas page, or refreshing its loan and card data |
 | [rss-sources.md](rss-sources.md) | Adding or replacing a news source |
+| [boletin-oficial.md](boletin-oficial.md) | Working on the Boletín Oficial digest, its Workers AI summaries, or the shared cron trigger |
 | [security.md](security.md) | Adding a route, or changing headers, request guards or rate limits |

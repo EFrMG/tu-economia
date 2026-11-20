@@ -19,8 +19,8 @@ Operational rules for working in this repository.
   - `app/components/layout/`: page chrome (Navbar, Sidebar, TopBar, Footer).
   - `app/lib/`: framework-agnostic logic and data access. Pairs like `indicators.ts` / `indicators.server.ts` split a module into a client-safe half and a server-only half; `*.test.ts` files are colocated next to the code they test. `~/*` imports map to `app/*`.
   - `app/css/`: the Tailwind CSS v4 files described under "Styling and design" below.
-- `workers/app.ts`: the Cloudflare Worker entry (the request handler and the daily retention cron); `wrangler.jsonc` configures the runtime.
-- `migrations/`: Cloudflare D1 SQL migrations (personal finance, auth, billing).
+- `workers/app.ts`: the Cloudflare Worker entry (the request handler and the shared cron trigger: the daily maintenance and the Boletín Oficial digest, dispatched by `app/lib/scheduled-tasks.ts`); `wrangler.jsonc` configures the runtime. The Free plan allows five cron triggers per account, so new scheduled work joins that trigger rather than adding one.
+- `migrations/`: Cloudflare D1 SQL migrations (personal finance, auth, billing, Boletín Oficial digest).
 - `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`, and `refresh-prices.sh`, which runs the monthly refresh end to end; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`. Pyright type-checks them with `pyrightconfig.json` at the root.
 - `cla/`: `accepted/` holds the contributors' acceptance records and `versions/` the published CLA texts; see "License and CLA" below.
 - `docs/`: feature and operations guides, indexed in `docs/README.md`.

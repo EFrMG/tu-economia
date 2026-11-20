@@ -1,6 +1,8 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 
+import { pruneBoletin, runBoletinStep } from "../app/lib/boletin.server";
 import { runFinanceRetention } from "../app/lib/finance-retention.server";
+import { scheduledTask } from "../app/lib/scheduled-tasks";
 import { withBaselineHeaders } from "../app/lib/security-headers.server";
 import { workerEnvContext } from "../app/lib/worker-context";
 
@@ -16,7 +18,29 @@ export default {
 
     return requestHandler(request, context).then(withBaselineHeaders);
   },
-  scheduled(_controller, env, ctx) {
-    ctx.waitUntil(runFinanceRetention(env));
+  scheduled(controller, env, ctx) {
+    const now = new Date(controller.scheduledTime);
+
+    if (
+      scheduledTask(controller.cron, controller.scheduledTime) ===
+      "daily-maintenance"
+    ) {
+      ctx.waitUntil(
+        Promise.all([runFinanceRetention(env, now), pruneBoletin(env, now)]),
+      );
+
+      return;
+    }
+
+    // One line per run in Workers Logs, so the digest's progress and failures can be followed without a dashboard.
+    ctx.waitUntil(
+      runBoletinStep(env, now).then(
+        (result) => console.log(JSON.stringify({ job: "boletin", ...result })),
+        (error: unknown) =>
+          console.error(
+            JSON.stringify({ job: "boletin", error: String(error) }),
+          ),
+      ),
+    );
   },
 } satisfies ExportedHandler<CloudflareEnvironment>;
