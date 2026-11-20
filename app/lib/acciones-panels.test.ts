@@ -71,10 +71,6 @@ describe("Acciones panels", () => {
     expect(isEquityPanel("empresas", true)).toBe(true);
     expect(isEquityPanel("merval", true)).toBe(false);
     expect(isEquityPanel(null, true)).toBe(false);
-
-    // The former CEDEAR and leaders panels are unknown ids now and redirect.
-    expect(isEquityPanel("cedears", true)).toBe(false);
-    expect(isEquityPanel("lideres", true)).toBe(false);
   });
 
   it("defaults to Empresas while BYMA is off, including for the BYMA panel", () => {

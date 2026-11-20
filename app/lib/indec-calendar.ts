@@ -9,9 +9,6 @@
  * The calendar also lists pobreza (semestral) and mercado de trabajo
  * (trimestral), which can be added here when those surfaces land. */
 
-/** Semester covered by this calendar, `YYYY-S` where S is 1 or 2. */
-export const INDEC_CALENDAR_SEMESTER = "2026-2" as const;
-
 /** Last day the calendar is in force; the test fails after this date. */
 export const INDEC_CALENDAR_EXPIRES_AT = "2026-12-31";
 

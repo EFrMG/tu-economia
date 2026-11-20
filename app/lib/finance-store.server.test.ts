@@ -3220,42 +3220,8 @@ describe("subscription entitlement", () => {
       throw new Error(`Unexpected mock request ${url}`);
     }) as typeof fetch;
 
-    async function signedEvent(type: string, id: string) {
-      const ts = String(Math.floor(Date.now() / 1000));
-      const requestId = `synthetic-${id}`;
-
-      const key = await crypto.subtle.importKey(
-        "raw",
-        new TextEncoder().encode(live.MP_WEBHOOK_SECRET!),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"],
-      );
-
-      const bytes = new Uint8Array(
-        await crypto.subtle.sign(
-          "HMAC",
-          key,
-          new TextEncoder().encode(
-            `id:${id};request-id:${requestId};ts:${ts};`,
-          ),
-        ),
-      );
-
-      const signature = Array.from(bytes, (value) =>
-        value.toString(16).padStart(2, "0"),
-      ).join("");
-
-      return new Request(`${origin}/api/billing/webhook?data.id=${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-request-id": requestId,
-          "x-signature": `ts=${ts},v1=${signature}`,
-        },
-        body: JSON.stringify({ type }),
-      });
-    }
+    const signedEvent = (type: string, id: string) =>
+      signedBillingEvent(live.MP_WEBHOOK_SECRET, type, id);
 
     expect(
       (

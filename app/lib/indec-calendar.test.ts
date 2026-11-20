@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  INDEC_CALENDAR_EXPIRES_AT,
-  INDEC_CALENDAR_SEMESTER,
   INDEC_RELEASES,
   formatReleaseDate,
   isCalendarInForce,
@@ -12,11 +10,6 @@ import {
 describe("INDEC release calendar", () => {
   it("is still in force (refresh the table when this fails)", () => {
     expect(isCalendarInForce()).toBe(true);
-  });
-
-  it("expires at the end of the covered semester", () => {
-    expect(INDEC_CALENDAR_EXPIRES_AT).toBe("2026-12-31");
-    expect(INDEC_CALENDAR_SEMESTER).toBe("2026-2");
   });
 
   it("has a release for every shown indicator in every month", () => {

@@ -21,11 +21,9 @@ describe("deposit and inflation comparison", () => {
     expect(comparisons).toHaveLength(1);
     expect(comparisons[0].month).toBe("2026-09");
     expect(comparisons[0].rateDate).toBe("2026-08-28");
-    expect(comparisons[0].nominalReturnPercent).toBeCloseTo((20.98 * 30) / 365);
-
-    expect(comparisons[0].realReturnPercent).toBeCloseTo(
-      ((1 + (20.98 * 30) / 36500) / 1.017 - 1) * 100,
-    );
+    // A 20,98 % TNA over 30 days, against 1,7 % monthly inflation.
+    expect(comparisons[0].nominalReturnPercent).toBeCloseTo(1.72438, 4);
+    expect(comparisons[0].realReturnPercent).toBeCloseTo(0.02398, 4);
 
     expect(simulateDeposit(100_000, comparisons[0])?.finalAmount).toBeCloseTo(
       101_724.38,

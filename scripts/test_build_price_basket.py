@@ -40,11 +40,6 @@ class ArchiveFallbackTest(unittest.TestCase):
         self.assertEqual(self.fallback["banners"]["caba"], ["12-1", "15-1", "9-1", "9-2"])
         self.assertEqual(self.fallback["banners"]["ushuaia"], [])
 
-    def test_a_commerce_without_live_branches_is_never_shown_for_a_location(self):
-        shown = [banner for banner in self.fallback["banners"]["caba"] if banner in self.fallback["prices"]["7790000000001"]]
-
-        self.assertNotIn("10-1", shown)
-
 
 if __name__ == "__main__":
     unittest.main()

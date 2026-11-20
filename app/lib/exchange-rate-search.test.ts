@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   EXCHANGE_RATE_SEARCH_RESULTS,
-  rateCardId,
   searchExchangeRates,
 } from "./exchange-rate-search";
 
@@ -21,10 +20,6 @@ describe("exchange-rate search", () => {
     ]);
 
     expect(searchExchangeRates("MEP").map(({ id }) => id)).toEqual(["bolsa"]);
-  });
-
-  it("names each card's element id", () => {
-    expect(rateCardId("cripto")).toBe("exchange-rate-cripto");
   });
 
   it("opens the Dólar page at the rate card", () => {
