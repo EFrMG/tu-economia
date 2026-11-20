@@ -128,8 +128,6 @@ const EditionBar = ({ digest, loading = false }: EditionBarProps) => {
               </Link>
             )}
           </>
-        ) : digest ? (
-          <p className="text-data-label text-text-400">Sin ediciones</p>
         ) : null}
       </div>
       <EditionStep date={digest?.next ?? null} direction="next" />
@@ -230,16 +228,22 @@ const BoletinLoading = ({ compact = false }: { compact?: boolean }) => (
   </section>
 );
 
-const Unavailable = ({ className }: { className: string }) => (
+const Unavailable = ({
+  className,
+  children = "No fue posible consultar los resúmenes del Boletín Oficial en este momento.",
+}: {
+  className: string;
+  children?: string;
+}) => (
   <div className={className}>
     <div className="lg:col-span-full">
-      <UnavailableNotice>
-        No fue posible consultar los resúmenes del Boletín Oficial en este
-        momento.
-      </UnavailableNotice>
+      <UnavailableNotice>{children}</UnavailableNotice>
     </div>
   </div>
 );
+
+const NO_EDITIONS_MESSAGE =
+  "Todavía no hay ediciones procesadas. Los resúmenes se preparan cada mañana, después de la publicación del Boletín Oficial.";
 
 const EmptyState = ({ children }: { children: string }) => (
   <p className="border border-base-700 bg-surface-950 px-4 py-5 text-body-sm text-text-200 lg:col-span-full">
@@ -252,9 +256,13 @@ const BoletinDigestPanel = ({ digest }: { digest: BoletinDigest | null }) => (
   <section aria-labelledby="boletin-heading">
     <BoletinHeading />
     <BoletinIntro />
-    <EditionBar digest={digest} />
+    {digest?.editionDate ? <EditionBar digest={digest} /> : null}
     {digest === null ? (
       <Unavailable className={panelGridClassName} />
+    ) : digest.editionDate === null ? (
+      <Unavailable className={panelGridClassName}>
+        {NO_EDITIONS_MESSAGE}
+      </Unavailable>
     ) : (
       <div className={panelGridClassName}>
         {digest.notices.length > 0 ? (
@@ -263,9 +271,7 @@ const BoletinDigestPanel = ({ digest }: { digest: BoletinDigest | null }) => (
           ))
         ) : (
           <EmptyState>
-            {digest.editionDate
-              ? "Esta edición no incluye normas de los organismos seguidos."
-              : "Todavía no hay ediciones procesadas. Los resúmenes se preparan cada mañana, después de la publicación del Boletín Oficial."}
+            Esta edición no incluye normas de los organismos seguidos.
           </EmptyState>
         )}
       </div>
@@ -289,6 +295,10 @@ const BoletinResumenCard = ({ digest }: { digest: BoletinDigest | null }) => {
       <BoletinHeading compact />
       {digest === null ? (
         <Unavailable className={resumenGridClassName} />
+      ) : digest.editionDate === null ? (
+        <Unavailable className={resumenGridClassName}>
+          Todavía no hay ediciones procesadas del Boletín Oficial.
+        </Unavailable>
       ) : (
         <div className={resumenGridClassName}>
           {notices.length > 0 ? (
@@ -297,9 +307,7 @@ const BoletinResumenCard = ({ digest }: { digest: BoletinDigest | null }) => {
             ))
           ) : (
             <EmptyState>
-              {digest.editionDate
-                ? `La edición del ${formatEditionDate(digest.editionDate)} no incluye normas con impacto directo en los hogares.`
-                : "Todavía no hay ediciones procesadas del Boletín Oficial."}
+              {`La edición del ${formatEditionDate(digest.editionDate)} no incluye normas con impacto directo en los hogares.`}
             </EmptyState>
           )}
         </div>
