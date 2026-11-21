@@ -24,8 +24,8 @@ Variables go in `vars` in `wrangler.jsonc`, and a deploy replaces variables set 
 The Worker reads and writes D1 through the `DB` binding in `wrangler.jsonc`. `pnpm dev` runs against Miniflare's simulated D1 in `.wrangler/state`. It starts empty and needs the migrations before *Mi economía* can store anything. Applied migrations are tracked in `d1_migrations`, so the command skips them (do not also run them with `d1 execute --file`):
 
 ```sh
-mise exec -- pnpm exec wrangler d1 migrations apply tu-economia --local
-mise exec -- pnpm exec wrangler d1 migrations list tu-economia --remote
+pnpm exec wrangler d1 migrations apply tu-economia --local   # mise run d1-migrate-local
+pnpm exec wrangler d1 migrations list tu-economia --remote   # mise run d1-migrations-remote
 ```
 
 Deleting `.wrangler/state` resets the local one. See Cloudflare's [D1 Wrangler command reference](https://developers.cloudflare.com/d1/wrangler-commands/).
@@ -51,7 +51,7 @@ INSERT INTO billing_subscriptions (user_id, subscription_id, provider_status, tr
 VALUES ('<user id>', 'dev-<user id>', 'authorized', '2099-01-01T00:00:00.000Z', datetime('now'), datetime('now'));
 ```
 
-Find the user ID with `SELECT id, email FROM "user"`. Run SQL with `mise exec -- pnpm exec wrangler d1 execute tu-economia --local --command "<statement>"`.
+Find the user ID with `SELECT id, email FROM "user"`. Run SQL with `pnpm exec wrangler d1 execute tu-economia --local --command "<statement>"` or `mise run d1-sql "<statement>"`.
 
 ## Sign-in
 
@@ -120,7 +120,7 @@ The retention logic is also unit-tested in `app/lib/finance-retention.test.ts` a
 5. Confirm the send: `deletion_notice_attempted_at` and `deletion_notice_sent_at` in `finance_documents` hold the run timestamp and the signed-in tab shows the scheduled date. Read them back with:
 
    ```sh
-   mise exec -- pnpm exec wrangler d1 execute tu-economia --local --command "SELECT deletion_notice_attempted_at, deletion_notice_sent_at FROM finance_documents"
+   pnpm exec wrangler d1 execute tu-economia --local --command "SELECT deletion_notice_attempted_at, deletion_notice_sent_at FROM finance_documents"
    ```
 
    Or, through the same explorer API (`<database id>` is the one `wrangler.jsonc` declares for `DB`):

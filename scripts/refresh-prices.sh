@@ -59,12 +59,12 @@ if ! python3 -I scripts/build-price-basket.py build --work "$work"; then
   echo "The build failed. If a basket GTIN left the archive, run:" >&2
   echo "  python3 -I scripts/build-price-basket.py candidates --work \"$work\"" >&2
   echo "then replace it in scripts/price-basket.json from $work/candidates.md. Only build reads the basket, so finish without downloading again:" >&2
-  echo "  python3 -I scripts/build-price-basket.py build --work \"$work\" && mise exec -- pnpm test" >&2
+  echo "  python3 -I scripts/build-price-basket.py build --work \"$work\" && pnpm test" >&2
   exit 1
 fi
 
-mise exec -- pnpm test
-mise exec -- pnpm exec wrangler deploy --dry-run
+pnpm test
+pnpm exec wrangler deploy --dry-run
 
 echo
 git status --short -- app/lib/price-basket.generated.json app/lib/price-basket-server.generated.json public/precios

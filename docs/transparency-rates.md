@@ -54,4 +54,4 @@ If the BCRA refuses the machine running the script, save the two responses anoth
 python3 -I scripts/build-transparency-rates.py --input-dir ~/transparencia
 ```
 
-Commit `app/lib/transparency-rates.generated.json` and run `mise exec -- pnpm test`. Weekly is enough: lenders update their rows every few weeks or months, a few dozen rows a day across all of them, and every row shows its own date.
+Commit `app/lib/transparency-rates.generated.json` and run `pnpm test`. Weekly is enough: lenders update their rows every few weeks or months, a few dozen rows a day across all of them, and every row shows its own date.

@@ -76,14 +76,16 @@ Operational rules for working in this repository.
 
 ## Verification
 
+Tools (Node from `.node-version`, Python, pnpm) are provisioned by mise (`mise install`). Commands are written bare (`pnpm test`) and assume mise is activated in the shell; in a non-interactive shell that is not (an agent, a script), prefix them with `mise exec --`.
+
 Run before declaring implementation work complete (formatting, lint, TypeScript and Python type checks, unit tests, Python script tests and build):
 
 ```sh
-mise exec -- pnpm test
+pnpm test
 ```
 
 Keep automated tests focused on server, data, and calculation logic. Do not add frontend component tests unless the user requests them.
 
 For token, reset, or utility changes, also inspect generated `build/client/assets/*.css`: Tailwind does not fail on unknown classes, so a token mistake only shows up in the generated CSS.
 
-After work that changes the Worker bundle, `mise exec -- pnpm exec wrangler deploy --dry-run` validates it locally.
+After work that changes the Worker bundle, `pnpm exec wrangler deploy --dry-run` (or `mise run wrangler-dry-run`) validates it locally.

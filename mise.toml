@@ -1,3 +1,27 @@
+[settings]
+# Node comes from .node-version, which Cloudflare's build also reads, so there is one pin for both.
+idiomatic_version_file_enable_tools = ["node"]
+
 [tools]
+python = "3.13"
 pnpm = "11.21.0"
-"npm:pyright" = "1.1.414"
+
+[tasks.refresh-prices]
+description = "Run the monthly Precios refresh (download, build, checks); run it from Argentina"
+run = "scripts/refresh-prices.sh"
+
+[tasks.d1-migrate-local]
+description = "Apply the D1 migrations to the local database"
+run = "pnpm exec wrangler d1 migrations apply tu-economia --local"
+
+[tasks.d1-migrations-remote]
+description = "List the D1 migrations pending on the remote database"
+run = "pnpm exec wrangler d1 migrations list tu-economia --remote"
+
+[tasks.d1-sql]
+description = "Run a SQL statement on the local D1 database: mise run d1-sql \"SELECT ...\""
+run = "pnpm exec wrangler d1 execute tu-economia --local --command"
+
+[tasks.wrangler-dry-run]
+description = "Validate the Worker bundle locally (run `pnpm build` first)"
+run = "pnpm exec wrangler deploy --dry-run"

@@ -15,7 +15,7 @@ Set these build variables:
 
 | Variable                  | Value                         | Purpose                                                                 |
 | ------------------------- | ----------------------------- | ----------------------------------------------------------------------- |
-| `NODE_VERSION`            | `22.23.3`                     | Match the version pinned in `.node-version` and used by GitHub Actions. |
+| `NODE_VERSION`            | `26.13.1`                     | Match the version pinned in `.node-version`, which mise and GitHub Actions also use. |
 | `PNPM_VERSION`            | `11.21.0`                     | Match `packageManager`, `mise.toml`, and the lockfile.                  |
 | `SKIP_DEPENDENCY_INSTALL` | `1`                           | Let the build command perform the frozen-lockfile install once.         |
 | `VITE_SITE_URL`           | The production HTTPS site URL | Canonical and OpenGraph URLs. Without it the build succeeds but the Worker answers every page with a 500. |

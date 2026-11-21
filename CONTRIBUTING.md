@@ -6,7 +6,7 @@ Thank you for considering contributing to _Tu Economía_!
 
 1. Read the [Individual Contributor License Agreement](CLA.md).
 2. Create your CLA acceptance record (instructions below) and commit it to a fork's branch.
-3. Remember to run `mise exec -- pnpm test` before you open the pull request.
+3. Remember to run `pnpm test` before you open the pull request.
 4. Open a pull request describing the changes and their motivation. Include the acceptance record.
 
 ## What you are agreeing to

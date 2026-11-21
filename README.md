@@ -67,19 +67,19 @@ Vite serves as the build tool and development server.
 
 The Cloudflare Vite plugin runs server code in the Workers runtime during development and preview.
 
-The project is pnpm-managed; `mise.toml` and `packageManager` in `package.json` pin the same pnpm version, and `.node-version` pins the Node.js build version.
+The project is pnpm-managed. mise provisions the toolchain: `mise.toml` pins pnpm (the same version as `packageManager` in `package.json`) and Python, and `.node-version` pins Node.js, which Cloudflare's build and mise both read. Commands below assume mise is activated in your shell (`mise activate`, see the mise docs); otherwise prefix them with `mise exec --`. `mise tasks` lists the shortcuts for the Wrangler and Precios commands.
 
 1. Clone the repository.
-2. Provision pnpm: `mise install`.
-3. Install dependencies: `mise exec -- pnpm install --frozen-lockfile`.
+2. Provision Node.js, Python and pnpm: `mise install`.
+3. Install dependencies: `pnpm install --frozen-lockfile`.
 4. Local D1 (Miniflare) starts empty; see [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
-5. Start the development server: `mise exec -- pnpm dev`. It runs without remote bindings, so the Boletín Oficial digest cannot summarize locally; `CLOUDFLARE_REMOTE_BINDINGS=true mise exec -- pnpm dev` connects the Workers AI binding, which needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`) and spends the account's daily Neurons.
+5. Start the development server: `pnpm dev`. It runs without remote bindings, so the Boletín Oficial digest cannot summarize locally; `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` connects the Workers AI binding, which needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`) and spends the account's daily Neurons.
 
-> For a local production preview, run `mise exec -- pnpm build` followed by `mise exec -- pnpm preview`.
+> For a local production preview, run `pnpm build` followed by `pnpm preview`.
 
-> To validate the Worker bundle and assets without publishing, run `mise exec -- pnpm exec wrangler deploy --dry-run` after building.
+> To validate the Worker bundle and assets without publishing, run `pnpm exec wrangler deploy --dry-run` after building.
 
-Before committing, run `mise exec -- pnpm test`. It groups formatting, lint, the TypeScript and Python type checks, unit tests, the Python script tests, and the build in one command.
+Before committing, run `pnpm test`. It groups formatting, lint, the TypeScript and Python type checks, unit tests, the Python script tests, and the build in one command.
 
 #### 2.3.1 Configuration
 

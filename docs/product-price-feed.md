@@ -50,7 +50,7 @@ The *Precios* tab of *Mi economía* shows what common products cost at the super
 
 The refresh is a manual routine, run from a machine in Argentina around the 3rd of each month. `datos.produccion.gob.ar` answers `403 Forbidden` to GitHub-hosted runners. A self-hosted runner was ruled out because the repository is public and its pull-request workflows could run on it.
 
-`scripts/refresh-prices.sh [work-directory]` runs `download`, `aggregate` and `build` below, then `pnpm test` and a Wrangler dry run, and lists the changed generated files. The work directory defaults to `$SEPA_WORK`, then `${TMPDIR:-/tmp}/sepa`, must be outside the repository and owned by you. When `build` fails on a GTIN that left the archive, it prints the `candidates` and `build` commands to finish by hand.
+`scripts/refresh-prices.sh [work-directory]` (or `mise run refresh-prices -- [work-directory]`) runs `download`, `aggregate` and `build` below, then `pnpm test` and a Wrangler dry run, and lists the changed generated files. The work directory defaults to `$SEPA_WORK`, then `${TMPDIR:-/tmp}/sepa`, must be outside the repository and owned by you. When `build` fails on a GTIN that left the archive, it prints the `candidates` and `build` commands to finish by hand.
 
 The build is a standard-library Python script (3.11 or later), never run in the Worker. The archive is untrusted input: the download is accepted only over HTTPS from `datos.produccion.gob.ar` (checked after redirects, capped at 1 GB), and both ZIP levels are checked for entry count, declared size and compression ratio before anything is decompressed.
 
@@ -63,4 +63,4 @@ python3 -I scripts/build-price-basket.py candidates --work ~/sepa # optional: ~/
 python3 -I scripts/build-price-basket.py build --work ~/sepa
 ```
 
-`build` validates `scripts/price-basket.json` against the archive and fails on a GTIN that disappeared; replace it from `candidates.md`. It writes `app/lib/price-basket.generated.json` (client), `app/lib/price-basket-server.generated.json` (server only, with the `archive` fallback prices) and the search index, removing the previous one. Commit those files and run `mise exec -- pnpm test`.
+`build` validates `scripts/price-basket.json` against the archive and fails on a GTIN that disappeared; replace it from `candidates.md`. It writes `app/lib/price-basket.generated.json` (client), `app/lib/price-basket-server.generated.json` (server only, with the `archive` fallback prices) and the search index, removing the previous one. Commit those files and run `pnpm test`.

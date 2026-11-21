@@ -104,7 +104,7 @@ At about 50 Neurons per notice, a typical day (7 to 15 summaries) uses 350 to 75
 1. Deploy with `BOLETIN_DIGEST_ENABLED` set to `"true"` in `wrangler.jsonc` (setting it to anything else turns the cron and the pages off). The next morning's runs collect the edition; the panel fills as notices are summarized, one every five minutes.
 2. Check: Workers Logs show `collected`, then `processed` lines; `wrangler d1 execute tu-economia --remote --command "SELECT status, outcome, COUNT(*), SUM(neurons) FROM boletin_notices GROUP BY 1, 2"` shows how notices ended and what they cost.
 
-To run a step locally, start `CLOUDFLARE_REMOTE_BINDINGS=true mise exec -- pnpm dev` with the flag set in `.dev.vars` (`BOLETIN_DIGEST_ENABLED=true`) and fire the scheduled handler with the shared expression; each call is one step, and summarizing reaches the remote Workers AI with your Wrangler login.
+To run a step locally, start `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` with the flag set in `.dev.vars` (`BOLETIN_DIGEST_ENABLED=true`) and fire the scheduled handler with the shared expression; each call is one step, and summarizing reaches the remote Workers AI with your Wrangler login.
 
 ```sh
 curl -X POST "http://localhost:5173/cdn-cgi/local/explorer/api/local/scheduled?worker=tu-economia" -H "Content-Type: application/json" -d '{"cron": "*/5 6-15 * * *"}'
