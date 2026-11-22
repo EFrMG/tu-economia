@@ -21,7 +21,7 @@ import {
 export function meta() {
   return pageMeta({
     description:
-      "Dólar, inflación, canasta básica y salarios, tasas de préstamos y tarjetas por entidad, actividad económica, empresas, noticias y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
+      "Dólar, inflación, canasta básica y salarios, tasas de préstamos y tarjetas por entidad, actividad económica, empresas, noticias, resúmenes del Boletín Oficial y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
     path: "/",
   });
 }
@@ -44,7 +44,8 @@ export default function Home() {
             </h1>
             <p className="block max-w-2xl text-center text-body-lg text-text-300 md:text-marketing-lead">
               <span>
-                Dólar, precios e ingresos, tasas, empresas y noticias.
+                Dólar, precios e ingresos, tasas, empresas, noticias y
+                normativa.
               </span>{" "}
               <br />
               <span>Registre sus ahorros y gastos en un solo lugar.</span>
@@ -143,11 +144,11 @@ export default function Home() {
             />
             <ScrollFeature
               id="Noticias"
-              title="Noticias económicas"
-              description="Titulares recientes de medios argentinos. El resumen muestra un avance de las últimas noticias."
+              title="Noticias y normativa"
+              description="Titulares recientes de medios argentinos y un resumen diario de las normas del Boletín Oficial que afectan al hogares."
               points={[
                 "iProfesional, Clarín y Página/12",
-                "Enlace directo a cada publicación original",
+                "Decretos y resoluciones de la primera sección del Boletín Oficial, resumidos cada mañana",
               ]}
               icon={<HiOutlineNewspaper />}
               reverse

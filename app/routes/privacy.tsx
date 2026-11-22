@@ -24,7 +24,7 @@ export default function Privacy() {
           conservan y protegen los datos personales en Tu Economía.
         </p>
         <p className="font-mono text-data-label text-text-400">
-          Última actualización: 4 de noviembre de 2026
+          Última actualización: 22 de noviembre de 2026
         </p>
       </header>
 
@@ -156,10 +156,17 @@ export default function Privacy() {
             <p>
               Las consultas a fuentes públicas de mercado (Dólar API,
               ArgentinaDatos, la API del BCRA, la API del INDEC, Datos
-              Argentina, canales RSS de noticias y la API no oficial de Precios
-              Claros) se efectúan de forma centralizada desde nuestro servidor.
-              Su navegador no se comunica directamente con esos proveedores
+              Argentina, canales RSS de noticias, el sitio del Boletín Oficial
+              de la República Argentina y la API no oficial de Precios Claros)
+              se efectúan de forma centralizada desde nuestro servidor. Su
+              navegador no se comunica directamente con esos proveedores
               externos para cargar los paneles.
+            </p>
+            <p>
+              Los resúmenes del Boletín Oficial se generan con Cloudflare
+              Workers AI a partir del texto público de cada norma. No se envían
+              a ese servicio datos de los usuarios, y se omiten las normas
+              referidas a personas determinadas.
             </p>
             <p>
               Para operar la infraestructura del servicio, compartimos datos

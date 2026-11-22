@@ -31,11 +31,14 @@ import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import { workerEnvContext } from "~/lib/worker-context";
 
-export function meta() {
+export function meta({ loaderData }: Route.MetaArgs) {
+  const boletinEnabled = loaderData?.boletinEnabled ?? false;
+
   return pageMeta({
     title: "Resumen",
-    description:
-      "Cotizaciones del dólar, inflación, canasta básica, salario real, riesgo país y las últimas noticias económicas.",
+    description: boletinEnabled
+      ? "Cotizaciones del dólar, inflación, canasta básica, salario real, riesgo país, las últimas noticias económicas y las normas del Boletín Oficial."
+      : "Cotizaciones del dólar, inflación, canasta básica, salario real, riesgo país y las últimas noticias económicas.",
     path: "/dashboard",
   });
 }

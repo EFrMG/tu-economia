@@ -2,7 +2,7 @@
 
 Automatic summaries of the household-relevant notices in the first section of the Boletín Oficial de la República Argentina (BORA), shown on `/noticias?panel=boletin` and, capped at three, on Resumen (`/dashboard`). The cron prepares them once per notice and stores them in D1; pages only read D1, and nothing is generated per request.
 
-The whole feature sits behind `BOLETIN_DIGEST_ENABLED`, in `wrangler.jsonc`: while it is not `"true"` the cron does nothing, `/noticias` has no Boletín panel and Resumen has no Boletín card.
+The whole feature sits behind `BOLETIN_DIGEST_ENABLED`, in `wrangler.jsonc`: while it is not `"true"` the cron does nothing, `/noticias` has no Boletín panel and Resumen has no Boletín card. The home page, `/docs`, `/privacy` and `/terms` describe the digest regardless of the flag; the `/noticias` and Resumen meta descriptions and the sidebar label follow it.
 
 ## Code
 

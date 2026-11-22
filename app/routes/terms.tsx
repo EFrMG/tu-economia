@@ -27,7 +27,7 @@ export default function Terms() {
           finaliza y qué uso puede darse a los datos del servicio.
         </p>
         <p className="font-mono text-data-label text-text-400">
-          Última actualización: 12 de noviembre de 2026
+          Última actualización: 22 de noviembre de 2026
         </p>
       </header>
 
@@ -43,9 +43,9 @@ export default function Terms() {
             <p>
               Tu Economía es un servicio de información económica para
               Argentina. Las secciones públicas —cotizaciones, indicadores,
-              noticias y documentación— pueden utilizarse sin cuenta. La edición
-              de los registros de Mi economía en su cuenta requiere una cuenta y
-              una suscripción activa.
+              noticias, normativa y documentación— pueden utilizarse sin cuenta.
+              La edición de los registros de Mi economía en su cuenta requiere
+              una cuenta y una suscripción activa.
             </p>
             <p>
               Estos términos rigen esa suscripción. La sección «Interfaces y
@@ -80,6 +80,12 @@ export default function Terms() {
               fuentes públicas y se ofrecen con fines informativos. Los datos
               son referenciales y no constituyen asesoría financiera, impositiva
               ni legal.
+            </p>
+            <p>
+              Los resúmenes de normas del Boletín Oficial se generan de forma
+              automática y pueden contener errores u omisiones. No reemplazan la
+              publicación oficial: el texto publicado en el Boletín Oficial,
+              enlazado en cada norma, es el único con valor legal.
             </p>
             <p>
               La suscripción habilita guardar, editar, exportar y eliminar
@@ -265,10 +271,10 @@ export default function Terms() {
               automatizados con ese fin.
             </p>
             <p>
-              Las cotizaciones, los indicadores y las noticias provienen de
-              fuentes públicas que tienen sus propias condiciones de uso. Si
-              necesita esos datos para otro fin, consúltelos directamente en las
-              fuentes que se detallan en la{" "}
+              Las cotizaciones, los indicadores, las noticias y las normas
+              provienen de fuentes públicas que tienen sus propias condiciones
+              de uso. Si necesita esos datos para otro fin, consúltelos
+              directamente en las fuentes que se detallan en la{" "}
               <Link
                 to="/docs"
                 className="text-primary-text-100 underline-offset-4 focus-visible:outline-none hocus:underline"
