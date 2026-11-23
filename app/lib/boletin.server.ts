@@ -81,7 +81,7 @@ async function fetchPage(url: string, fetcher: FetchLike) {
 export type BoletinStepResult =
   | { step: "disabled" }
   | { step: "waiting-edition" }
-  | { step: "collected"; listed: number; selected: number }
+  | { step: "collected"; edition: string; listed: number; selected: number }
   | { step: "processed"; id: string; status: NoticeOutcome }
   | { step: "retry"; id: string; reason: string }
   | { step: "idle" };
@@ -102,7 +102,10 @@ export interface BoletinDeps {
   fetch?: FetchLike;
 }
 
-/** One cron step. Collects today's edition when it is not on file yet; otherwise summarizes the oldest pending notice. */
+/**
+ * One cron step. Summarizes the oldest pending notice; with none left, and today's edition not on file yet, reads the section page for an edition newer than the stored ones.
+ * Pending notices come first so a day without an edition, which reads the page on every run, still finishes the previous one.
+ */
 export async function runBoletinStep(
   env: CloudflareEnvironment,
   now = new Date(),
@@ -111,38 +114,48 @@ export async function runBoletinStep(
   const db = env.DB;
   if (!isBoletinDigestEnabled(env) || !db) return { step: "disabled" };
 
-  const today = editionDateFor(now);
-
-  const collected = await db
-    .prepare("SELECT 1 FROM boletin_editions WHERE edition_date = ?")
-    .bind(today)
-    .first();
-
-  if (!collected) return collectEdition(db, today, now, fetcher);
-
   const pending = await db
     .prepare(
       "SELECT id, edition_date, rubro, heading, norm, has_annexes, attempts FROM boletin_notices WHERE status = 'pending' ORDER BY edition_date, position LIMIT 1",
     )
     .first<PendingRow>();
 
-  if (!pending) return { step: "idle" };
+  if (pending) return processNotice(db, env.AI, pending, now, fetcher);
 
-  return processNotice(db, env.AI, pending, now, fetcher);
+  const newest = await db
+    .prepare("SELECT MAX(edition_date) AS date FROM boletin_editions")
+    .first<{ date: string | null }>();
+
+  const newestStored = newest?.date ?? null;
+
+  if (newestStored !== null && newestStored >= editionDateFor(now))
+    return { step: "idle" };
+
+  return collectEdition(db, newestStored, now, fetcher);
 }
 
-/** Reads the section page. Before the morning edition (and on days without one) it still shows the previous edition, so nothing is recorded until its date is today's. */
+/**
+ * Reads the section page and records its newest edition when it is newer than every stored one.
+ * Not requiring today's date means an edition missed on its own day (published after the cron's last run, or while the cron or the site was down) is still collected the next day, as long as the page shows it.
+ */
 async function collectEdition(
   db: D1Database,
-  today: string,
+  newestStored: string | null,
   now: Date,
   fetcher: FetchLike,
 ): Promise<BoletinStepResult> {
-  const listed = parseListing(await fetchPage(LISTING_URL, fetcher)).filter(
-    (notice) => notice.editionDate === today,
+  const notices = parseListing(await fetchPage(LISTING_URL, fetcher));
+
+  const latest = notices.reduce<string | null>(
+    (date, notice) =>
+      date === null || notice.editionDate > date ? notice.editionDate : date,
+    null,
   );
 
-  if (listed.length === 0) return { step: "waiting-edition" };
+  if (latest === null || (newestStored !== null && latest <= newestStored))
+    return { step: "waiting-edition" };
+
+  const listed = notices.filter((notice) => notice.editionDate === latest);
 
   const selected = listed.filter(isRelevantListing);
   const timestamp = now.toISOString();
@@ -152,7 +165,7 @@ async function collectEdition(
       .prepare(
         "INSERT OR IGNORE INTO boletin_editions (edition_date, collected_at, listed_count, selected_count) VALUES (?, ?, ?, ?)",
       )
-      .bind(today, timestamp, listed.length, selected.length),
+      .bind(latest, timestamp, listed.length, selected.length),
     ...selected.map((notice) =>
       db
         .prepare(
@@ -174,6 +187,7 @@ async function collectEdition(
 
   return {
     step: "collected",
+    edition: latest,
     listed: listed.length,
     selected: selected.length,
   };

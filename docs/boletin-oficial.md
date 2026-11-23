@@ -34,8 +34,10 @@ One cron trigger serves every scheduled job: `*/5 6-15 * * *` in `wrangler.jsonc
 
 Each step does one small thing, because a Free-plan invocation gets 10 ms of CPU and 50 subrequests:
 
-1. **Collect.** When `boletin_editions` has no row for today's date in Argentina, read the section page. Until the morning edition appears (and on days without one) the page still shows the previous date, so nothing is recorded. Once it shows today, record the edition and insert the selected notices as `pending`.
-2. **Summarize.** Otherwise take the oldest `pending` notice: read its page, apply the exclusions, trim the text, call the model, check the answer and store the result.
+1. **Summarize.** Take the oldest `pending` notice: read its page, apply the exclusions, trim the text, call the model, check the answer and store the result.
+2. **Collect.** With nothing pending and no edition stored for today's date in Argentina, read the section page. When the newest edition it lists is newer than every stored one, record it and insert its selected notices as `pending`; otherwise (before the morning edition, and on days without one) nothing is recorded. The edition need not be today's, so one missed on its own day (published after the last run, or while the cron or the site was down) is collected the next day if the page still shows it, and the first run on an empty database collects whatever the page shows. An edition the page has already replaced is lost.
+
+Pending notices come first so that a day without an edition, which reads the page on every run, still finishes the previous one.
 
 A notice ends as:
 

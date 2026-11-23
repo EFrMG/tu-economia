@@ -81,6 +81,14 @@ function setup(onTestFinished: (fn: () => void) => void) {
   return { database, db: localD1(database) };
 }
 
+/** An edition already collected, with no notices. */
+const storeEdition = (database: DatabaseSync, date: string) =>
+  database
+    .prepare(
+      "INSERT INTO boletin_editions (edition_date, collected_at, listed_count, selected_count) VALUES (?, ?, 0, 0)",
+    )
+    .run(date, `${date}T12:00:00.000Z`);
+
 /** 09:00 in Argentina on the edition's day. */
 const morning = new Date("2026-11-19T12:00:00Z");
 
@@ -167,10 +175,11 @@ describe("Boletín digest cron", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it("waits while the section still shows the previous edition", async ({
+  it("waits while the section still shows the newest stored edition", async ({
     onTestFinished,
   }) => {
     const { db, database } = setup(onTestFinished);
+    storeEdition(database, "2026-11-18");
 
     expect(
       await runBoletinStep(env(db), morning, {
@@ -180,7 +189,57 @@ describe("Boletín digest cron", () => {
 
     expect(
       database.prepare("SELECT COUNT(*) AS n FROM boletin_editions").get(),
-    ).toEqual({ n: 0 });
+    ).toEqual({ n: 1 });
+  });
+
+  it("collects the section's edition on the first run, whatever its date", async ({
+    onTestFinished,
+  }) => {
+    const { db } = setup(onTestFinished);
+
+    expect(
+      await runBoletinStep(env(db), morning, {
+        fetch: boletinFetch(listingFor("20261118")),
+      }),
+    ).toMatchObject({ step: "collected", edition: "2026-11-18" });
+  });
+
+  it("collects the next day an edition missed on its own day", async ({
+    onTestFinished,
+  }) => {
+    const { db, database } = setup(onTestFinished);
+    storeEdition(database, "2026-11-18");
+
+    // Friday morning, with Thursday's edition still on the page.
+    const friday = new Date("2026-11-20T12:00:00Z");
+
+    expect(
+      await runBoletinStep(env(db), friday, {
+        fetch: boletinFetch(listingFor("20261119")),
+      }),
+    ).toMatchObject({ step: "collected", edition: "2026-11-19" });
+  });
+
+  it("finishes the pending notices before reading the section page again", async ({
+    onTestFinished,
+  }) => {
+    const { db } = setup(onTestFinished);
+    const fetcher = boletinFetch(listingFor("20261119"));
+
+    await runBoletinStep(env(db), morning, { fetch: fetcher });
+
+    // The next day, with no new edition yet: the previous one is still summarized.
+    const nextDay = new Date("2026-11-20T12:00:00Z");
+
+    expect(
+      await runBoletinStep(env(db), nextDay, { fetch: fetcher }),
+    ).toMatchObject({ step: "processed", id: "100" });
+
+    expect(
+      fetcher.mock.calls.filter(([url]) =>
+        String(url).endsWith("/seccion/primera"),
+      ),
+    ).toHaveLength(1);
   });
 
   it("collects the edition once, then summarizes one notice per run", async ({
@@ -194,6 +253,7 @@ describe("Boletín digest cron", () => {
       await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
     ).toEqual({
       step: "collected",
+      edition: "2026-11-19",
       listed: 4,
       selected: 3,
     });
