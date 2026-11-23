@@ -256,6 +256,29 @@ describe("getDashboardRates", () => {
     expect(result.highlight.history.at(-1)).toBe(131);
   });
 
+  it("validates only the saved copy's window of the full upstream history", async () => {
+    const fetch = successfulFetch();
+
+    fetch.mockImplementation(async (input: string | URL) => {
+      if (String(input).endsWith("/blue"))
+        return jsonResponse([
+          { fecha: "2011-01-03", venta: "4" },
+          ...historyFor("blue"),
+        ]);
+
+      if (String(input) === RATES_URL) return jsonResponse(liveRates());
+
+      return jsonResponse(historyFor(String(input).split("/").at(-1)!));
+    });
+
+    vi.stubGlobal("fetch", fetch);
+    const { getDashboardRates } = await loadModule();
+
+    const result = await getDashboardRates({});
+
+    expect(result.highlight.history).toEqual([90, 100, 110]);
+  });
+
   it("returns chronologically merged Blue and Oficial chart data with missing closes as null", async () => {
     const fetch = successfulFetch();
 
@@ -526,6 +549,117 @@ describe("getDashboardRates", () => {
     for (const [, init] of fetch.mock.calls) {
       expect(init?.signal).toBeInstanceOf(AbortSignal);
     }
+  });
+});
+
+describe("saved copies of the dollar closes", () => {
+  const HISTORY_URL = "https://api.argentinadatos.com/v1/cotizaciones/dolares";
+  const now = new Date("2026-01-15T16:00:00.000Z");
+
+  it("asks only for the days from the copy's last close to today, replacing that close and skipping days without one", async () => {
+    const fetch = vi.fn(async (input: string | URL) => {
+      const day: Record<string, unknown> = {
+        [`${HISTORY_URL}/blue/2026/01/13`]: { fecha: "2026-01-13", venta: 95 },
+        [`${HISTORY_URL}/blue/2026/01/15`]: { fecha: "2026-01-15", venta: 110 },
+      };
+
+      const body = day[String(input)];
+
+      return body
+        ? jsonResponse(body)
+        : jsonResponse({ error: "Not found" }, 404);
+    });
+
+    vi.stubGlobal("fetch", fetch);
+    const { DOLLAR_HISTORY_SOURCES } = await loadModule();
+
+    const rows = await DOLLAR_HISTORY_SOURCES[0].fetchRows({}, now, [
+      { fecha: "2026-01-12", venta: 80 },
+      { fecha: "2026-01-13", venta: 90 },
+    ]);
+
+    expect(rows).toEqual([
+      { fecha: "2026-01-12", venta: 80 },
+      { fecha: "2026-01-13", venta: 95 },
+      { fecha: "2026-01-15", venta: 110 },
+    ]);
+
+    expect(fetch.mock.calls.map(([url]) => String(url)).sort()).toEqual([
+      `${HISTORY_URL}/blue/2026/01/13`,
+      `${HISTORY_URL}/blue/2026/01/14`,
+      `${HISTORY_URL}/blue/2026/01/15`,
+    ]);
+  });
+
+  it("fails the refresh when a day's request fails, so the retry run asks again", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ error: "busy" }, 503)),
+    );
+
+    const { DOLLAR_HISTORY_SOURCES } = await loadModule();
+
+    await expect(
+      DOLLAR_HISTORY_SOURCES[0].fetchRows({}, now, [
+        { fecha: "2026-01-14", venta: 100 },
+      ]),
+    ).rejects.toThrow("503");
+  });
+
+  it("fails the refresh when the upstream no longer has the copy's last close, instead of keeping the copy frozen", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ error: "Not found" }, 404)),
+    );
+
+    const { DOLLAR_HISTORY_SOURCES } = await loadModule();
+
+    await expect(
+      DOLLAR_HISTORY_SOURCES[0].fetchRows({}, now, [
+        { fecha: "2026-01-14", venta: 100 },
+      ]),
+    ).rejects.toThrow("2026-01-14");
+  });
+
+  it("fails the refresh when the newest close is more than five days old", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) =>
+        String(input).endsWith("/blue/2026/01/09")
+          ? jsonResponse({ fecha: "2026-01-09", venta: 100 })
+          : jsonResponse({ error: "Not found" }, 404),
+      ),
+    );
+
+    const { DOLLAR_HISTORY_SOURCES } = await loadModule();
+
+    await expect(
+      DOLLAR_HISTORY_SOURCES[0].fetchRows({}, now, [
+        { fecha: "2026-01-09", venta: 100 },
+      ]),
+    ).rejects.toThrow("no tiene cierres desde 2026-01-09");
+  });
+
+  it("replaces a copy more than ten days behind from the full series", async () => {
+    const fetch = vi.fn(async (_input: string | URL) =>
+      jsonResponse(historyFor("blue")),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const { DOLLAR_HISTORY_SOURCES } = await loadModule();
+
+    const rows = await DOLLAR_HISTORY_SOURCES[0].fetchRows({}, now, [
+      { fecha: "2026-01-05", venta: 70 },
+    ]);
+
+    expect(rows.map((row) => row.fecha)).toEqual([
+      "2026-01-13",
+      "2026-01-14",
+      "2026-01-15",
+    ]);
+
+    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+      `${HISTORY_URL}/blue`,
+    ]);
   });
 });
 

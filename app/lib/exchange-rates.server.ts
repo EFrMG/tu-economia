@@ -9,6 +9,8 @@ import {
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 
 import {
+  calendarCutoff,
+  calendarDatesBetween,
   historyForCalendarDays,
   mergeHistoricalSeries,
   normalizeHistory,
@@ -113,6 +115,9 @@ const HISTORY_RETENTION_DAYS = 90;
 /** A saved copy keeps a few more days than the chart shows, so the window still fills on the day before the next refresh. */
 const HISTORY_COPY_DAYS = HISTORY_RETENTION_DAYS + 7;
 
+/** A refresh fails when the newest close is older than this, so a source that stopped publishing shows as stale. ArgentinaDatos carries closes through weekends, so even a long holiday weekend stays within it. */
+const MAX_CLOSE_AGE_DAYS = 5;
+
 const LIVE_TTL_MS = 60_000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
@@ -161,12 +166,22 @@ export function getExchangeRateSourceHealth(): ExchangeRateSourceHealth {
   };
 }
 
-async function fetchJson(url: string): Promise<unknown> {
+/** The parsed body; with `allowNotFound`, a 404 resolves to `null` instead of failing. */
+async function fetchJson(
+  url: string,
+  { allowNotFound = false } = {},
+): Promise<unknown> {
   return withUpstreamTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
     const response = await fetch(url, {
       headers: { accept: "application/json" },
       signal,
     });
+
+    if (allowNotFound && response.status === 404) {
+      void response.body?.cancel().catch(() => undefined);
+
+      return null;
+    }
 
     if (!response.ok) {
       throw new Error(`${url} responded with ${response.status}`);
@@ -204,27 +219,109 @@ const storedHistorySchema = z.object({
   venta: z.number().finite(),
 });
 
-/** One saved copy of closing values per casa, refreshed by the daily cron; see `SCHEDULED_SOURCES`. */
+/**
+ * Whether a raw upstream entry carries a date string before `cutoff`, the only entries dropped without validation.
+ * Everything else, a malformed entry included, goes to the schema, so a broken response still fails the refresh.
+ */
+const datedBefore = (entry: unknown, cutoff: string) =>
+  typeof entry === "object" &&
+  entry !== null &&
+  "fecha" in entry &&
+  typeof entry.fecha === "string" &&
+  entry.fecha < cutoff;
+
+/** The most days a refresh asks for one by one; a copy further behind is replaced from the full series instead, which keeps each run well inside the Free plan's 50 subrequests. */
+const MAX_INCREMENTAL_DAYS = 10;
+
+const withVenta = (
+  points: z.infer<typeof historySchema>,
+): HistoricalRatePoint[] =>
+  points
+    .filter((point) => point.venta !== null)
+    .map((point) => ({ fecha: point.fecha, venta: point.venta as number }));
+
+/** The whole series of a casa, kept to the copy's window. The upstream sends every close since 2011, some 530 KB; only the window is validated, to save CPU time. */
+async function fetchFullHistory(casa: Casa, today: string) {
+  const cutoff = calendarCutoff(today, HISTORY_COPY_DAYS);
+
+  const recent = z
+    .array(z.unknown())
+    .parse(await fetchJson(`${HISTORY_URL}/${casa}`))
+    .filter((entry) => !datedBefore(entry, cutoff));
+
+  return withVenta(historySchema.parse(recent));
+}
+
+/**
+ * The saved closes with every day from the last one to today asked again; later points win in `normalizeHistory`, so an asked day replaces its saved close.
+ * The last saved day is known to exist upstream, so a 404 for it means the endpoint changed rather than a day without a close: the refresh fails, and the copy turns stale on /api-status instead of silently stopping.
+ */
+async function fetchNewCloses(
+  casa: Casa,
+  previous: HistoricalRatePoint[],
+  dates: string[],
+) {
+  const [lastSaved, ...newer] = await Promise.all(
+    dates.map((date) => fetchDayClose(casa, date)),
+  );
+
+  if (!lastSaved.length)
+    throw new Error(
+      `ArgentinaDatos no devolvió el cierre de ${casa} del ${dates[0]}, ya guardado.`,
+    );
+
+  return [...previous, ...lastSaved, ...newer.flat()];
+}
+
+/** One day's close, or none when the upstream has no entry for that date (404). */
+async function fetchDayClose(casa: Casa, date: string) {
+  const body = await fetchJson(
+    `${HISTORY_URL}/${casa}/${date.replaceAll("-", "/")}`,
+    { allowNotFound: true },
+  );
+
+  if (body === null) return [];
+
+  const point = historyPointSchema.parse(body);
+
+  if (point.fecha !== date)
+    throw new Error(`El cierre de ${casa} del ${date} llegó con otra fecha.`);
+
+  return withVenta([point]);
+}
+
+/**
+ * One saved copy of closing values per casa, refreshed by the daily cron; see `SCHEDULED_SOURCES`.
+ * A refresh with a recent copy asks only for the days from the copy's last close to today, that last close included because a value saved early in the day may still have changed.
+ */
 const historySource = (casa: Casa): SnapshotSource<HistoricalRatePoint> => ({
   key: `${HISTORY_KEY_PREFIX}${casa}@1`,
   schema: storedHistorySchema,
-  fetchRows: async (_env, now) => {
-    const points = historySchema.parse(
-      await fetchJson(`${HISTORY_URL}/${casa}`),
-    );
+  fetchRows: async (_env, now, previous = []) => {
+    const today = argentineDate(now);
+    const lastSaved = normalizeHistory(previous).at(-1)?.fecha;
+    const missing = lastSaved ? calendarDatesBetween(lastSaved, today) : [];
 
-    const validPoints: HistoricalRatePoint[] = points
-      .filter((point) => point.venta !== null)
-      .map((point) => ({ fecha: point.fecha, venta: point.venta as number }));
+    const incremental =
+      missing.length > 0 && missing.length <= MAX_INCREMENTAL_DAYS;
+
+    const points = incremental
+      ? await fetchNewCloses(casa, previous, missing)
+      : await fetchFullHistory(casa, today);
 
     const rows = historyForCalendarDays(
-      normalizeHistory(validPoints),
+      normalizeHistory(points),
       HISTORY_COPY_DAYS,
-      argentineDate(now),
+      today,
     );
 
-    if (!rows.length)
-      throw new Error(`El historial de ${casa} no incluyó cierres recientes.`);
+    const newest = rows.at(-1)?.fecha;
+
+    // An upstream that stops adding days still answers for the old ones, so without this the copy would keep a fresh fetch time while the charts stood still.
+    if (!newest || newest < calendarCutoff(today, MAX_CLOSE_AGE_DAYS + 1))
+      throw new Error(
+        `El historial de ${casa} no tiene cierres desde ${newest ?? "hace más de " + HISTORY_COPY_DAYS + " días"}.`,
+      );
 
     return rows;
   },

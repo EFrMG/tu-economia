@@ -41,15 +41,35 @@ export function normalizeHistory(points: HistoricalRatePoint[]) {
   );
 }
 
+/** The first date, YYYY-MM-DD, of a window of `days` calendar days ending on `today`. */
+export function calendarCutoff(today: string, days: number) {
+  const cutoff = new Date(`${today}T00:00:00.000Z`);
+  cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+
+  return cutoff.toISOString().slice(0, 10);
+}
+
+/** Every calendar date, YYYY-MM-DD, from `from` to `to` inclusive; empty when `from` is after `to`. */
+export function calendarDatesBetween(from: string, to: string) {
+  const dates: string[] = [];
+  const day = new Date(`${from}T00:00:00.000Z`);
+
+  for (let date = from; date <= to; date = day.toISOString().slice(0, 10)) {
+    dates.push(date);
+    day.setUTCDate(day.getUTCDate() + 1);
+  }
+
+  return dates;
+}
+
 /** Includes the selected Argentine calendar day and the preceding `days - 1` calendar days. */
 export function historyForCalendarDays<T extends { fecha: string }>(
   points: T[],
   days: number,
   today: string,
 ) {
-  const cutoff = new Date(`${today}T00:00:00.000Z`);
-  cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
-  const cutoffDate = cutoff.toISOString().slice(0, 10);
+  const cutoffDate = calendarCutoff(today, days);
+
   return points.filter(
     (point) => point.fecha >= cutoffDate && point.fecha <= today,
   );
