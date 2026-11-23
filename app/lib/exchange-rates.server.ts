@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { createPromiseCache } from "~/lib/promise-cache.server";
+import {
+  loadRows,
+  snapshotHealth,
+  type SnapshotEnv,
+  type SnapshotSource,
+} from "~/lib/source-snapshots.server";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 
 import {
@@ -98,12 +104,16 @@ interface ExchangeRateSourceHealth {
   history: SourceHealth;
 }
 
+const HISTORY_KEY_PREFIX = "dollar-history:";
+
 /** Points kept for the sparkline. Roughly a trading month. */
 const HISTORY_WINDOW = 30;
 const HISTORY_RETENTION_DAYS = 90;
 
+/** A saved copy keeps a few more days than the chart shows, so the window still fills on the day before the next refresh. */
+const HISTORY_COPY_DAYS = HISTORY_RETENTION_DAYS + 7;
+
 const LIVE_TTL_MS = 60_000;
-const HISTORY_TTL_MS = 10 * 60_000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
 /** A failed live request may show the last usable response for at most 15 minutes. */
@@ -118,49 +128,36 @@ interface LastKnownLiveRates {
 
 let lastKnownLiveRates: LastKnownLiveRates | undefined;
 
-const sourceHealth: ExchangeRateSourceHealth = {
-  live: {
-    status: "not-checked",
-    lastSuccessfulFetchAt: null,
-    lastFailureAt: null,
-  },
-  history: {
-    status: "not-checked",
-    lastSuccessfulFetchAt: null,
-    lastFailureAt: null,
-  },
+let liveHealth: SourceHealth = {
+  status: "not-checked",
+  lastSuccessfulFetchAt: null,
+  lastFailureAt: null,
 };
 
-function recordSuccess(
-  source: keyof ExchangeRateSourceHealth,
-  status: "fetched" | "cached",
-) {
-  sourceHealth[source] = {
-    ...sourceHealth[source],
+function recordSuccess(status: "fetched" | "cached") {
+  liveHealth = {
+    ...liveHealth,
     status,
     lastSuccessfulFetchAt:
       status === "fetched"
         ? new Date().toISOString()
-        : sourceHealth[source].lastSuccessfulFetchAt,
+        : liveHealth.lastSuccessfulFetchAt,
   };
 }
 
-function recordFailure(
-  source: keyof ExchangeRateSourceHealth,
-  status: "failed" | "partial" | "stale" = "failed",
-) {
-  sourceHealth[source] = {
-    ...sourceHealth[source],
+function recordFailure(status: "failed" | "stale" = "failed") {
+  liveHealth = {
+    ...liveHealth,
     status,
     lastFailureAt: new Date().toISOString(),
   };
 }
 
-/** A snapshot of this process's source activity, not a real-time availability monitor. */
+/** A snapshot of this process's source activity, not a real-time availability monitor. The history comes from the saved copies. */
 export function getExchangeRateSourceHealth(): ExchangeRateSourceHealth {
   return {
-    live: { ...sourceHealth.live },
-    history: { ...sourceHealth.history },
+    live: { ...liveHealth },
+    history: snapshotHealth(HISTORY_KEY_PREFIX),
   };
 }
 
@@ -202,67 +199,74 @@ function fetchLiveRates() {
   });
 }
 
-/** Closing values for a casa, oldest first, retained for the 90-calendar-day chart window. */
-function fetchHistory(casa: Casa, today: string) {
-  const key = `history:${casa}`;
-  const cachedResult = cache.isFresh(key);
+const storedHistorySchema = z.object({
+  fecha: z.iso.date(),
+  venta: z.number().finite(),
+});
 
-  return cache
-    .get(key, HISTORY_TTL_MS, async () => {
-      const points = historySchema.parse(
-        await fetchJson(`${HISTORY_URL}/${casa}`),
-      );
+/** One saved copy of closing values per casa, refreshed by the daily cron; see `SCHEDULED_SOURCES`. */
+const historySource = (casa: Casa): SnapshotSource<HistoricalRatePoint> => ({
+  key: `${HISTORY_KEY_PREFIX}${casa}@1`,
+  schema: storedHistorySchema,
+  fetchRows: async (_env, now) => {
+    const points = historySchema.parse(
+      await fetchJson(`${HISTORY_URL}/${casa}`),
+    );
 
-      const validPoints: HistoricalRatePoint[] = points
-        .filter((point) => point.venta !== null)
-        .map((point) => ({ fecha: point.fecha, venta: point.venta as number }));
+    const validPoints: HistoricalRatePoint[] = points
+      .filter((point) => point.venta !== null)
+      .map((point) => ({ fecha: point.fecha, venta: point.venta as number }));
 
-      return historyForCalendarDays(
-        normalizeHistory(validPoints),
-        HISTORY_RETENTION_DAYS,
-        today,
-      );
-    })
-    .then((points) => {
-      if (!cachedResult) {
-        sourceHealth.history.lastSuccessfulFetchAt = new Date().toISOString();
-      }
+    const rows = historyForCalendarDays(
+      normalizeHistory(validPoints),
+      HISTORY_COPY_DAYS,
+      argentineDate(now),
+    );
 
-      return { points, cached: cachedResult };
-    });
+    if (!rows.length)
+      throw new Error(`El historial de ${casa} no incluyó cierres recientes.`);
+
+    return rows;
+  },
+});
+
+const ALL_CASAS: Casa[] = [HIGHLIGHT_CASA, ...GRID_CASAS];
+
+export const DOLLAR_HISTORY_SOURCES: readonly SnapshotSource<HistoricalRatePoint>[] =
+  ALL_CASAS.map(historySource);
+
+const HISTORY_SOURCES = new Map(
+  ALL_CASAS.map((casa, index) => [casa, DOLLAR_HISTORY_SOURCES[index]]),
+);
+
+/** Closing values for a casa, oldest first, within the 90-calendar-day chart window. */
+async function fetchHistory(casa: Casa, today: string, env: SnapshotEnv) {
+  const points = await loadRows(HISTORY_SOURCES.get(casa)!, env);
+
+  return historyForCalendarDays(points, HISTORY_RETENTION_DAYS, today);
 }
 
-async function loadHistories(casas: Casa[], today: string) {
+async function loadHistories(casas: Casa[], today: string, env: SnapshotEnv) {
   const attempts = await Promise.allSettled(
-    casas.map((casa) => fetchHistory(casa, today)),
+    casas.map((casa) => fetchHistory(casa, today, env)),
   );
-
-  const failed = attempts.some((result) => result.status === "rejected");
-  const succeeded = attempts.some((result) => result.status === "fulfilled");
-
-  if (failed) {
-    recordFailure("history", succeeded ? "partial" : "failed");
-  } else {
-    sourceHealth.history.status = attempts.every(
-      (result) => result.status === "fulfilled" && result.value.cached,
-    )
-      ? "cached"
-      : "fetched";
-  }
 
   return {
     points: attempts.map((result) =>
-      result.status === "fulfilled" ? result.value.points : [],
+      result.status === "fulfilled" ? result.value : [],
     ),
     failed: attempts.map((result) => result.status === "rejected"),
   };
 }
 
 /** Checks live and historical sources independently without changing the dashboard's loading path. */
-export async function checkExchangeRateSources() {
-  const casas: Casa[] = [HIGHLIGHT_CASA, ...GRID_CASAS];
+export async function checkExchangeRateSources(env: SnapshotEnv) {
   const today = argentineDate(new Date());
-  await Promise.allSettled([getUsableLiveRates(), loadHistories(casas, today)]);
+
+  await Promise.allSettled([
+    getUsableLiveRates(),
+    loadHistories(ALL_CASAS, today, env),
+  ]);
 
   return getExchangeRateSourceHealth();
 }
@@ -292,13 +296,13 @@ async function getUsableLiveRates() {
       throw new Error("No se pudo registrar la cotización principal.");
     }
 
-    recordSuccess("live", result.cached ? "cached" : "fetched");
+    recordSuccess(result.cached ? "cached" : "fetched");
 
     return { rates, retrievedAt, status: "current" as const };
   } catch {
     const snapshot = lastKnownLiveRates;
     if (snapshot && Date.now() - snapshot.retrievedAt <= MAX_LIVE_STALE_MS) {
-      recordFailure("live", "stale");
+      recordFailure("stale");
 
       return {
         rates: snapshot.rates,
@@ -307,7 +311,7 @@ async function getUsableLiveRates() {
       };
     }
 
-    recordFailure("live");
+    recordFailure();
 
     throw new Response("No se pudieron obtener cotizaciones de la API.", {
       status: 502,
@@ -330,13 +334,15 @@ function changeAgainstPreviousClose(
   return ((venta - previous.venta) / previous.venta) * 100;
 }
 
-export async function getDashboardRates(): Promise<DashboardRates> {
-  const casas: Casa[] = [HIGHLIGHT_CASA, ...GRID_CASAS];
+export async function getDashboardRates(
+  env: SnapshotEnv,
+): Promise<DashboardRates> {
+  const casas = ALL_CASAS;
   const now = new Date();
   const today = argentineDate(now);
 
   // Begin the independent historical requests while the live feed is still pending.
-  const historiesPromise = loadHistories(casas, today);
+  const historiesPromise = loadHistories(casas, today, env);
 
   const liveResult = await getUsableLiveRates();
   const live = liveResult.rates;
@@ -457,10 +463,12 @@ export async function getLiveRates(): Promise<LiveRates> {
 }
 
 /** Keeps the historical chart available when the live-rate source fails. */
-export async function getDashboardHistory(): Promise<DashboardHistory> {
+export async function getDashboardHistory(
+  env: SnapshotEnv,
+): Promise<DashboardHistory> {
   const casas = ["blue", "oficial"] as const;
   const today = argentineDate(new Date());
-  const result = await loadHistories([...casas], today);
+  const result = await loadHistories([...casas], today, env);
   return {
     historicalChart: mergeHistoricalSeries(result.points[0], result.points[1]),
     historicalAsOf: today,

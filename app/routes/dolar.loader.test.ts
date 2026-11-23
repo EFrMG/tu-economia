@@ -1,3 +1,4 @@
+import { RouterContextProvider } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -6,6 +7,7 @@ import {
   type DashboardRates,
 } from "~/lib/exchange-rates.server";
 import { getIndicators } from "~/lib/indicators.server";
+import { workerEnvContext } from "~/lib/worker-context";
 import { loader, shouldRevalidate } from "./dolar";
 
 vi.mock("~/lib/indicators.server", () => ({ getIndicators: vi.fn() }));
@@ -49,8 +51,14 @@ beforeEach(() => {
   vi.mocked(getIndicators).mockResolvedValue([]);
 });
 
-const requestArgs = (url: string) =>
-  ({ request: new Request(url) }) as Parameters<typeof loader>[0];
+const requestArgs = (url: string) => {
+  const context = new RouterContextProvider();
+  context.set(workerEnvContext, {});
+
+  return { request: new Request(url), context } as unknown as Parameters<
+    typeof loader
+  >[0];
+};
 
 describe("dolar loader", () => {
   it("streams exchange rates and the indicator cards independently", async () => {

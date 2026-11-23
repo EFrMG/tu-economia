@@ -5,25 +5,12 @@ import { FIGURES, ISSUERS, TAXONOMIES } from "~/lib/company-filings";
 /** Subrequests one Worker invocation may make. */
 const SUBREQUEST_LIMIT = 50;
 
-/** Synthetic CIKs; every issuer resolves, every concept answers 404, which is the most expensive path (the us-gaap fallback). */
+/** Every issuer resolves and every concept answers 404, which is the most expensive path (the us-gaap fallback). */
 function countingFetch() {
-  const cikOf = new Map(
-    ISSUERS.map((issuer, index) => [9_000_001 + index, issuer.ticker]),
-  );
+  const cikOf = new Map(ISSUERS.map((issuer) => [issuer.cik, issuer.ticker]));
 
   return vi.fn(async (input: string | URL | Request) => {
     const url = String(input);
-
-    if (url.endsWith("/files/company_tickers.json"))
-      return Response.json(
-        Object.fromEntries(
-          [...cikOf].map(([cik, ticker], index) => [
-            String(index),
-            { cik_str: cik, ticker, title: ticker },
-          ]),
-        ),
-      );
-
     const submissions = /submissions\/CIK(\d{10})\.json$/.exec(url);
 
     if (submissions)
@@ -59,16 +46,16 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Runs against the real issuer table, so growing it past the Worker limit fails here before it fails in production. */
+/** Runs against the real issuer table, so growing it past the Worker limit fails here before it fails in production. These are the visits without saved copies; the cron's refresh of one company costs the same as a cold company view. */
 describe("SEC EDGAR subrequest budget", () => {
-  it("costs one ticker lookup plus one submissions request per issuer for the list", async () => {
+  it("costs one submissions request per issuer for the list", async () => {
     const fetch = countingFetch();
     vi.stubGlobal("fetch", fetch);
     const { getIssuerList } = await import("~/lib/company-filings.server");
 
-    await settle(getIssuerList());
+    await settle(getIssuerList({}));
 
-    expect(fetch).toHaveBeenCalledTimes(1 + ISSUERS.length);
+    expect(fetch).toHaveBeenCalledTimes(ISSUERS.length);
     expect(fetch.mock.calls.length).toBeLessThan(SUBREQUEST_LIMIT);
   });
 
@@ -81,13 +68,13 @@ describe("SEC EDGAR subrequest budget", () => {
 
     await settle(
       Promise.all([
-        getCompanyFilings(ISSUERS[0].ticker),
-        getCompanyFigures(ISSUERS[0].ticker),
+        getCompanyFilings({}, ISSUERS[0].ticker),
+        getCompanyFigures({}, ISSUERS[0].ticker),
       ]),
     );
 
-    // Ticker file, submissions, then every tag in both taxonomies.
-    expect(fetch).toHaveBeenCalledTimes(2 + FIGURES.length * TAXONOMIES.length);
+    // Submissions, then every tag in both taxonomies.
+    expect(fetch).toHaveBeenCalledTimes(1 + FIGURES.length * TAXONOMIES.length);
     expect(fetch.mock.calls.length).toBeLessThan(SUBREQUEST_LIMIT);
   });
 });

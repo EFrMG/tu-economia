@@ -91,7 +91,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
  * The calculator's parameters (`precio`, `ratio`, `referencia`, `tc`, `mercado`) are normalised on its panel and removed from every other, and `empresa` is removed from the calculator.
  */
 export function loader({ request, context }: Route.LoaderArgs) {
-  const bymaEnabled = isEquitiesBymaEnabled(context.get(workerEnvContext));
+  const env = context.get(workerEnvContext);
+  const bymaEnabled = isEquitiesBymaEnabled(env);
   const url = new URL(request.url);
   const requested = url.searchParams.get("panel");
   const panel = resolveEquityPanel(requested, bymaEnabled);
@@ -171,19 +172,19 @@ export function loader({ request, context }: Route.LoaderArgs) {
       ? null
       : preview
         ? Promise.resolve(unavailablePanel())
-        : getIssuerList();
+        : getIssuerList(env);
 
   const company: Promise<CompanyPanel<CompanyFilingsData>> | null = !issuer
     ? null
     : preview
       ? Promise.resolve(unavailablePanel())
-      : getCompanyFilings(issuer.ticker);
+      : getCompanyFilings(env, issuer.ticker);
 
   const figures: Promise<CompanyPanel<CompanyFiguresData>> | null = !issuer
     ? null
     : preview
       ? Promise.resolve(unavailablePanel())
-      : getCompanyFigures(issuer.ticker);
+      : getCompanyFigures(env, issuer.ticker);
 
   // The calculator's only upstream is Dólar API; a failure becomes the manual-rate state, never an error.
   const rates: Promise<ReferenceRates> | null =

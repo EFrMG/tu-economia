@@ -239,7 +239,7 @@ describe("getItemPrices", () => {
     });
 
     fetch.mockRejectedValue(new Error("down"));
-    vi.advanceTimersByTime(30 * 60_000 + 1);
+    vi.advanceTimersByTime(4 * 60 * 60_000 + 1);
 
     await expect(getItemPrices("huevos", caba)).resolves.toMatchObject({
       chains: null,
@@ -276,7 +276,7 @@ describe("getItemPrices", () => {
     });
 
     fetch.mockRejectedValue(new Error("down"));
-    vi.advanceTimersByTime(30 * 60_000 + 1);
+    vi.advanceTimersByTime(4 * 60 * 60_000 + 1);
 
     await expect(getItemPrices("7790060023684", caba)).rejects.toThrow("down");
   });
@@ -342,7 +342,7 @@ describe("getItemPrices", () => {
       "7798108347105",
     ]);
 
-    vi.advanceTimersByTime(30 * 60_000 + 1);
+    vi.advanceTimersByTime(4 * 60 * 60_000 + 1);
     await getItemPrices("7798064180143", caba);
 
     expect(fetch).toHaveBeenCalledTimes(3);

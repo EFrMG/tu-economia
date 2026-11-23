@@ -259,8 +259,8 @@ describe("INDEC data", () => {
     const { getIndecData, getIndecSourceHealth } =
       await import("./indec.server");
 
-    const data = await getIndecData("token");
-    await getIndecData("token");
+    const data = await getIndecData({ INDEC_API_TOKEN: "token" });
+    await getIndecData({ INDEC_API_TOKEN: "token" });
 
     expect(data.baskets?.period).toBe("2026-09-01");
     expect(data.wages?.period).toBe("2026-08-01");
@@ -287,7 +287,7 @@ describe("INDEC data", () => {
     const { getIndecData, getIndecSourceHealth } =
       await import("./indec.server");
 
-    const data = await getIndecData("token");
+    const data = await getIndecData({ INDEC_API_TOKEN: "token" });
 
     expect(data.baskets).toBeNull();
     expect(data.wages).toBeNull();
@@ -302,12 +302,168 @@ describe("INDEC data", () => {
     const { getIndecData, getIndecSourceHealth } =
       await import("./indec.server");
 
-    expect(await getIndecData(undefined)).toEqual({
+    expect(await getIndecData({})).toEqual({
       baskets: null,
       wages: null,
       prices: null,
     });
     expect(fetch).not.toHaveBeenCalled();
     expect(getIndecSourceHealth().status).toBe("failed");
+  });
+});
+
+const povertyRow = (
+  periodo: string,
+  personas: number,
+  observaciones: string | null = null,
+) => ({
+  area_geografica_nom: "T_31_A",
+  periodo,
+  tasa_pobreza_personas: personas,
+  tasa_pobreza_hogares: personas - 8,
+  tasa_indigencia_personas: personas / 5,
+  tasa_indigencia_hogares: personas / 6,
+  observaciones,
+});
+
+describe("INDEC poverty", () => {
+  it("orders the semesters, separates the provisional mark from INDEC's other observations and keeps the first of a repeated semester", async () => {
+    const { buildPoverty } = await import("./indec.server");
+
+    const data = buildPoverty([
+      povertyRow("20261S", 32.3, "Dato provisorio"),
+      povertyRow("20192S", 35.5, "No incluye el aglomerado Gran Resistencia."),
+      povertyRow("20162S", 30.3),
+      povertyRow("20162S", 99),
+    ]);
+
+    expect(data?.points.map((point) => point.period)).toEqual([
+      "2016-S2",
+      "2019-S2",
+      "2026-S1",
+    ]);
+
+    expect(data?.points[0]).toEqual({
+      period: "2016-S2",
+      personas: { poverty: 30.3, indigence: 30.3 / 5 },
+      hogares: { poverty: 30.3 - 8, indigence: 30.3 / 6 },
+      note: null,
+      provisional: false,
+    });
+
+    expect(data?.points[1]).toMatchObject({
+      note: "No incluye el aglomerado Gran Resistencia.",
+      provisional: false,
+    });
+    expect(data?.points[2]).toMatchObject({ note: null, provisional: true });
+    expect(buildPoverty([])).toBeNull();
+  });
+
+  it("reads the whole series of the 31 agglomerations without the monthly window, and drops malformed rows", async () => {
+    const fetch = vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+
+      expect(url.pathname).toBe("/v1/pobreza_eph");
+      expect(url.searchParams.get("area_geografica_nom")).toBe("eq.T_31_A");
+      expect(url.searchParams.get("periodo")).toBeNull();
+
+      return response([
+        povertyRow("20252S", 28.2),
+        povertyRow("20261S", 32.3),
+        { ...povertyRow("20262S", 30), tasa_pobreza_personas: 130 },
+        { ...povertyRow("2027", 30) },
+      ]);
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    const { getPovertyData, getIndecSourceHealth } =
+      await import("./indec.server");
+
+    const data = await getPovertyData({ INDEC_API_TOKEN: "token" });
+    await getPovertyData({ INDEC_API_TOKEN: "token" });
+
+    expect(data?.points.map((point) => point.period)).toEqual([
+      "2025-S2",
+      "2026-S1",
+    ]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(getIndecSourceHealth().status).toBe("fetched");
+  });
+
+  it("is unavailable when the service fails or there is no token", async () => {
+    const fetch = vi.fn(async () => response({ message: "x" }, 503));
+    vi.stubGlobal("fetch", fetch);
+
+    const { getPovertyData, getIndecSourceHealth } =
+      await import("./indec.server");
+
+    expect(await getPovertyData({ INDEC_API_TOKEN: "token" })).toBeNull();
+    expect(await getPovertyData({})).toBeNull();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(getIndecSourceHealth().status).toBe("failed");
+  });
+});
+
+describe("INDEC saved copies", () => {
+  const copiesAt = async (fetchedAt: string) => {
+    const { localD1 } = await import("./local-d1.test-helper");
+    const { writeSnapshot } = await import("./source-snapshots.server");
+    const { db } = localD1("0010_source_snapshots.sql");
+
+    const copies: [string, unknown[]][] = [
+      ["valorizacion_canastas_cba_cbt", basketRows("202609")],
+      ["indice_salarios", [row({ periodo: "202608", valor: 2.73 })]],
+      ["ipc_nacional", [general("202609", "v_m", 1.9)]],
+      ["pobreza_eph", [povertyRow("20261S", 32.3)]],
+    ];
+
+    for (const [service, rows] of copies)
+      await writeSnapshot(db, `indec:${service}@1`, { rows, fetchedAt });
+
+    return db;
+  };
+
+  it("serves the copies without asking INDEC, even half a day later and without a token", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const db = await copiesAt("2026-11-11T20:00:00.000Z");
+
+    const { getIndecData, getPovertyData, getIndecSourceHealth } =
+      await import("./indec.server");
+
+    const data = await getIndecData({ DB: db });
+
+    expect(data.baskets?.period).toBe("2026-09-01");
+    expect(data.wages?.period).toBe("2026-08-01");
+    expect(data.prices?.general.monthly).toBe(1.9);
+    expect((await getPovertyData({ DB: db }))?.points).toHaveLength(1);
+    expect(fetch).not.toHaveBeenCalled();
+
+    expect(getIndecSourceHealth()).toMatchObject({
+      status: "cached",
+      lastSuccessfulFetchAt: "2026-11-11T20:00:00.000Z",
+    });
+  });
+
+  it("reports copies that missed the daily refresh as stale, so an expired token shows in the health instead of blanking the page", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const db = await copiesAt("2026-11-10T06:05:00.000Z");
+
+    const { getIndecData, getIndecSourceHealth } =
+      await import("./indec.server");
+
+    const data = await getIndecData({ INDEC_API_TOKEN: "expired", DB: db });
+
+    expect(data.baskets?.period).toBe("2026-09-01");
+    expect(fetch).not.toHaveBeenCalled();
+
+    expect(getIndecSourceHealth()).toMatchObject({
+      status: "stale",
+      lastSuccessfulFetchAt: "2026-11-10T06:05:00.000Z",
+    });
   });
 });

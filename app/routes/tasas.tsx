@@ -39,6 +39,7 @@ import {
 import { getCardPage, getLoanPage } from "~/lib/transparency-rates.server";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
+import { workerEnvContext } from "~/lib/worker-context";
 
 const INDICATOR_GROUPS_SHOWN = ["rates", "units"] as const;
 
@@ -59,7 +60,7 @@ export function meta() {
  * parameters are removed, and a page past the last becomes the last. A bare `/tasas` shows the default panel without a redirect.
  * The panels' data is bundled, so they never stream; the cards and the deposit comparison do.
  */
-export function loader({ request }: Route.LoaderArgs) {
+export function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const requested = url.searchParams.get("panel");
   const panel = isRatesPanel(requested) ? requested : DEFAULT_RATES_PANEL;
@@ -109,13 +110,17 @@ export function loader({ request }: Route.LoaderArgs) {
       comparisons: Promise.resolve(null),
     };
 
+  const env = context.get(workerEnvContext);
+
   return {
     ...panels,
-    indicators: getIndicators(),
+    indicators: getIndicators(env),
     comparisons: withUpstreamTimeout(10_000, () =>
-      Promise.all([getMonthlyInflationHistory(), getDepositRateHistory()]).then(
-        ([inflation, deposits]) =>
-          depositInflationComparisons(inflation, deposits),
+      Promise.all([
+        getMonthlyInflationHistory(env),
+        getDepositRateHistory(env),
+      ]).then(([inflation, deposits]) =>
+        depositInflationComparisons(inflation, deposits),
       ),
     ).catch(() => null),
   };

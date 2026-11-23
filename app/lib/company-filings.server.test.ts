@@ -2,39 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ISSUERS } from "~/lib/company-filings";
 import recorded from "~/lib/company-filings.server.fixtures.json";
+import { localD1 } from "~/lib/local-d1.test-helper";
 
-/** Synthetic CIKs: the tests never assume real ones. */
 const CIK = Object.fromEntries(
-  ISSUERS.map((issuer, index) => [issuer.ticker, 9_000_001 + index]),
+  ISSUERS.map((issuer) => [issuer.ticker, issuer.cik]),
 );
-
-const TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
-
-const tickerFile = (
-  overrides: Record<string, number | undefined> = {},
-): Record<string, unknown> =>
-  Object.fromEntries(
-    [
-      ...ISSUERS.flatMap((issuer) => {
-        const cik =
-          issuer.ticker in overrides
-            ? overrides[issuer.ticker]
-            : CIK[issuer.ticker];
-
-        return cik === undefined
-          ? []
-          : [
-              {
-                cik_str: cik,
-                ticker: issuer.ticker,
-                title: `${issuer.name} SA`,
-              },
-            ];
-      }),
-      { cik_str: 320193, ticker: "AAPL", title: "Apple Inc." },
-      { ticker: "BROKEN" },
-    ].map((entry, index) => [String(index), entry]),
-  );
 
 const submissions = (ticker: string, cik = CIK[ticker]) => ({
   cik: String(cik),
@@ -83,22 +55,37 @@ const annual = (val: number, extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-type Handler = (url: string) => Response | Promise<Response>;
+const ifrs = {
+  "ifrs-full/Revenue": concept("ifrs-full", "Revenue", {
+    ARS: [
+      annual(900, {
+        start: "2024-01-01",
+        end: "2024-12-31",
+        fy: 2024,
+        filed: "2025-04-25",
+      }),
+      annual(1000, { start: "2025-01-01" }),
+      annual(300, { start: "2025-10-01", form: "6-K" }),
+    ],
+  }),
+  "ifrs-full/ProfitLoss": concept("ifrs-full", "ProfitLoss", {
+    ARS: [annual(-50, { start: "2025-01-01" }), { bad: true }],
+  }),
+  "ifrs-full/Assets": concept("ifrs-full", "Assets", {
+    ARS: [annual(5000), annual(5100, { filed: "2027-04-20", fy: 2026 })],
+  }),
+};
 
-/** Answers the ticker file, every issuer's submissions, and the concepts in `concepts` (keyed `taxonomy/tag`); everything else is 404. */
+/** Answers every issuer's submissions and the concepts in `concepts` (keyed `taxonomy/tag`); everything else is 404. */
 function secFetch({
-  tickers = () => Response.json(tickerFile()),
   submissionsFor = (ticker: string) => Response.json(submissions(ticker)),
   concepts = {},
 }: {
-  tickers?: Handler;
   submissionsFor?: (ticker: string) => Response;
   concepts?: Record<string, unknown>;
 } = {}) {
   return vi.fn(async (input: string | URL | Request, _init?: RequestInit) => {
     const url = String(input);
-
-    if (url === TICKERS_URL) return tickers(url);
 
     const submissionsMatch = /submissions\/CIK(\d{10})\.json$/.exec(url);
 
@@ -156,7 +143,7 @@ describe("SEC requests", () => {
     vi.stubGlobal("fetch", fetch);
     const { getIssuerList, SEC_USER_AGENT } = await loadModule();
 
-    await settle(getIssuerList());
+    await settle(getIssuerList({}));
 
     expect(SEC_USER_AGENT).toMatch(/TuEconomia/);
     expect(SEC_USER_AGENT).toMatch(/@/);
@@ -186,9 +173,9 @@ describe("SEC requests", () => {
 
     const { getIssuerList } = await loadModule();
 
-    await settle(getIssuerList());
+    await settle(getIssuerList({}));
 
-    expect(starts).toHaveLength(1 + ISSUERS.length);
+    expect(starts).toHaveLength(ISSUERS.length);
 
     for (let index = 1; index < starts.length; index++)
       expect(starts[index] - starts[index - 1]).toBeGreaterThanOrEqual(100);
@@ -196,12 +183,12 @@ describe("SEC requests", () => {
 });
 
 describe("getIssuerList", () => {
-  it("resolves each ticker through the ticker file and links the latest annual report", async () => {
+  it("reads each company by its CIK and links the latest annual report", async () => {
     const fetch = secFetch();
     vi.stubGlobal("fetch", fetch);
     const { getIssuerList } = await loadModule();
 
-    const panel = await settle(getIssuerList());
+    const panel = await settle(getIssuerList({}));
 
     expect(panel.status).toBe("available");
     expect(panel.data!.rows).toHaveLength(ISSUERS.length);
@@ -230,11 +217,10 @@ describe("getIssuerList", () => {
     });
   });
 
-  it("marks a ticker missing from the file, or a CIK that does not list it, as unresolved", async () => {
+  it("marks a company whose submissions do not list its ticker as unresolved", async () => {
     vi.stubGlobal(
       "fetch",
       secFetch({
-        tickers: () => Response.json(tickerFile({ TEO: undefined })),
         submissionsFor: (ticker) =>
           Response.json(
             ticker === "LOMA"
@@ -246,11 +232,10 @@ describe("getIssuerList", () => {
 
     const { getIssuerList } = await loadModule();
 
-    const rows = (await settle(getIssuerList())).data!.rows;
+    const rows = (await settle(getIssuerList({}))).data!.rows;
     const statusOf = (ticker: string) =>
       rows.find((row) => row.issuer.ticker === ticker)!.status;
 
-    expect(statusOf("TEO")).toBe("unresolved");
     expect(statusOf("LOMA")).toBe("unresolved");
     expect(statusOf("YPF")).toBe("available");
   });
@@ -268,7 +253,7 @@ describe("getIssuerList", () => {
 
     const { getIssuerList } = await loadModule();
 
-    const panel = await settle(getIssuerList());
+    const panel = await settle(getIssuerList({}));
 
     expect(panel.status).toBe("available");
 
@@ -309,7 +294,7 @@ describe("getIssuerList", () => {
 
     const { getIssuerList } = await loadModule();
 
-    const rows = (await settle(getIssuerList())).data!.rows;
+    const rows = (await settle(getIssuerList({}))).data!.rows;
 
     expect(rows.find((row) => row.issuer.ticker === "PAM")!.status).toBe(
       "unavailable",
@@ -319,23 +304,6 @@ describe("getIssuerList", () => {
       status: "available",
       latestAnnual: { form: "20-F", reportDate: null, description: null },
     });
-  });
-
-  it("is unavailable without the ticker file and then makes no submissions request", async () => {
-    const fetch = secFetch({
-      tickers: () => new Response("Forbidden", { status: 403 }),
-    });
-
-    vi.stubGlobal("fetch", fetch);
-    const { getIssuerList } = await loadModule();
-
-    expect(await settle(getIssuerList())).toEqual({
-      status: "unavailable",
-      data: null,
-      freshness: null,
-    });
-
-    expect(urlsOf(fetch)).toEqual([TICKERS_URL]);
   });
 
   it("is unavailable when every company fails", async () => {
@@ -348,29 +316,80 @@ describe("getIssuerList", () => {
 
     const { getIssuerList } = await loadModule();
 
-    expect((await settle(getIssuerList())).status).toBe("unavailable");
+    expect((await settle(getIssuerList({}))).status).toBe("unavailable");
   });
 
-  it("caches the ticker file and submissions under their own keys", async () => {
+  it("shares the saved copies with every instance, without asking the SEC again", async () => {
     const fetch = secFetch();
     vi.stubGlobal("fetch", fetch);
-    const { getIssuerList, getCompanyFilings } = await loadModule();
 
-    await settle(getIssuerList());
+    const env = { DB: localD1("0010_source_snapshots.sql").db };
+
+    await settle((await loadModule()).getCompanyFilings(env, "YPF"));
     const calls = fetch.mock.calls.length;
 
-    await settle(getIssuerList());
-    await settle(getCompanyFilings("YPF"));
+    vi.setSystemTime(new Date("2026-12-10T15:00:00.000Z"));
+    vi.resetModules();
+
+    const panel = await settle(
+      (await loadModule()).getCompanyFilings(env, "YPF"),
+    );
 
     expect(fetch.mock.calls.length).toBe(calls);
+    expect(panel.freshness?.fetchedAt).toBe("2026-11-10T15:00:00.000Z");
+  });
+});
 
-    // Submissions expire after six hours; the ticker file lasts a day.
-    vi.setSystemTime(new Date("2026-11-10T21:00:01.000Z"));
-    await settle(getCompanyFilings("YPF"));
+describe("weekly refresh", () => {
+  it("spreads the companies over the week, two or fewer a day", async () => {
+    const { companiesDueOn } = await loadModule();
 
-    expect(urlsOf(fetch).slice(calls)).toEqual([
-      `https://data.sec.gov/submissions/CIK${String(CIK.YPF).padStart(10, "0")}.json`,
-    ]);
+    const week = Array.from({ length: 7 }, (_, day) =>
+      companiesDueOn(new Date(Date.UTC(2026, 10, 8 + day))),
+    );
+
+    expect(week.flat()).toHaveLength(ISSUERS.length);
+    expect(Math.max(...week.map((day) => day.length))).toBeLessThanOrEqual(2);
+  });
+
+  it("asks for the figures again only when a new annual report is filed", async () => {
+    let annual = "0001-26-000002";
+
+    const fetch = secFetch({
+      concepts: ifrs,
+      submissionsFor: (ticker) => {
+        const record = submissions(ticker);
+
+        record.filings.recent.accessionNumber[1] = annual;
+
+        return Response.json(record);
+      },
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    const env = { DB: localD1("0010_source_snapshots.sql").db };
+    const issuer = ISSUERS.find(({ ticker }) => ticker === "YPF")!;
+    const { refreshCompany } = await loadModule();
+    const day = (date: string) => new Date(`${date}T07:00:00.000Z`);
+    const conceptCalls = () =>
+      urlsOf(fetch).filter((url) => url.includes("companyconcept")).length;
+
+    await expect(
+      settle(refreshCompany(env, day("2026-11-10"), issuer)),
+    ).resolves.toMatchObject({ key: "sec:company:YPF", status: "refreshed" });
+    expect(conceptCalls()).toBe(4);
+
+    await expect(
+      settle(refreshCompany(env, day("2026-11-10"), issuer)),
+    ).resolves.toMatchObject({ status: "current" });
+
+    await settle(refreshCompany(env, day("2026-11-17"), issuer));
+    expect(conceptCalls()).toBe(4);
+
+    annual = "0001-27-000009";
+    await settle(refreshCompany(env, day("2026-11-24"), issuer));
+    expect(conceptCalls()).toBe(8);
   });
 });
 
@@ -379,7 +398,7 @@ describe("getCompanyFilings", () => {
     vi.stubGlobal("fetch", secFetch());
     const { getCompanyFilings } = await loadModule();
 
-    const panel = await settle(getCompanyFilings("GGAL"));
+    const panel = await settle(getCompanyFilings({}, "GGAL"));
 
     expect(panel.status).toBe("available");
     expect(panel.data!.issuer.ticker).toBe("GGAL");
@@ -437,7 +456,7 @@ describe("getCompanyFilings", () => {
 
     const { getCompanyFilings } = await loadModule();
 
-    const panel = await settle(getCompanyFilings("GGAL"));
+    const panel = await settle(getCompanyFilings({}, "GGAL"));
 
     expect(panel.data!.filings.map((filing) => filing.form)).toEqual([
       "6-K",
@@ -451,7 +470,9 @@ describe("getCompanyFilings", () => {
     vi.stubGlobal("fetch", fetch);
     const { getCompanyFilings } = await loadModule();
 
-    expect((await settle(getCompanyFilings("AAPL"))).status).toBe("unresolved");
+    expect((await settle(getCompanyFilings({}, "AAPL"))).status).toBe(
+      "unresolved",
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -463,38 +484,19 @@ describe("getCompanyFilings", () => {
 
     const { getCompanyFilings } = await loadModule();
 
-    expect((await settle(getCompanyFilings("YPF"))).status).toBe("unavailable");
+    expect((await settle(getCompanyFilings({}, "YPF"))).status).toBe(
+      "unavailable",
+    );
   });
 });
 
 describe("getCompanyFigures", () => {
-  const ifrs = {
-    "ifrs-full/Revenue": concept("ifrs-full", "Revenue", {
-      ARS: [
-        annual(900, {
-          start: "2024-01-01",
-          end: "2024-12-31",
-          fy: 2024,
-          filed: "2025-04-25",
-        }),
-        annual(1000, { start: "2025-01-01" }),
-        annual(300, { start: "2025-10-01", form: "6-K" }),
-      ],
-    }),
-    "ifrs-full/ProfitLoss": concept("ifrs-full", "ProfitLoss", {
-      ARS: [annual(-50, { start: "2025-01-01" }), { bad: true }],
-    }),
-    "ifrs-full/Assets": concept("ifrs-full", "Assets", {
-      ARS: [annual(5000), annual(5100, { filed: "2027-04-20", fy: 2026 })],
-    }),
-  };
-
   it("picks the latest annual fact of each IFRS tag, with unit, period and form", async () => {
     const fetch = secFetch({ concepts: ifrs });
     vi.stubGlobal("fetch", fetch);
     const { getCompanyFigures } = await loadModule();
 
-    const panel = await settle(getCompanyFigures("YPF"));
+    const panel = await settle(getCompanyFigures({}, "YPF"));
 
     expect(panel.status).toBe("available");
     expect(panel.data!.taxonomy).toBe("ifrs-full");
@@ -538,7 +540,7 @@ describe("getCompanyFigures", () => {
     vi.stubGlobal("fetch", fetch);
     const { getCompanyFigures } = await loadModule();
 
-    const panel = await settle(getCompanyFigures("YPF"));
+    const panel = await settle(getCompanyFigures({}, "YPF"));
 
     expect(panel.data!.taxonomy).toBe("us-gaap");
     expect(panel.data!.figures.revenue).toMatchObject({
@@ -572,7 +574,7 @@ describe("getCompanyFigures", () => {
     vi.stubGlobal("fetch", fetch);
     const { getCompanyFigures } = await loadModule();
 
-    const panel = await settle(getCompanyFigures("YPF"));
+    const panel = await settle(getCompanyFigures({}, "YPF"));
 
     expect(panel.data!.missing).toEqual(["assets"]);
     expect(panel.data!.figures.revenue?.value).toBe(1000);
@@ -586,7 +588,7 @@ describe("getCompanyFigures", () => {
     vi.stubGlobal("fetch", secFetch());
     const { getCompanyFigures } = await loadModule();
 
-    const panel = await settle(getCompanyFigures("BMA"));
+    const panel = await settle(getCompanyFigures({}, "BMA"));
 
     expect(panel.status).toBe("available");
     expect(panel.data!.taxonomy).toBeNull();
@@ -619,22 +621,26 @@ describe("getCompanyFigures", () => {
 
     const { getCompanyFigures } = await loadModule();
 
-    expect((await settle(getCompanyFigures("YPF"))).status).toBe("unavailable");
-    expect((await settle(getCompanyFigures("LOMA"))).status).toBe("unresolved");
+    expect((await settle(getCompanyFigures({}, "YPF"))).status).toBe(
+      "unavailable",
+    );
+    expect((await settle(getCompanyFigures({}, "LOMA"))).status).toBe(
+      "unresolved",
+    );
   });
 
-  it("caches a concept under its company, taxonomy and tag", async () => {
+  it("keeps each company's figures apart in memory", async () => {
     const fetch = secFetch({ concepts: ifrs });
     vi.stubGlobal("fetch", fetch);
     const { getCompanyFigures } = await loadModule();
 
-    await settle(getCompanyFigures("YPF"));
+    await settle(getCompanyFigures({}, "YPF"));
     const calls = fetch.mock.calls.length;
 
-    await settle(getCompanyFigures("YPF"));
+    await settle(getCompanyFigures({}, "YPF"));
     expect(fetch.mock.calls.length).toBe(calls);
 
-    await settle(getCompanyFigures("GGAL"));
+    await settle(getCompanyFigures({}, "GGAL"));
 
     expect(
       urlsOf(fetch)
@@ -649,9 +655,6 @@ describe("recorded responses", () => {
   function recordedFetch() {
     return vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
-
-      if (url === TICKERS_URL)
-        return Response.json({ "0": recorded.tickerEntry });
 
       if (url.endsWith(`/submissions/CIK${"931427".padStart(10, "0")}.json`))
         return Response.json(recorded.submissions);
@@ -670,7 +673,7 @@ describe("recorded responses", () => {
     vi.stubGlobal("fetch", recordedFetch());
     const { getCompanyFilings } = await loadModule();
 
-    const panel = await settle(getCompanyFilings("TGS"));
+    const panel = await settle(getCompanyFilings({}, "TGS"));
 
     expect(panel.status).toBe("available");
 
@@ -692,7 +695,7 @@ describe("recorded responses", () => {
     vi.stubGlobal("fetch", recordedFetch());
     const { getCompanyFigures } = await loadModule();
 
-    const panel = await settle(getCompanyFigures("TGS"));
+    const panel = await settle(getCompanyFigures({}, "TGS"));
 
     expect(panel.status).toBe("available");
     expect(panel.data!.taxonomy).toBe("ifrs-full");
@@ -726,17 +729,27 @@ describe("source health", () => {
     });
   });
 
-  it("reports fetched, then cached, and counts a 404 concept as an answer", async () => {
+  it("reports fetched, then cached from the saved copies, and counts a 404 concept as an answer", async () => {
     vi.stubGlobal("fetch", secFetch());
+
+    const env = { DB: localD1("0010_source_snapshots.sql").db };
+
+    expect(
+      (await settle((await loadModule()).checkCompanyFilingSources(env)))
+        .status,
+    ).toBe("fetched");
+
+    vi.resetModules();
     const { checkCompanyFilingSources, getCompanyFigures } = await loadModule();
 
-    expect((await settle(checkCompanyFilingSources())).status).toBe("fetched");
-    expect((await settle(checkCompanyFilingSources())).status).toBe("cached");
+    expect((await settle(checkCompanyFilingSources(env))).status).toBe(
+      "cached",
+    );
 
     // Every concept answers 404 here; that is the absence of a tag, not a failure.
-    await settle(getCompanyFigures("YPF"));
+    await settle(getCompanyFigures(env, "YPF"));
 
-    const health = await settle(checkCompanyFilingSources());
+    const health = await settle(checkCompanyFilingSources(env));
 
     expect(health.status).toBe("fetched");
     expect(health.lastFailureAt).toBeNull();
@@ -754,7 +767,7 @@ describe("source health", () => {
     );
 
     const first = await loadModule();
-    const partial = await settle(first.checkCompanyFilingSources());
+    const partial = await settle(first.checkCompanyFilingSources({}));
 
     expect(partial.status).toBe("partial");
     expect(partial.lastFailureAt).not.toBeNull();
@@ -763,12 +776,12 @@ describe("source health", () => {
     vi.resetModules();
     vi.stubGlobal(
       "fetch",
-      secFetch({ tickers: () => new Response("Forbidden", { status: 403 }) }),
+      secFetch({ submissionsFor: () => new Response("busy", { status: 503 }) }),
     );
 
     const second = await loadModule();
 
-    expect((await settle(second.checkCompanyFilingSources())).status).toBe(
+    expect((await settle(second.checkCompanyFilingSources({}))).status).toBe(
       "failed",
     );
   });

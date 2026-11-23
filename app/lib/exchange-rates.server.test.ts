@@ -61,7 +61,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardHistory } = await loadModule();
 
-    const history = await getDashboardHistory();
+    const history = await getDashboardHistory({});
 
     expect(history.historicalChart).toHaveLength(3);
     expect(history.historicalFailedSeries).toEqual([]);
@@ -76,7 +76,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result.highlight).toMatchObject({
       casa: "blue",
@@ -114,7 +114,7 @@ describe("getDashboardRates", () => {
     const { getDashboardRates, getExchangeRateSourceHealth } =
       await loadModule();
 
-    await getDashboardRates();
+    await getDashboardRates({});
 
     expect(getExchangeRateSourceHealth()).toEqual({
       live: {
@@ -129,17 +129,14 @@ describe("getDashboardRates", () => {
       },
     });
 
-    await getDashboardRates();
+    await getDashboardRates({});
 
     expect(getExchangeRateSourceHealth()).toMatchObject({
       live: {
         status: "cached",
         lastSuccessfulFetchAt: "2026-01-15T16:00:00.000Z",
       },
-      history: {
-        status: "cached",
-        lastSuccessfulFetchAt: "2026-01-15T16:00:00.000Z",
-      },
+      history: { lastSuccessfulFetchAt: "2026-01-15T16:00:00.000Z" },
     });
   });
 
@@ -148,7 +145,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    await expect(getDashboardRates()).rejects.toMatchObject({ status: 502 });
+    await expect(getDashboardRates({})).rejects.toMatchObject({ status: 502 });
     expect(fetch).toHaveBeenCalledTimes(6);
   });
 
@@ -169,7 +166,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const pending = getDashboardRates();
+    const pending = getDashboardRates({});
     expect(fetch).toHaveBeenCalledTimes(6);
     finishLive(jsonResponse(liveRates()));
 
@@ -190,7 +187,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { checkExchangeRateSources } = await loadModule();
 
-    const health = await checkExchangeRateSources();
+    const health = await checkExchangeRateSources({});
 
     expect(health.live.status).toBe("failed");
 
@@ -217,7 +214,7 @@ describe("getDashboardRates", () => {
     const { getDashboardRates, getExchangeRateSourceHealth } =
       await loadModule();
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result.highlight.history).toEqual([]);
     expect(result.highlight.changePct).toBeNull();
@@ -252,7 +249,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result.highlight.history).toHaveLength(30);
     expect(result.highlight.history[0]).toBe(102);
@@ -286,7 +283,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result.historicalChart).toEqual([
       { fecha: "2026-01-13", blue: 120, oficial: null },
@@ -300,7 +297,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", successfulFetch());
     const { getDashboardRates } = await loadModule();
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result.highlight.changePct).toBe(10);
   });
@@ -310,7 +307,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    await Promise.all([getDashboardRates(), getDashboardRates()]);
+    await Promise.all([getDashboardRates({}), getDashboardRates({})]);
     expect(fetch).toHaveBeenCalledTimes(6);
 
     expect(
@@ -318,7 +315,7 @@ describe("getDashboardRates", () => {
     ).toHaveLength(1);
 
     vi.advanceTimersByTime(60_001);
-    await getDashboardRates();
+    await getDashboardRates({});
     expect(fetch).toHaveBeenCalledTimes(7);
 
     expect(
@@ -343,14 +340,14 @@ describe("getDashboardRates", () => {
     const { getDashboardRates } = await loadModule();
 
     expect(
-      (await getDashboardRates()).grid.map((rate) => rate.casa),
+      (await getDashboardRates({})).grid.map((rate) => rate.casa),
     ).not.toContain("cripto");
 
     vi.advanceTimersByTime(5_001);
 
-    expect((await getDashboardRates()).grid.map((rate) => rate.casa)).toContain(
-      "cripto",
-    );
+    expect(
+      (await getDashboardRates({})).grid.map((rate) => rate.casa),
+    ).toContain("cripto");
 
     expect(
       fetch.mock.calls.filter(([url]) => String(url) === RATES_URL),
@@ -373,15 +370,15 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    await expect(getDashboardRates()).rejects.toMatchObject({ status: 502 });
+    await expect(getDashboardRates({})).rejects.toMatchObject({ status: 502 });
 
     // Inside the failure backoff the same failure is served without another upstream request.
-    await expect(getDashboardRates()).rejects.toMatchObject({ status: 502 });
+    await expect(getDashboardRates({})).rejects.toMatchObject({ status: 502 });
     expect(liveAttempts).toBe(1);
 
     await vi.advanceTimersByTimeAsync(5_000);
 
-    await expect(getDashboardRates()).resolves.toMatchObject({
+    await expect(getDashboardRates({})).resolves.toMatchObject({
       highlight: { casa: "blue" },
     });
 
@@ -408,7 +405,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const outcome = expect(getDashboardRates()).rejects.toMatchObject({
+    const outcome = expect(getDashboardRates({})).rejects.toMatchObject({
       status: 502,
     });
 
@@ -417,7 +414,7 @@ describe("getDashboardRates", () => {
 
     await vi.advanceTimersByTimeAsync(5_000);
 
-    await expect(getDashboardRates()).resolves.toMatchObject({
+    await expect(getDashboardRates({})).resolves.toMatchObject({
       highlight: { casa: "blue" },
     });
 
@@ -429,7 +426,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const initial = await getDashboardRates();
+    const initial = await getDashboardRates({});
 
     fetch.mockImplementation(async (input: string | URL) => {
       if (String(input) === RATES_URL) throw new Error("temporary outage");
@@ -438,7 +435,7 @@ describe("getDashboardRates", () => {
     });
 
     vi.advanceTimersByTime(60_001);
-    const firstFallback = await getDashboardRates();
+    const firstFallback = await getDashboardRates({});
     expect(firstFallback.highlight.venta).toBe(initial.highlight.venta);
 
     expect(firstFallback.freshness).toEqual({
@@ -457,7 +454,7 @@ describe("getDashboardRates", () => {
 
     vi.advanceTimersByTime(839_998);
 
-    await expect(getDashboardRates()).resolves.toMatchObject({
+    await expect(getDashboardRates({})).resolves.toMatchObject({
       freshness: {
         status: "stale",
         lastSuccessfulFetchAt: "2026-01-15T16:00:00.000Z",
@@ -465,7 +462,7 @@ describe("getDashboardRates", () => {
     });
 
     vi.advanceTimersByTime(2);
-    await expect(getDashboardRates()).rejects.toMatchObject({ status: 502 });
+    await expect(getDashboardRates({})).rejects.toMatchObject({ status: 502 });
   });
 
   it("does not replace a usable snapshot when a valid payload omits Blue, then recovers", async () => {
@@ -473,7 +470,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    const initial = await getDashboardRates();
+    const initial = await getDashboardRates({});
 
     fetch.mockImplementation(async (input: string | URL) => {
       if (String(input) === RATES_URL) {
@@ -485,7 +482,7 @@ describe("getDashboardRates", () => {
 
     vi.advanceTimersByTime(60_001);
 
-    await expect(getDashboardRates()).resolves.toMatchObject({
+    await expect(getDashboardRates({})).resolves.toMatchObject({
       highlight: { venta: initial.highlight.venta },
       freshness: {
         status: "stale",
@@ -505,7 +502,7 @@ describe("getDashboardRates", () => {
 
     await vi.advanceTimersByTimeAsync(5_000);
 
-    const result = await getDashboardRates();
+    const result = await getDashboardRates({});
 
     expect(result).toMatchObject({
       highlight: { venta: 999 },
@@ -521,7 +518,7 @@ describe("getDashboardRates", () => {
     vi.stubGlobal("fetch", fetch);
     const { getDashboardRates } = await loadModule();
 
-    await getDashboardRates();
+    await getDashboardRates({});
 
     expect(fetch).toHaveBeenCalledTimes(6);
     expect(vi.getTimerCount()).toBe(0);

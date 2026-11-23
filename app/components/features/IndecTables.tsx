@@ -339,11 +339,24 @@ const PricesTable = ({ data }: { data: Part<ConsumerPricesData> }) => (
   />
 );
 
+export type IndecTable = keyof IndecData;
+
+const ALL_TABLES: readonly IndecTable[] = ["baskets", "wages", "prices"];
+
+interface IndecTablesProps {
+  data?: IndecData;
+  /** The tables to render, in their page order; the page splits them to place other sections between. */
+  tables?: readonly IndecTable[];
+}
+
 /** `data` is `undefined` while loading; each table shows its own unavailable state. */
-export const IndecTables = ({ data }: { data?: IndecData }) => (
+export const IndecTables = ({
+  data,
+  tables = ALL_TABLES,
+}: IndecTablesProps) => (
   <>
-    <BasketsTable data={data?.baskets} />
-    <WagesTable data={data?.wages} />
-    <PricesTable data={data?.prices} />
+    {tables.includes("baskets") ? <BasketsTable data={data?.baskets} /> : null}
+    {tables.includes("wages") ? <WagesTable data={data?.wages} /> : null}
+    {tables.includes("prices") ? <PricesTable data={data?.prices} /> : null}
   </>
 );

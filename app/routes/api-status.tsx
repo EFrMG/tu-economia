@@ -143,13 +143,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   try {
     await withUpstreamTimeout(10_000, () =>
       Promise.allSettled([
-        checkExchangeRateSources(),
+        checkExchangeRateSources(env),
         getEconomicNews(),
-        getIndicators(),
-        getIndecData(env.INDEC_API_TOKEN),
-        getEconomicActivity(),
+        getIndicators(env),
+        getIndecData(env),
+        getEconomicActivity(env),
         ...(bymaEnabled ? [checkEquitySources()] : []),
-        checkCompanyFilingSources(),
+        checkCompanyFilingSources(env),
       ]),
     );
   } catch {

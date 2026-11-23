@@ -25,7 +25,8 @@ const API_KEY = "zIgFou7Gta7g87VFGL9dZ4BEEs19gNYS1SOQZt96";
 const USER_AGENT = `TuEconomia/1.0 (+${SITE_URL})`;
 
 const REQUEST_TIMEOUT_MS = 8_000;
-const PRICES_TTL_MS = 30 * 60_000;
+/** Precios Claros changes about once a day; a few hours of reuse costs only freshness, and an instance rarely lives that long. */
+const PRICES_TTL_MS = 4 * 60 * 60_000;
 
 interface GroupMember {
   gtin: string;

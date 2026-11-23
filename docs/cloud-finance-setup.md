@@ -15,13 +15,13 @@
 | `RESEND_API_KEY` | secret | Enables email sign-in links and retention notices. Required together with `EMAIL_FROM`. |
 | `EMAIL_FROM` | variable | Sender on a domain verified with Resend, for example `"Tu Economía <acceso@example.com>"`. Not a secret. |
 | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` | secrets | Mercado Pago credentials for [billing](billing.md). |
-| `INDEC_API_TOKEN` | secret | Catálogo API-INDEC token for the canasta, wages and IPC tables on `/precios` and two Resumen figures ([market-data.md](market-data.md#indec-canastas-salarios-ipc)). Generated under "Gestionar la cuenta" at `https://api.indec.gob.ar/` and shown once. It expires 12 months after it is generated; regenerating revokes the old one, so set the new one right away. Without it, those three tables show as unavailable. |
+| `INDEC_API_TOKEN` | secret | Catálogo API-INDEC token for the canasta, wages, IPC and poverty sections on `/precios` and two Resumen figures ([market-data.md](market-data.md#indec-canastas-salarios-ipc-pobreza)). Generated under "Gestionar la cuenta" at `https://api.indec.gob.ar/` and shown once. It expires 12 months after it is generated; regenerating revokes the old one, so set the new one right away. Without it, those sections keep serving their saved copies in D1 (reported as `stale` on `/api-status` after a missed day, and as errors by the daily refresh in Workers Logs) and show as unavailable only once there is no copy. |
 
 Variables go in `vars` in `wrangler.jsonc`, and a deploy replaces variables set in the dashboard with them. Secrets are set with `wrangler secret put <NAME>` and, locally, in `.dev.vars`.
 
 ## Database
 
-The Worker reads and writes D1 through the `DB` binding in `wrangler.jsonc`. `pnpm dev` runs against Miniflare's simulated D1 in `.wrangler/state`. It starts empty and needs the migrations before *Mi economía* can store anything. Applied migrations are tracked in `d1_migrations`, so the command skips them (do not also run them with `d1 execute --file`):
+The Worker reads and writes D1 through the `DB` binding in `wrangler.jsonc`: *Mi economía*, accounts and billing, the Boletín digest, and the saved copies of the slow-changing sources (`source_snapshots`: INDEC, EMAE, the BCRA, country risk, the dollar closes and SEC EDGAR; without that migration those sections still work, asking their source on every memory-cache miss and logging the failed copy reads). `pnpm dev` runs against Miniflare's simulated D1 in `.wrangler/state`. It starts empty and needs the migrations before *Mi economía* can store anything. Applied migrations are tracked in `d1_migrations`, so the command skips them (do not also run them with `d1 execute --file`):
 
 ```sh
 pnpm exec wrangler d1 migrations apply tu-economia --local   # mise run d1-migrate-local

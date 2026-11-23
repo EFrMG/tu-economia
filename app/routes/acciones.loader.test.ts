@@ -148,8 +148,8 @@ describe("acciones loader, Empresas panel", () => {
 
     expect(data.empresa).toBe("YPF");
     expect(data.issuers).toBeNull();
-    expect(getCompanyFilings).toHaveBeenCalledWith("YPF");
-    expect(getCompanyFigures).toHaveBeenCalledWith("YPF");
+    expect(getCompanyFilings).toHaveBeenCalledWith(expect.anything(), "YPF");
+    expect(getCompanyFigures).toHaveBeenCalledWith(expect.anything(), "YPF");
     expect(getIssuerList).not.toHaveBeenCalled();
   });
 

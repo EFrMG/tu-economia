@@ -15,6 +15,7 @@ import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
 import { getIndicators } from "~/lib/indicators.server";
 import { pageMeta } from "~/lib/meta";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
+import { workerEnvContext } from "~/lib/worker-context";
 
 const INDICATOR_GROUPS_SHOWN = ["money"] as const;
 
@@ -27,7 +28,7 @@ export function meta() {
   });
 }
 
-export function loader({ request }: Route.LoaderArgs) {
+export function loader({ request, context }: Route.LoaderArgs) {
   if (isUnavailablePreview(new URL(request.url).searchParams)) {
     return {
       activity: Promise.resolve(null),
@@ -40,9 +41,11 @@ export function loader({ request }: Route.LoaderArgs) {
     };
   }
 
+  const env = context.get(workerEnvContext);
+
   return {
-    activity: getEconomicActivity().catch(() => null),
-    indicators: getIndicators(),
+    activity: getEconomicActivity(env).catch(() => null),
+    indicators: getIndicators(env),
   };
 }
 

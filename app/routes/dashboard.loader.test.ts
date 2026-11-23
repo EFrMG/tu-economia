@@ -43,7 +43,9 @@ describe("resumen loader", () => {
     await expect(result.news).resolves.toBeNull();
     await expect(result.indicators).resolves.toEqual([]);
     await expect(result.indec).resolves.toMatchObject({ baskets: null });
-    expect(getIndecData).toHaveBeenCalledWith("token");
+    expect(getIndecData).toHaveBeenCalledWith(
+      expect.objectContaining({ INDEC_API_TOKEN: "token" }),
+    );
   });
 
   it("previews unavailable data without calling sources", async () => {

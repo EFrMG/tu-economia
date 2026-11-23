@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { createPromiseCache } from "~/lib/promise-cache.server";
+import {
+  loadRows,
+  snapshotHealth,
+  type SnapshotEnv,
+  type SnapshotSource,
+} from "~/lib/source-snapshots.server";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import type { SourceHealth } from "~/lib/exchange-rates.server";
 import {
@@ -18,9 +23,17 @@ import {
   type PriceRow,
   type WagesData,
 } from "~/lib/indec";
+import {
+  POVERTY_AREA,
+  POVERTY_SERVICE,
+  type PovertyData,
+  type PovertyPoint,
+} from "~/lib/poverty";
 
 const REQUEST_TIMEOUT_MS = 8_000;
-const CACHE_TTL_MS = 60 * 60_000;
+
+/** Bump when a service's `select` or schema changes, so an old copy is never read with the new shape. */
+const SNAPSHOT_VERSION = 1;
 
 /** The API never answers more rows than this; a response that reaches it may be truncated, so it fails instead. */
 const PAGE_LIMIT = 1_000;
@@ -45,33 +58,11 @@ const rowSchema = z.object({
 
 export type IndecRow = z.infer<typeof rowSchema>;
 
-const cache = createPromiseCache();
+const KEY_PREFIX = "indec:";
 
-const healthStats = {
-  successes: 0,
-  failures: 0,
-  lastSuccess: null as string | null,
-  lastFailure: null as string | null,
-};
-
-export function getIndecSourceHealth(): SourceHealth {
-  const { successes, failures, lastSuccess, lastFailure } = healthStats;
-
-  const status =
-    successes === 0 && failures === 0
-      ? "not-checked"
-      : failures === 0
-        ? "fetched"
-        : successes === 0
-          ? "failed"
-          : "partial";
-
-  return {
-    status,
-    lastSuccessfulFetchAt: lastSuccess,
-    lastFailureAt: lastFailure,
-  };
-}
+/** One row for the four services, from their saved copies. */
+export const getIndecSourceHealth = (): SourceHealth =>
+  snapshotHealth(KEY_PREFIX);
 
 /** `YYYYMM` of the month `months` before `now`, in UTC. */
 export function periodBefore(now: Date, months: number): string {
@@ -85,65 +76,69 @@ export function periodBefore(now: Date, months: number): string {
 const toIsoMonth = (period: string) =>
   `${period.slice(0, 4)}-${period.slice(4, 6)}-01`;
 
-/** A malformed row is dropped on its own, so it only blanks the figure it would have filled. */
-async function fetchRows(
+/** One request to a service. A malformed row is dropped on its own, so it only blanks the figure it would have filled. */
+async function fetchServiceRows<Row>(
   service: string,
+  schema: z.ZodType<Row>,
   params: Record<string, string>,
   token: string | undefined,
-): Promise<IndecRow[]> {
-  try {
-    if (!token) throw new Error("Falta el token del INDEC (INDEC_API_TOKEN).");
+): Promise<Row[]> {
+  if (!token) throw new Error("Falta el token del INDEC (INDEC_API_TOKEN).");
 
-    const query = new URLSearchParams({
-      ...params,
-      periodo: `gte.${periodBefore(new Date(), WINDOW_MONTHS)}`,
-      limit: String(PAGE_LIMIT),
+  const query = new URLSearchParams({ ...params, limit: String(PAGE_LIMIT) });
+
+  const rows = await withUpstreamTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
+    const response = await fetch(`${INDEC_DATA_URL}${service}?${query}`, {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      signal,
     });
 
-    const rows = await withUpstreamTimeout(
-      REQUEST_TIMEOUT_MS,
-      async (signal) => {
-        const response = await fetch(`${INDEC_DATA_URL}${service}?${query}`, {
-          headers: {
-            accept: "application/json",
-            authorization: `Bearer ${token}`,
-          },
-          signal,
-        });
-
-        if (!response.ok)
-          throw new Error(
-            `El servicio ${service} del INDEC respondió con ${response.status}.`,
-          );
-
-        return z.array(z.unknown()).parse(await response.json());
-      },
-    );
-
-    if (rows.length >= PAGE_LIMIT)
+    if (!response.ok)
       throw new Error(
-        `El servicio ${service} del INDEC alcanzó el límite de ${PAGE_LIMIT} filas.`,
+        `El servicio ${service} del INDEC respondió con ${response.status}.`,
       );
 
-    const parsed = rows.flatMap((row) => {
-      const result = rowSchema.safeParse(row);
+    return z.array(z.unknown()).parse(await response.json());
+  });
 
-      return result.success ? [result.data] : [];
-    });
+  if (rows.length >= PAGE_LIMIT)
+    throw new Error(
+      `El servicio ${service} del INDEC alcanzó el límite de ${PAGE_LIMIT} filas.`,
+    );
 
-    if (!parsed.length)
-      throw new Error(`El servicio ${service} del INDEC no incluyó valores.`);
+  const parsed = rows.flatMap((row) => {
+    const result = schema.safeParse(row);
 
-    healthStats.successes += 1;
-    healthStats.lastSuccess = new Date().toISOString();
+    return result.success ? [result.data] : [];
+  });
 
-    return parsed;
-  } catch (error) {
-    healthStats.failures += 1;
-    healthStats.lastFailure = new Date().toISOString();
-    throw error;
-  }
+  if (!parsed.length)
+    throw new Error(`El servicio ${service} del INDEC no incluyó valores.`);
+
+  return parsed;
 }
+
+/** One saved copy per service, refreshed by the daily cron; see `SCHEDULED_SOURCES`. */
+const indecSource = <Row>(
+  service: string,
+  schema: z.ZodType<Row>,
+  params: (now: Date) => Record<string, string>,
+): SnapshotSource<Row> => ({
+  key: `${KEY_PREFIX}${service}@${SNAPSHOT_VERSION}`,
+  schema,
+  fetchRows: (env, now) =>
+    fetchServiceRows(service, schema, params(now), env.INDEC_API_TOKEN),
+});
+
+/** The monthly services, read from `WINDOW_MONTHS` back. */
+const monthlySource = (service: string, params: Record<string, string>) =>
+  indecSource(service, rowSchema, (now) => ({
+    ...params,
+    periodo: `gte.${periodBefore(now, WINDOW_MONTHS)}`,
+  }));
 
 const valueOf = (
   rows: IndecRow[],
@@ -322,51 +317,100 @@ export function buildPrices(rows: IndecRow[]): ConsumerPricesData | null {
   };
 }
 
-const loadBasketRows = (token: string | undefined) =>
-  cache.get(`indec:${BASKETS_SERVICE}`, CACHE_TTL_MS, () =>
-    fetchRows(
-      BASKETS_SERVICE,
-      { select: "codigo,tipo_de_indicador,periodo,valor" },
-      token,
-    ),
-  );
+const BASKETS_SOURCE = monthlySource(BASKETS_SERVICE, {
+  select: "codigo,tipo_de_indicador,periodo,valor",
+});
 
-const loadWageRows = (token: string | undefined) =>
-  cache.get(`indec:${WAGES_SERVICE}`, CACHE_TTL_MS, () =>
-    fetchRows(
-      WAGES_SERVICE,
-      {
-        select: "codigo,tipo_de_indicador,periodo,valor",
-        codigo: `in.(${WAGE_SECTORS.map(({ code }) => code).join(",")})`,
-        tipo_de_indicador: "in.(v_m,v_ia)",
-      },
-      token,
-    ),
-  );
+const WAGES_SOURCE = monthlySource(WAGES_SERVICE, {
+  select: "codigo,tipo_de_indicador,periodo,valor",
+  codigo: `in.(${WAGE_SECTORS.map(({ code }) => code).join(",")})`,
+  tipo_de_indicador: "in.(v_m,v_ia)",
+});
 
 /** National divisions and categories, and the general level of every region. */
-const loadPriceRows = (token: string | undefined) =>
-  cache.get(`indec:${PRICES_SERVICE}`, CACHE_TTL_MS, () =>
-    fetchRows(
-      PRICES_SERVICE,
-      {
-        select:
-          "nivel,codigo,descripcion,region,tipo_de_indicador,periodo,valor",
-        tipo_de_indicador: "in.(v_m,v_ia)",
-        or: "(region.eq.Nacional,nivel.eq.Nivel General)",
-      },
-      token,
-    ),
-  );
+const PRICES_SOURCE = monthlySource(PRICES_SERVICE, {
+  select: "nivel,codigo,descripcion,region,tipo_de_indicador,periodo,valor",
+  tipo_de_indicador: "in.(v_m,v_ia)",
+  or: "(region.eq.Nacional,nivel.eq.Nivel General)",
+});
+
+/** A percentage, or `null` when INDEC replaced it with a conventional sign. */
+const povertyRate = z.number().finite().min(0).max(100).nullable();
+
+const povertyRowSchema = z.object({
+  /** `YYYY1S` or `YYYY2S`. */
+  periodo: z.string().regex(/^\d{4}[12]S$/),
+  tasa_pobreza_personas: povertyRate,
+  tasa_pobreza_hogares: povertyRate,
+  tasa_indigencia_personas: povertyRate,
+  tasa_indigencia_hogares: povertyRate,
+  observaciones: z.string().nullable().optional(),
+});
+
+export type PovertyRow = z.infer<typeof povertyRowSchema>;
+
+const PROVISIONAL_NOTE = /^dato provisorio\.?$/i;
+
+/** One point per semester, oldest first; a repeated semester keeps its first row. */
+export function buildPoverty(rows: PovertyRow[]): PovertyData | null {
+  const bySemester = new Map<string, PovertyRow>();
+
+  for (const row of rows)
+    if (!bySemester.has(row.periodo)) bySemester.set(row.periodo, row);
+
+  const points = [...bySemester.values()]
+    .sort((a, b) => a.periodo.localeCompare(b.periodo))
+    .map((row): PovertyPoint => {
+      const note = row.observaciones?.trim() || null;
+      const provisional = note !== null && PROVISIONAL_NOTE.test(note);
+
+      return {
+        period: `${row.periodo.slice(0, 4)}-S${row.periodo.slice(4, 5)}`,
+        personas: {
+          poverty: row.tasa_pobreza_personas,
+          indigence: row.tasa_indigencia_personas,
+        },
+        hogares: {
+          poverty: row.tasa_pobreza_hogares,
+          indigence: row.tasa_indigencia_hogares,
+        },
+        note: provisional ? null : note,
+        provisional,
+      };
+    });
+
+  return points.length ? { points } : null;
+}
+
+/** The whole series: about two rows a year since the second semester of 2016, far from the page limit. */
+const POVERTY_SOURCE = indecSource(POVERTY_SERVICE, povertyRowSchema, () => ({
+  select:
+    "periodo,tasa_pobreza_personas,tasa_pobreza_hogares,tasa_indigencia_personas,tasa_indigencia_hogares,observaciones",
+  area_geografica_nom: `eq.${POVERTY_AREA}`,
+  order: "periodo.asc",
+}));
+
+/** The four services, for the cron's refresh. */
+export const INDEC_SOURCES: readonly SnapshotSource<unknown>[] = [
+  BASKETS_SOURCE,
+  WAGES_SOURCE,
+  PRICES_SOURCE,
+  POVERTY_SOURCE,
+];
+
+/** `null` when the service cannot be read; only `/precios` asks for it, so it stays out of `getIndecData`. */
+export const getPovertyData = (env: SnapshotEnv, now = new Date()) =>
+  loadRows(POVERTY_SOURCE, env, now).then(buildPoverty, () => null);
 
 /** The three services fail independently; wages lose only their real change when the IPC cannot be read. */
 export async function getIndecData(
-  token: string | undefined,
+  env: SnapshotEnv,
+  now = new Date(),
 ): Promise<IndecData> {
   const [basketRows, wageRows, priceRows] = await Promise.all([
-    loadBasketRows(token).catch(() => null),
-    loadWageRows(token).catch(() => null),
-    loadPriceRows(token).catch(() => null),
+    loadRows(BASKETS_SOURCE, env, now).catch(() => null),
+    loadRows(WAGES_SOURCE, env, now).catch(() => null),
+    loadRows(PRICES_SOURCE, env, now).catch(() => null),
   ]);
 
   return {

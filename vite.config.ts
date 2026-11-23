@@ -2,9 +2,11 @@ import { reactRouter } from "@react-router/dev/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { configDefaults } from "vitest/config";
 
 export default defineConfig(({ mode }) => ({
   test: {
+    exclude: [...configDefaults.exclude, "DOCS/**"],
     server: { deps: { inline: [/opentelemetry/, /better-auth/] } },
   },
   plugins: [

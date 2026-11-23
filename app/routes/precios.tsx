@@ -2,8 +2,12 @@ import { Suspense, useMemo } from "react";
 import { Await, type ShouldRevalidateFunctionArgs } from "react-router";
 
 import type { Route } from "./+types/precios";
-import { IndecTables } from "~/components/features/IndecTables";
+import {
+  IndecTables,
+  type IndecTable,
+} from "~/components/features/IndecTables";
 import { IndicatorGroups } from "~/components/features/IndicatorCards";
+import { PovertySection } from "~/components/features/PovertySection";
 import {
   PurchasingPowerLoading,
   PurchasingPowerSection,
@@ -12,24 +16,29 @@ import { RouteError } from "~/components/layout/RouteError";
 import { RouteFooter } from "~/components/ui/RouteFooter";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import { UNAVAILABLE_INDEC_DATA } from "~/lib/indec";
-import { getIndecData } from "~/lib/indec.server";
+import { getIndecData, getPovertyData } from "~/lib/indec.server";
 import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
 import {
   getIndicators,
   getMonthlyInflationHistory,
 } from "~/lib/indicators.server";
 import { pageMeta } from "~/lib/meta";
+import { POVERTY_UNIT_PARAM, POVERTY_YEARS_PARAM } from "~/lib/poverty";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import { workerEnvContext } from "~/lib/worker-context";
 
 const INDICATOR_GROUPS_SHOWN = ["prices"] as const;
 
+/** The poverty chart sits between the canasta, which holds the poverty and indigence lines, and the rest of the INDEC tables. */
+const BASKETS_TABLE: readonly IndecTable[] = ["baskets"];
+const LATER_TABLES: readonly IndecTable[] = ["wages", "prices"];
+
 export function meta() {
   return pageMeta({
     title: "Precios e ingresos",
     description:
-      "Inflación mensual, interanual y esperada, canasta básica, salarios, inflación por rubro y región, y el poder adquisitivo de un monto.",
+      "Inflación mensual, interanual y esperada, canasta básica, pobreza e indigencia, salarios, inflación por rubro y región, y el poder adquisitivo de un monto.",
     path: "/precios",
   });
 }
@@ -44,20 +53,24 @@ export function loader({ request, context }: Route.LoaderArgs) {
         })),
       ),
       indec: Promise.resolve(UNAVAILABLE_INDEC_DATA),
+      poverty: Promise.resolve(null),
       inflationHistory: Promise.resolve(null),
     };
   }
 
+  const env = context.get(workerEnvContext);
+
   return {
-    indicators: getIndicators(),
-    indec: getIndecData(context.get(workerEnvContext).INDEC_API_TOKEN),
+    indicators: getIndicators(env),
+    indec: getIndecData(env),
+    poverty: getPovertyData(env),
     inflationHistory: withUpstreamTimeout(10_000, () =>
-      getMonthlyInflationHistory(),
+      getMonthlyInflationHistory(env),
     ).catch(() => null),
   };
 }
 
-/** The calculator's inputs live in the URL but only recompute on the client. */
+/** The calculator's inputs and the poverty chart's options live in the URL but only recompute on the client. */
 export function shouldRevalidate({
   currentUrl,
   nextUrl,
@@ -74,7 +87,12 @@ export function shouldRevalidate({
   const current = new URLSearchParams(currentUrl.searchParams);
   const next = new URLSearchParams(nextUrl.searchParams);
 
-  for (const key of ["ppAmount", "ppFrom"]) {
+  for (const key of [
+    "ppAmount",
+    "ppFrom",
+    POVERTY_UNIT_PARAM,
+    POVERTY_YEARS_PARAM,
+  ]) {
     current.delete(key);
     next.delete(key);
   }
@@ -91,8 +109,8 @@ const PreciosHeader = () => (
       Precios e ingresos
     </h1>
     <p className="max-w-2xl text-body-lg text-text-200">
-      Inflación, canasta básica y salarios, con el período de cada dato, y el
-      poder adquisitivo de un monto a lo largo del tiempo.
+      Inflación, canasta básica, pobreza y salarios, con el período de cada
+      dato, y el poder adquisitivo de un monto a lo largo del tiempo.
     </p>
   </header>
 );
@@ -109,9 +127,10 @@ export default function Precios({ loaderData }: Route.ComponentProps) {
       Promise.all([
         loaderData.indicators,
         loaderData.indec,
+        loaderData.poverty,
         loaderData.inflationHistory,
       ]).then(
-        ([indicators, indec, inflation]) =>
+        ([indicators, indec, poverty, inflation]) =>
           indicators.some(
             (result) =>
               result.point === null &&
@@ -121,10 +140,16 @@ export default function Precios({ loaderData }: Route.ComponentProps) {
               ),
           ) ||
           Object.values(indec).some((part) => part === null) ||
+          poverty === null ||
           inflation === null,
         () => true,
       ),
-    [loaderData.indicators, loaderData.indec, loaderData.inflationHistory],
+    [
+      loaderData.indicators,
+      loaderData.indec,
+      loaderData.poverty,
+      loaderData.inflationHistory,
+    ],
   );
 
   useFailedDataRetry(retryNeeded);
@@ -149,12 +174,34 @@ export default function Precios({ loaderData }: Route.ComponentProps) {
         </Await>
       </Suspense>
 
-      <Suspense fallback={<IndecTables />}>
+      <Suspense fallback={<IndecTables tables={BASKETS_TABLE} />}>
         <Await
           resolve={loaderData.indec}
-          errorElement={<IndecTables data={UNAVAILABLE_INDEC_DATA} />}
+          errorElement={
+            <IndecTables data={UNAVAILABLE_INDEC_DATA} tables={BASKETS_TABLE} />
+          }
         >
-          {(indec) => <IndecTables data={indec} />}
+          {(indec) => <IndecTables data={indec} tables={BASKETS_TABLE} />}
+        </Await>
+      </Suspense>
+
+      <Suspense fallback={<PovertySection />}>
+        <Await
+          resolve={loaderData.poverty}
+          errorElement={<PovertySection data={null} />}
+        >
+          {(poverty) => <PovertySection data={poverty} />}
+        </Await>
+      </Suspense>
+
+      <Suspense fallback={<IndecTables tables={LATER_TABLES} />}>
+        <Await
+          resolve={loaderData.indec}
+          errorElement={
+            <IndecTables data={UNAVAILABLE_INDEC_DATA} tables={LATER_TABLES} />
+          }
+        >
+          {(indec) => <IndecTables data={indec} tables={LATER_TABLES} />}
         </Await>
       </Suspense>
 
@@ -177,7 +224,9 @@ export function HydrateFallback() {
     <div className="stack-10">
       <PreciosHeader />
       <IndicatorGroups groups={INDICATOR_GROUPS_SHOWN} />
-      <IndecTables />
+      <IndecTables tables={BASKETS_TABLE} />
+      <PovertySection />
+      <IndecTables tables={LATER_TABLES} />
       <PurchasingPowerLoading />
       <PreciosFooter />
     </div>

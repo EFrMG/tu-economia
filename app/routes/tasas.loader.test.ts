@@ -1,5 +1,7 @@
+import { RouterContextProvider } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 
+import { workerEnvContext } from "~/lib/worker-context";
 import { loader, shouldRevalidate } from "./tasas";
 
 vi.mock("~/lib/indicators.server", () => ({
@@ -8,10 +10,15 @@ vi.mock("~/lib/indicators.server", () => ({
   getDepositRateHistory: vi.fn(async () => []),
 }));
 
-const run = (path: string) =>
-  loader({
+const run = (path: string) => {
+  const context = new RouterContextProvider();
+  context.set(workerEnvContext, {});
+
+  return loader({
     request: new Request(`http://localhost${path}`),
+    context,
   } as unknown as Parameters<typeof loader>[0]);
+};
 
 const redirectOf = (path: string) => {
   try {

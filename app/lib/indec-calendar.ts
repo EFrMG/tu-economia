@@ -6,17 +6,18 @@
  * Source: https://www.indec.gob.ar/ftp/cuadros/publicaciones/calendario_2sem2026.pdf
  * (converted to text as `docs/sources/INDEC/calendario_2sem2026.txt`).
  *
- * The calendar also lists pobreza (semestral) and mercado de trabajo
- * (trimestral), which can be added here when those surfaces land. */
+ * The calendar also lists mercado de trabajo (trimestral), which can be added
+ * here when that surface lands. */
 
 /** Last day the calendar is in force; the test fails after this date. */
 export const INDEC_CALENDAR_EXPIRES_AT = "2026-12-31";
 
-export type IndecCalendarIndicator = "ipc" | "canasta" | "salarios" | "emae";
+export type IndecCalendarIndicator =
+  "ipc" | "canasta" | "salarios" | "emae" | "pobreza";
 
 export interface IndecRelease {
   indicator: IndecCalendarIndicator;
-  /** Data period covered, `YYYY-MM`. */
+  /** Data period covered, `YYYY-MM`; a semester is its last month. */
   period: string;
   /** Publication date, `YYYY-MM-DD`. */
   releaseDate: string;
@@ -54,6 +55,10 @@ export const INDEC_RELEASES: readonly IndecRelease[] = [
   { indicator: "emae", period: "2026-08", releaseDate: "2026-10-21" },
   { indicator: "emae", period: "2026-09", releaseDate: "2026-11-24" },
   { indicator: "emae", period: "2026-10", releaseDate: "2026-12-21" },
+
+  // Incidencia de la pobreza y de la indigencia, 31 aglomerados urbanos. The
+  // second semester of 2026 is published in the first semester of 2027.
+  { indicator: "pobreza", period: "2026-06", releaseDate: "2026-09-24" },
 ] as const;
 
 const releaseDateFormatter = new Intl.DateTimeFormat("es-AR", {

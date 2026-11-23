@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { createPromiseCache } from "~/lib/promise-cache.server";
+import {
+  loadRows,
+  snapshotHealth,
+  type SnapshotEnv,
+  type SnapshotSource,
+} from "~/lib/source-snapshots.server";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import type { SourceHealth } from "~/lib/exchange-rates.server";
 import {
@@ -17,7 +22,6 @@ const COUNTRY_RISK_URL =
 const BCRA_CATEGORY = "Principales Variables";
 
 const REQUEST_TIMEOUT_MS = 8_000;
-const CACHE_TTL_MS = 30 * 60_000;
 
 /** The largest page the BCRA serves; a larger `limit` answers 400. */
 const BCRA_PAGE_SIZE = 3_000;
@@ -45,6 +49,11 @@ const catalogueRowSchema = z.object({
   ultValorInformado: z.number().finite(),
 });
 
+/** A catalogue row: the latest value the BCRA reported for one series. */
+interface LatestValue extends IndicatorPoint {
+  variable: number;
+}
+
 const seriesPageSchema = z.object({
   metadata: z.object({
     resultset: z.object({ count: z.number().int().nonnegative() }),
@@ -54,97 +63,33 @@ const seriesPageSchema = z.object({
   ),
 });
 
-const cache = createPromiseCache();
-
-interface HealthStats {
-  successes: number;
-  failures: number;
-  lastSuccess: string | null;
-  lastFailure: string | null;
-}
-
-const createHealthStats = (): HealthStats => ({
-  successes: 0,
-  failures: 0,
-  lastSuccess: null,
-  lastFailure: null,
-});
-
-const bcraHealthStats = createHealthStats();
-const countryRiskHealthStats = createHealthStats();
-
-function recordSuccess(stats: HealthStats) {
-  stats.successes += 1;
-  stats.lastSuccess = new Date().toISOString();
-}
-
-function recordFailure(stats: HealthStats) {
-  stats.failures += 1;
-  stats.lastFailure = new Date().toISOString();
-}
-
-function toSourceHealth({
-  successes,
-  failures,
-  lastSuccess,
-  lastFailure,
-}: HealthStats): SourceHealth {
-  const status =
-    successes === 0 && failures === 0
-      ? "not-checked"
-      : failures === 0
-        ? "fetched"
-        : successes === 0
-          ? "failed"
-          : "partial";
-
-  return {
-    status,
-    lastSuccessfulFetchAt: lastSuccess,
-    lastFailureAt: lastFailure,
-  };
-}
-
 export function getIndicatorSourceHealth(): {
   bcra: SourceHealth;
   countryRisk: SourceHealth;
 } {
   return {
-    bcra: toSourceHealth(bcraHealthStats),
-    countryRisk: toSourceHealth(countryRiskHealthStats),
+    bcra: snapshotHealth("bcra:"),
+    countryRisk: snapshotHealth("country-risk@"),
   };
 }
 
-/** Counts as a success only once `parse` accepts the payload. */
-async function fetchParsed<T>(
+/** One GET whose payload `parse` validates. */
+function fetchParsed<T>(
   url: string,
   label: string,
-  stats: HealthStats,
   parse: (payload: unknown) => T,
 ): Promise<T> {
-  try {
-    const result = await withUpstreamTimeout(
-      REQUEST_TIMEOUT_MS,
-      async (signal) => {
-        const response = await fetch(url, {
-          headers: { accept: "application/json" },
-          signal,
-        });
+  return withUpstreamTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
+    const response = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal,
+    });
 
-        if (!response.ok)
-          throw new Error(`${label} respondió con ${response.status}.`);
+    if (!response.ok)
+      throw new Error(`${label} respondió con ${response.status}.`);
 
-        return parse(await response.json());
-      },
-    );
-
-    recordSuccess(stats);
-
-    return result;
-  } catch (error) {
-    recordFailure(stats);
-    throw error;
-  }
+    return parse(await response.json());
+  });
 }
 
 /** Repeated dates collapse to one point and the series is returned oldest first. */
@@ -167,7 +112,7 @@ function normalizePoints(
  * Reads the catalogue's latest value per series. A malformed row only drops its own series,
  * so one invalid series leaves the other cards visible.
  */
-async function fetchLatestValues(): Promise<Map<number, IndicatorPoint>> {
+async function fetchLatestValues(): Promise<LatestValue[]> {
   const params = new URLSearchParams({
     categoria: BCRA_CATEGORY,
     limit: String(BCRA_PAGE_SIZE),
@@ -175,28 +120,24 @@ async function fetchLatestValues(): Promise<Map<number, IndicatorPoint>> {
 
   const label = "El catálogo del BCRA";
 
-  return fetchParsed(
-    `${BCRA_BASE}?${params}`,
-    label,
-    bcraHealthStats,
-    (payload) => {
-      const latest = new Map<number, IndicatorPoint>();
+  return fetchParsed(`${BCRA_BASE}?${params}`, label, (payload) => {
+    const latest = new Map<number, LatestValue>();
 
-      for (const row of catalogueSchema.parse(payload).results) {
-        const parsed = catalogueRowSchema.safeParse(row);
-        if (!parsed.success) continue;
+    for (const row of catalogueSchema.parse(payload).results) {
+      const parsed = catalogueRowSchema.safeParse(row);
+      if (!parsed.success) continue;
 
-        latest.set(parsed.data.idVariable, {
-          date: parsed.data.ultFechaInformada,
-          value: parsed.data.ultValorInformado,
-        });
-      }
+      latest.set(parsed.data.idVariable, {
+        variable: parsed.data.idVariable,
+        date: parsed.data.ultFechaInformada,
+        value: parsed.data.ultValorInformado,
+      });
+    }
 
-      if (!latest.size) throw new Error(`${label} no incluyó valores.`);
+    if (!latest.size) throw new Error(`${label} no incluyó valores.`);
 
-      return latest;
-    },
-  );
+    return [...latest.values()];
+  });
 }
 
 async function fetchSeriesPage(
@@ -213,22 +154,17 @@ async function fetchSeriesPage(
 
   const label = `La serie ${variable} del BCRA`;
 
-  return fetchParsed(
-    `${BCRA_BASE}/${variable}?${params}`,
-    label,
-    bcraHealthStats,
-    (payload) => {
-      const page = seriesPageSchema.parse(payload);
+  return fetchParsed(`${BCRA_BASE}/${variable}?${params}`, label, (payload) => {
+    const page = seriesPageSchema.parse(payload);
 
-      const series = page.results.find(
-        (result) => result.idVariable === variable,
-      );
+    const series = page.results.find(
+      (result) => result.idVariable === variable,
+    );
 
-      if (!series) throw new Error(`${label} no incluyó la variable pedida.`);
+    if (!series) throw new Error(`${label} no incluyó la variable pedida.`);
 
-      return { count: page.metadata.resultset.count, points: series.detalle };
-    },
-  );
+    return { count: page.metadata.resultset.count, points: series.detalle };
+  });
 }
 
 /** Reads the first page, then the remaining pages in parallel; a series longer than the page budget fails rather than truncating. */
@@ -261,49 +197,69 @@ async function fetchSeriesHistory(
 }
 
 async function fetchCountryRisk(): Promise<IndicatorPoint> {
-  return fetchParsed(
-    COUNTRY_RISK_URL,
-    "El riesgo país",
-    countryRiskHealthStats,
-    (payload) => {
-      const point = pointSchema.parse(payload);
+  return fetchParsed(COUNTRY_RISK_URL, "El riesgo país", (payload) => {
+    const point = pointSchema.parse(payload);
 
-      return { date: point.fecha, value: point.valor };
-    },
-  );
+    return { date: point.fecha, value: point.valor };
+  });
 }
 
-function loadLatestValues() {
-  return cache.get("bcra:latest", CACHE_TTL_MS, fetchLatestValues);
-}
+const storedPointSchema = z.object({
+  date: z.iso.date(),
+  value: z.number().finite(),
+});
 
-function loadCountryRisk() {
-  return cache.get("country-risk", CACHE_TTL_MS, fetchCountryRisk);
-}
+/** The BCRA catalogue's latest value per series, refreshed by the daily cron like every source here; see `SCHEDULED_SOURCES`. */
+export const BCRA_LATEST_SOURCE: SnapshotSource<LatestValue> = {
+  key: "bcra:latest@1",
+  schema: storedPointSchema.extend({ variable: z.number().int() }),
+  fetchRows: fetchLatestValues,
+};
+
+export const INFLATION_HISTORY_SOURCE: SnapshotSource<IndicatorPoint> = {
+  key: `bcra:history:${INFLATION_VARIABLE}@1`,
+  schema: storedPointSchema,
+  fetchRows: () => fetchSeriesHistory(INFLATION_VARIABLE),
+};
+
+export const DEPOSIT_HISTORY_SOURCE: SnapshotSource<IndicatorPoint> = {
+  key: `bcra:history:${DEPOSITS_VARIABLE}@1`,
+  schema: storedPointSchema,
+  fetchRows: () => fetchSeriesHistory(DEPOSITS_VARIABLE, DEPOSIT_HISTORY_FROM),
+};
+
+export const COUNTRY_RISK_SOURCE: SnapshotSource<IndicatorPoint> = {
+  key: "country-risk@1",
+  schema: storedPointSchema,
+  fetchRows: async () => [await fetchCountryRisk()],
+};
 
 /** Shares the validated inflation history between the purchasing-power and deposit calculators and the inflation resource. */
-export function getMonthlyInflationHistory(): Promise<IndicatorPoint[]> {
-  return cache.get(`bcra:history:${INFLATION_VARIABLE}`, CACHE_TTL_MS, () =>
-    fetchSeriesHistory(INFLATION_VARIABLE),
-  );
-}
+export const getMonthlyInflationHistory = (env: SnapshotEnv) =>
+  loadRows(INFLATION_HISTORY_SOURCE, env);
 
-export function getDepositRateHistory(): Promise<IndicatorPoint[]> {
-  return cache.get(`bcra:history:${DEPOSITS_VARIABLE}`, CACHE_TTL_MS, () =>
-    fetchSeriesHistory(DEPOSITS_VARIABLE, DEPOSIT_HISTORY_FROM),
-  );
-}
+export const getDepositRateHistory = (env: SnapshotEnv) =>
+  loadRows(DEPOSIT_HISTORY_SOURCE, env);
 
 /** The BCRA catalogue and the country-risk series fail independently, and a missing BCRA row only blanks its own card. */
-export async function getIndicators(): Promise<IndicatorResult[]> {
+export async function getIndicators(
+  env: SnapshotEnv,
+): Promise<IndicatorResult[]> {
   const [latest, countryRisk] = await Promise.all([
-    loadLatestValues().catch(() => null),
-    loadCountryRisk().catch(() => null),
+    loadRows(BCRA_LATEST_SOURCE, env).catch(() => []),
+    loadRows(COUNTRY_RISK_SOURCE, env).catch(() => []),
   ]);
+
+  const point = (variable: number | null): IndicatorPoint | null => {
+    if (variable === null) return countryRisk[0] ?? null;
+
+    const row = latest.find((value) => value.variable === variable);
+
+    return row ? { date: row.date, value: row.value } : null;
+  };
 
   return INDICATOR_DEFINITIONS.map(({ id, bcraVariable }) => ({
     id,
-    point:
-      bcraVariable === null ? countryRisk : (latest?.get(bcraVariable) ?? null),
+    point: point(bcraVariable),
   }));
 }

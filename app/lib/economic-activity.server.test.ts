@@ -35,7 +35,7 @@ describe("economic activity", () => {
     vi.stubGlobal("fetch", fetch);
     const { getEconomicActivity } = await import("./economic-activity.server");
 
-    const activity = await getEconomicActivity();
+    const activity = await getEconomicActivity({});
 
     expect(fetch).toHaveBeenCalledWith(
       activityUrl,
@@ -54,7 +54,7 @@ describe("economic activity", () => {
     });
   });
 
-  it("shares concurrent work, evicts failures, and caches valid values for thirty minutes", async () => {
+  it("shares concurrent work, evicts failures, and keeps valid values in memory for an hour without a database", async () => {
     let apiAttempts = 0;
 
     const fetch = vi.fn(async (input: string | URL | Request) => {
@@ -70,8 +70,8 @@ describe("economic activity", () => {
     const { getEconomicActivity } = await import("./economic-activity.server");
 
     const [first, concurrent] = await Promise.allSettled([
-      getEconomicActivity(),
-      getEconomicActivity(),
+      getEconomicActivity({}),
+      getEconomicActivity({}),
     ]);
 
     expect(first.status).toBe("rejected");
@@ -79,17 +79,17 @@ describe("economic activity", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
 
     // Inside the failure backoff the failure is served without another upstream request.
-    await expect(getEconomicActivity()).rejects.toThrow();
+    await expect(getEconomicActivity({})).rejects.toThrow();
     expect(fetch).toHaveBeenCalledTimes(2);
 
     await vi.advanceTimersByTimeAsync(5_000);
 
-    await getEconomicActivity();
-    await getEconomicActivity();
+    await getEconomicActivity({});
+    await getEconomicActivity({});
     expect(fetch).toHaveBeenCalledTimes(3);
 
-    vi.advanceTimersByTime(30 * 60_000 + 1);
-    await getEconomicActivity();
+    vi.advanceTimersByTime(60 * 60_000 + 1);
+    await getEconomicActivity({});
     expect(fetch).toHaveBeenCalledTimes(4);
   });
 
@@ -109,7 +109,7 @@ describe("economic activity", () => {
     vi.stubGlobal("fetch", fetch);
     const { getEconomicActivity } = await import("./economic-activity.server");
 
-    const activity = await getEconomicActivity();
+    const activity = await getEconomicActivity({});
 
     expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
       activityUrl,

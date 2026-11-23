@@ -1,17 +1,22 @@
 import { z } from "zod";
-import { createPromiseCache } from "~/lib/promise-cache.server";
+import {
+  loadRows,
+  snapshotHealth,
+  type SnapshotEnv,
+  type SnapshotSource,
+} from "~/lib/source-snapshots.server";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 
 import type { SourceHealth } from "~/lib/exchange-rates.server";
 import {
   ACTIVITY_CSV_URL,
   ACTIVITY_DATA_URL,
+  type ActivityObservation,
   type EconomicActivity,
 } from "~/lib/economic-activity";
 
 const API_TIMEOUT_MS = 3_000;
 const CSV_TIMEOUT_MS = 8_000;
-const CACHE_TTL_MS = 30 * 60_000;
 
 const rowSchema = z.tuple([
   z.iso.date(),
@@ -27,53 +32,13 @@ const csvRowSchema = z.object({
   emae_desestacionalizada_vm: z.string(),
 });
 
-const cache = createPromiseCache();
+export const getEconomicActivitySourceHealth = (): SourceHealth =>
+  snapshotHealth("emae@");
 
-interface ActivityHealthStats {
-  successes: number;
-  failures: number;
-  lastSuccess: string | null;
-  lastFailure: string | null;
-}
-
-const activityHealthStats: ActivityHealthStats = {
-  successes: 0,
-  failures: 0,
-  lastSuccess: null,
-  lastFailure: null,
-};
-
-function recordActivitySuccess() {
-  const now = new Date().toISOString();
-  activityHealthStats.successes += 1;
-  activityHealthStats.lastSuccess = now;
-}
-
-function recordActivityFailure() {
-  const now = new Date().toISOString();
-  activityHealthStats.failures += 1;
-  activityHealthStats.lastFailure = now;
-}
-
-export function getEconomicActivitySourceHealth(): SourceHealth {
-  const { successes, failures, lastSuccess, lastFailure } = activityHealthStats;
-  const status =
-    successes === 0 && failures === 0
-      ? "not-checked"
-      : failures === 0
-        ? "fetched"
-        : successes === 0
-          ? "failed"
-          : "partial";
-
-  return {
-    status,
-    lastSuccessfulFetchAt: lastSuccess,
-    lastFailureAt: lastFailure,
-  };
-}
-
-function activityFromRows(data: z.infer<typeof rowSchema>[]): EconomicActivity {
+/** The last twelve months with a value, oldest first. */
+function observationsFromRows(
+  data: z.infer<typeof rowSchema>[],
+): ActivityObservation[] {
   const observations = data
     .map(([date, yearOverYear, monthOverMonth]) => ({
       date,
@@ -86,14 +51,13 @@ function activityFromRows(data: z.infer<typeof rowSchema>[]): EconomicActivity {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(-12);
 
-  const latest = observations.at(-1);
-  if (!latest)
+  if (!observations.length)
     throw new Error("La serie EMAE no incluyó observaciones utilizables.");
 
-  return { observations, latest };
+  return observations;
 }
 
-async function fetchActivityApi(): Promise<EconomicActivity> {
+async function fetchActivityApi(): Promise<ActivityObservation[]> {
   return withUpstreamTimeout(API_TIMEOUT_MS, async (signal) => {
     const response = await fetch(ACTIVITY_DATA_URL, {
       headers: { accept: "application/json" },
@@ -105,7 +69,7 @@ async function fetchActivityApi(): Promise<EconomicActivity> {
 
     const payload: unknown = await response.json();
     const { data } = responseSchema.parse(payload);
-    return activityFromRows(data);
+    return observationsFromRows(data);
   });
 }
 
@@ -142,7 +106,7 @@ function parseFraction(value: string): number | null {
   return parsed;
 }
 
-async function fetchActivityCsv(): Promise<EconomicActivity> {
+async function fetchActivityCsv(): Promise<ActivityObservation[]> {
   return withUpstreamTimeout(CSV_TIMEOUT_MS, async (signal) => {
     const response = await fetch(ACTIVITY_CSV_URL, {
       headers: { accept: "text/csv" },
@@ -176,28 +140,29 @@ async function fetchActivityCsv(): Promise<EconomicActivity> {
       ]);
     });
 
-    return activityFromRows(data);
+    return observationsFromRows(data);
   });
 }
 
-async function fetchEconomicActivity(): Promise<EconomicActivity> {
-  try {
-    const result = await fetchActivityApi();
-    recordActivitySuccess();
-    return result;
-  } catch {
-    try {
-      const result = await fetchActivityCsv();
-      recordActivitySuccess();
-      return result;
-    } catch (error) {
-      recordActivityFailure();
-      throw error;
-    }
-  }
-}
+const observationSchema = z.object({
+  date: z.iso.date(),
+  yearOverYear: z.number().finite().nullable(),
+  monthOverMonth: z.number().finite().nullable(),
+});
 
-/** Concurrent readers share the request; a failure is not cached as a value, only backed off briefly. */
-export function getEconomicActivity(): Promise<EconomicActivity> {
-  return cache.get("emae", CACHE_TTL_MS, fetchEconomicActivity);
+/** The series API first, the official CSV when it fails. Refreshed by the daily cron; see `SCHEDULED_SOURCES`. */
+export const ACTIVITY_SOURCE: SnapshotSource<ActivityObservation> = {
+  key: "emae@1",
+  schema: observationSchema,
+  fetchRows: () => fetchActivityApi().catch(fetchActivityCsv),
+};
+
+/** The saved copy of the last twelve months; rejects only when there is no copy and the source cannot be read. */
+export async function getEconomicActivity(
+  env: SnapshotEnv,
+  now = new Date(),
+): Promise<EconomicActivity> {
+  const observations = await loadRows(ACTIVITY_SOURCE, env, now);
+
+  return { observations, latest: observations[observations.length - 1] };
 }

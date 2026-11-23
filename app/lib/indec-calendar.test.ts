@@ -13,7 +13,13 @@ describe("INDEC release calendar", () => {
   });
 
   it("has a release for every shown indicator in every month", () => {
-    const indicators = ["ipc", "canasta", "salarios", "emae"] as const;
+    const indicators = [
+      "ipc",
+      "canasta",
+      "salarios",
+      "emae",
+      "pobreza",
+    ] as const;
     for (const indicator of indicators) {
       const releases = INDEC_RELEASES.filter(
         (release) => release.indicator === indicator,

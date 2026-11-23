@@ -70,8 +70,19 @@ const SECTIONS: readonly {
       "canasta basica total",
       "linea de pobreza",
       "linea de indigencia",
+    ],
+  },
+  {
+    id: "pobreza",
+    pathname: "/precios",
+    title: "Pobreza e indigencia",
+    aliases: [
       "pobreza",
       "indigencia",
+      "tasa de pobreza",
+      "tasa de indigencia",
+      "eph",
+      "encuesta permanente de hogares",
     ],
   },
   {

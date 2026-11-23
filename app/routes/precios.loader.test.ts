@@ -1,7 +1,7 @@
 import { RouterContextProvider } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 
-import { getIndecData } from "~/lib/indec.server";
+import { getIndecData, getPovertyData } from "~/lib/indec.server";
 import {
   getIndicators,
   getMonthlyInflationHistory,
@@ -9,7 +9,10 @@ import {
 import { workerEnvContext } from "~/lib/worker-context";
 import { loader, shouldRevalidate } from "./precios";
 
-vi.mock("~/lib/indec.server", () => ({ getIndecData: vi.fn() }));
+vi.mock("~/lib/indec.server", () => ({
+  getIndecData: vi.fn(),
+  getPovertyData: vi.fn(),
+}));
 
 vi.mock("~/lib/indicators.server", () => ({
   getIndicators: vi.fn(),
@@ -25,12 +28,21 @@ const navigation = (current: string, next: string, formMethod?: string) =>
   }) as Parameters<typeof shouldRevalidate>[0];
 
 describe("precios revalidation", () => {
-  it("keeps loaded data when only the calculator inputs change", () => {
+  it("keeps loaded data when only the calculator inputs or the poverty chart's options change", () => {
     expect(
       shouldRevalidate(
         navigation(
           "https://example.com/precios?ppAmount=100",
           "https://example.com/precios?ppAmount=250&ppFrom=2026-01",
+        ),
+      ),
+    ).toBe(false);
+
+    expect(
+      shouldRevalidate(
+        navigation(
+          "https://example.com/precios",
+          "https://example.com/precios?povertyUnit=hogares&povertyYears=4",
         ),
       ),
     ).toBe(false);
@@ -76,6 +88,7 @@ it("settles the inflation history when its upstream never returns", async () => 
       wages: null,
       prices: null,
     });
+    vi.mocked(getPovertyData).mockResolvedValue(null);
     vi.mocked(getMonthlyInflationHistory).mockReturnValue(
       new Promise(() => undefined),
     );

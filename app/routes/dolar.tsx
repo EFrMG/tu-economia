@@ -29,6 +29,7 @@ import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
 import { pageMeta } from "~/lib/meta";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
+import { workerEnvContext } from "~/lib/worker-context";
 
 const INDICATOR_GROUPS_SHOWN = ["external"] as const;
 
@@ -47,7 +48,7 @@ const unavailableHistory = () => ({
   historicalFailedSeries: ["blue", "oficial"] as ("blue" | "oficial")[],
 });
 
-export function loader({ request }: Route.LoaderArgs) {
+export function loader({ request, context }: Route.LoaderArgs) {
   if (isUnavailablePreview(new URL(request.url).searchParams)) {
     return {
       market: Promise.resolve({ rates: null, history: unavailableHistory() }),
@@ -60,11 +61,12 @@ export function loader({ request }: Route.LoaderArgs) {
     };
   }
 
-  const history = getDashboardHistory().catch(unavailableHistory);
+  const env = context.get(workerEnvContext);
+  const history = getDashboardHistory(env).catch(unavailableHistory);
 
   const market = withUpstreamTimeout(10_000, async () => {
     try {
-      const rates = await getDashboardRates();
+      const rates = await getDashboardRates(env);
       const { historicalChart, historicalAsOf, historicalFailedSeries } = rates;
       return {
         rates,
@@ -77,7 +79,7 @@ export function loader({ request }: Route.LoaderArgs) {
     }
   }).catch(() => ({ rates: null, history: unavailableHistory() }));
 
-  return { market, indicators: getIndicators() };
+  return { market, indicators: getIndicators(env) };
 }
 
 /** The chart's period and view are presentation state: the history already loaded covers every period. */

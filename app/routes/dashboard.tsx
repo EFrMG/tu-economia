@@ -65,11 +65,11 @@ export function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     boletinEnabled,
-    rates: withUpstreamTimeout(10_000, () => getDashboardRates()).catch(
+    rates: withUpstreamTimeout(10_000, () => getDashboardRates(env)).catch(
       () => null,
     ),
-    indicators: getIndicators(),
-    indec: getIndecData(env.INDEC_API_TOKEN),
+    indicators: getIndicators(env),
+    indec: getIndecData(env),
     news: getEconomicNews().catch(() => null),
     boletin: boletinEnabled
       ? getBoletinDigest(env).catch(() => null)

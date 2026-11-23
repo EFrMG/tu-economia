@@ -30,7 +30,7 @@ So linking to notices and showing their official reference are not restricted by
 
 ## Pipeline
 
-One cron trigger serves every scheduled job: `*/5 6-15 * * *` in `wrangler.jsonc`, every five minutes from 06:00 to 15:55 UTC (03:00 to 12:55 in Argentina). The 06:00 run is the daily maintenance (lapsed Mi economía records, and Boletín editions older than 21 days); every other run is one digest step. A manual run with the former daily expression, `0 6 * * *`, forces the maintenance.
+One cron trigger serves every scheduled job: `*/5 6-15 * * *` in `wrangler.jsonc`, every five minutes from 06:00 to 15:55 UTC (03:00 to 12:55 in Argentina). The 06:00 run is the daily maintenance (lapsed Mi economía records, and Boletín editions older than 21 days); the runs from 06:05 to 08:25 refresh the saved copies of the market data ([market-data.md](market-data.md#saved-copies)) and give the digest only the runs they do not need; every later run is one digest step. A manual run with the former daily expression, `0 6 * * *`, forces the maintenance.
 
 Each step does one small thing, because a Free-plan invocation gets 10 ms of CPU and 50 subrequests:
 

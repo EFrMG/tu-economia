@@ -30,17 +30,27 @@ import {
 import type { EquityFreshness, EquityPanel } from "~/lib/equities";
 import { argentineDateTime } from "~/lib/equities.server";
 import type { SourceHealth } from "~/lib/exchange-rates.server";
-import { createPromiseCache } from "~/lib/promise-cache.server";
+import {
+  loadSnapshot,
+  readSnapshot,
+  refreshSnapshot,
+  snapshotHealth,
+  STALE_AFTER_MS,
+  type RefreshOutcome,
+  type SnapshotEnv,
+  type SnapshotSource,
+} from "~/lib/source-snapshots.server";
 import { SUPPORT_EMAIL } from "~/lib/support";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 
-const TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const DATA_BASE = "https://data.sec.gov";
 
-/** The ticker file changes when companies list or delist; filings and reported figures change a few times a year. */
-const TICKERS_TTL_MS = 24 * 60 * 60_000;
-const SUBMISSIONS_TTL_MS = 6 * 60 * 60_000;
-const CONCEPT_TTL_MS = 6 * 60 * 60_000;
+const DAY_MS = 24 * 60 * 60_000;
+
+/** Filings and reported figures change a few times a year, so the cron refreshes each company once a week; a copy older than a week and a half missed its refresh. */
+const STALE_COMPANY_COPY_MS = 7 * DAY_MS + STALE_AFTER_MS;
+
+const KEY_PREFIX = "sec:";
 
 const REQUEST_TIMEOUT_MS = 8_000;
 
@@ -52,15 +62,6 @@ const REQUEST_INTERVAL_MS = 125;
  * No URL: on 2026-11-10 the SEC answered 403 ("Request Rate Threshold Exceeded") to the same header with the repository URL in it, and 200 without it.
  */
 export const SEC_USER_AGENT = `TuEconomia/1.0 (${SUPPORT_EMAIL})`;
-
-const tickerEntrySchema = z.object({
-  cik_str: z.coerce.number().int().positive(),
-  ticker: z.string().min(1),
-  title: z.string(),
-});
-
-/** An object keyed `"0"`, `"1"`, …; entries are checked one by one so a malformed one cannot hide the rest. */
-const tickerFileSchema = z.record(z.string(), z.unknown());
 
 const nullableStrings = z.array(z.string().nullable());
 
@@ -96,10 +97,49 @@ const conceptSchema = z.object({
   units: z.record(z.string(), z.array(z.unknown())),
 });
 
-interface TickerEntry {
-  cik: number;
-  title: string;
-}
+const filingRefSchema = z.object({
+  accessionNumber: z.string(),
+  form: z.string(),
+  filingDate: z.string(),
+  reportDate: z.string().nullable(),
+  primaryDocument: z.string(),
+  description: z.string().nullable(),
+  url: z.string(),
+});
+
+const storedSubmissionsSchema = z.object({
+  name: z.string(),
+  tickers: z.array(z.string()),
+  filings: z.array(filingRefSchema),
+  latestAnnual: filingRefSchema.nullable(),
+});
+
+const reportedFigureSchema = z.object({
+  value: z.number().finite(),
+  unit: z.string(),
+  periodStart: z.string().nullable(),
+  periodEnd: z.string(),
+  fiscalYear: z.number().int().nullable(),
+  form: z.string(),
+  filed: z.string(),
+  accession: z.string(),
+  taxonomy: z.enum(TAXONOMIES),
+  tag: z.string(),
+});
+
+const figureIds = FIGURES.map(({ id }) => id) as [FigureId, ...FigureId[]];
+
+/** The figures as the page shows them, with the annual report they were read after, so a refresh asks for them again only when a new one is filed. */
+const storedFiguresSchema = z.object({
+  annualAccession: z.string().nullable(),
+  data: z.object({
+    taxonomy: z.enum(TAXONOMIES).nullable(),
+    figures: z.record(z.enum(figureIds), reportedFigureSchema.nullable()),
+    missing: z.array(z.enum(figureIds)),
+  }),
+});
+
+type StoredFigures = z.infer<typeof storedFiguresSchema>;
 
 interface Submissions {
   name: string;
@@ -110,31 +150,6 @@ interface Submissions {
 }
 
 type ConceptUnits = Record<string, ConceptFact[]>;
-
-const ISSUER_TICKERS = new Set(ISSUERS.map((issuer) => issuer.ticker));
-
-/** Keeps only the issuer table's tickers, so the large file is not held in memory. */
-function parseTickerFile(payload: unknown): Map<string, TickerEntry> {
-  const entries = new Map<string, TickerEntry>();
-
-  for (const raw of Object.values(tickerFileSchema.parse(payload))) {
-    const parsed = tickerEntrySchema.safeParse(raw);
-    if (!parsed.success) continue;
-
-    const ticker = parsed.data.ticker.trim().toUpperCase();
-
-    if (ISSUER_TICKERS.has(ticker) && !entries.has(ticker))
-      entries.set(ticker, {
-        cik: parsed.data.cik_str,
-        title: parsed.data.title,
-      });
-  }
-
-  if (!entries.size)
-    throw new Error("El archivo de tickers de la SEC no incluyó emisores.");
-
-  return entries;
-}
 
 function parseSubmissions(cik: number, payload: unknown): Submissions {
   const parsed = submissionsSchema.parse(payload);
@@ -213,122 +228,127 @@ function requestSec(url: string, notFoundIsData = false): Promise<unknown> {
   );
 }
 
-const cache = createPromiseCache();
-
-interface Loaded<T> {
-  value: T;
-  retrievedAt: number;
-}
-
-/** Health per request key: the ticker file, each company's submissions and each concept. The keys are bounded by the issuer table. */
-const requestHealth = new Map<string, SourceHealth>();
-
-/** Keys with a request in progress; `/api-status` counts them as not yet answered. */
-const inFlight = new Set<string>();
-
-function updateHealth(key: string, update: Partial<SourceHealth>) {
-  requestHealth.set(key, {
-    status: "not-checked",
-    lastSuccessfulFetchAt: null,
-    lastFailureAt: null,
-    ...requestHealth.get(key),
-    ...update,
-  });
-}
-
-/** Cached, validated value for one request; rejects when the request or its validation fails. */
-async function load<T>(
-  key: string,
-  ttlMs: number,
-  fetchAndParse: () => Promise<T>,
-): Promise<Loaded<T>> {
-  const cached = cache.isFresh(key);
-
-  inFlight.add(key);
-
-  try {
-    const loaded = await cache.get(key, ttlMs, async () => {
-      const value = await fetchAndParse();
-      const retrievedAt = Date.now();
-
-      updateHealth(key, {
-        lastSuccessfulFetchAt: new Date(retrievedAt).toISOString(),
-      });
-
-      return { value, retrievedAt };
-    });
-
-    updateHealth(key, { status: cached ? "cached" : "fetched" });
-
-    return loaded;
-  } catch (error) {
-    updateHealth(key, {
-      status: "failed",
-      lastFailureAt: new Date().toISOString(),
-    });
-
-    throw error;
-  } finally {
-    inFlight.delete(key);
-  }
-}
-
-function loadTickers() {
-  return load("tickers", TICKERS_TTL_MS, async () =>
-    parseTickerFile(await requestSec(TICKERS_URL)),
-  );
-}
-
-function loadSubmissions(cik: number) {
-  return load(`submissions:${cik}`, SUBMISSIONS_TTL_MS, async () =>
+/** The company's submissions: its name, tickers, recent filings and latest annual report. One request. */
+const filingsSource = (cik: number): SnapshotSource<Submissions> => ({
+  key: `${KEY_PREFIX}filings:${cik}@1`,
+  schema: storedSubmissionsSchema,
+  staleAfterMs: STALE_COMPANY_COPY_MS,
+  fetchRows: async () => [
     parseSubmissions(
       cik,
       await requestSec(`${DATA_BASE}/submissions/CIK${paddedCik(cik)}.json`),
     ),
-  );
-}
+  ],
+});
 
 /** `null` when the company does not report the tag (404). */
-function loadConcept(cik: number, taxonomy: Taxonomy, tag: string) {
-  return load(`concept:${cik}:${taxonomy}:${tag}`, CONCEPT_TTL_MS, async () => {
-    const payload = await requestSec(
-      `${DATA_BASE}/api/xbrl/companyconcept/CIK${paddedCik(cik)}/${taxonomy}/${tag}.json`,
-      true,
-    );
+async function requestConcept(cik: number, taxonomy: Taxonomy, tag: string) {
+  const payload = await requestSec(
+    `${DATA_BASE}/api/xbrl/companyconcept/CIK${paddedCik(cik)}/${taxonomy}/${tag}.json`,
+    true,
+  );
 
-    return payload === null ? null : parseConcept(payload);
-  });
+  return payload === null ? null : parseConcept(payload);
 }
 
-type Resolution =
-  | {
-      status: "resolved";
-      cik: number;
-      submissions: Submissions;
-      retrievedAt: number;
-    }
-  | { status: "unresolved" };
+const requestTaxonomy = (cik: number, taxonomy: Taxonomy) =>
+  Promise.allSettled(
+    FIGURES.map((figure) =>
+      requestConcept(cik, taxonomy, figure.tags[taxonomy]),
+    ),
+  );
 
 /**
- * Ticker → CIK through the SEC's ticker file, then the company's submissions. A ticker missing from the file, or a CIK whose submissions do not list the ticker, is `unresolved`.
- * Rejects when a request fails.
+ * The latest annual revenue, profit, total assets and equity as the company reported them, each with its unit, period and form.
+ * Asks the four `ifrs-full` tags first; only when all four answer 404 does it ask the `us-gaap` ones, so a company costs four concept requests, or eight for a US-GAAP filer.
+ * A tag the company does not report reads as `null`; a failed request also reads as `null` and is named in `missing`. Rejects when every request failed.
  */
-async function resolveIssuer(issuer: Issuer): Promise<Resolution> {
-  const tickers = await loadTickers();
-  const entry = tickers.value.get(issuer.ticker);
-  if (!entry) return { status: "unresolved" };
+async function requestFigures(cik: number): Promise<CompanyFiguresData> {
+  let taxonomy: Taxonomy = TAXONOMIES[0];
+  let results = await requestTaxonomy(cik, taxonomy);
 
-  const submissions = await loadSubmissions(entry.cik);
+  const nothingReported = (settled: typeof results) =>
+    settled.every(
+      (result) => result.status === "fulfilled" && result.value === null,
+    );
 
-  if (!listsTicker(submissions.value.tickers, issuer.ticker))
-    return { status: "unresolved" };
+  if (nothingReported(results)) {
+    taxonomy = TAXONOMIES[1];
+    results = await requestTaxonomy(cik, taxonomy);
+  }
+
+  if (results.every((result) => result.status === "rejected"))
+    throw new Error("La SEC no respondió ninguna cifra de la empresa.");
+
+  const figures = {} as Record<FigureId, ReportedFigure | null>;
+  const missing: FigureId[] = [];
+
+  FIGURES.forEach((figure, index) => {
+    const result = results[index];
+
+    if (result.status === "rejected") {
+      figures[figure.id] = null;
+      missing.push(figure.id);
+
+      return;
+    }
+
+    const latest = result.value && latestAnnualFact(result.value, figure.kind);
+
+    figures[figure.id] = latest
+      ? toReportedFigure(taxonomy, figure.tags[taxonomy], latest)
+      : null;
+  });
 
   return {
-    status: "resolved",
-    cik: entry.cik,
-    submissions: submissions.value,
-    retrievedAt: Math.min(tickers.retrievedAt, submissions.retrievedAt),
+    taxonomy: nothingReported(results) ? null : taxonomy,
+    figures: alignToOneReport(figures),
+    missing,
   };
+}
+
+/** The figures read after the annual report `annualAccession`. A refresh reuses the previous copy while no newer annual report is filed and nothing was missing, so it usually costs no request. */
+const figuresSource = (
+  cik: number,
+  annualAccession: string | null,
+): SnapshotSource<StoredFigures> => ({
+  key: `${KEY_PREFIX}figures:${cik}@1`,
+  schema: storedFiguresSchema,
+  staleAfterMs: STALE_COMPANY_COPY_MS,
+  fetchRows: async (_env, _now, previous) => {
+    const kept = previous?.[0];
+
+    if (
+      kept &&
+      kept.annualAccession === annualAccession &&
+      kept.data.missing.length === 0
+    )
+      return [kept];
+
+    return [{ annualAccession, data: await requestFigures(cik) }];
+  },
+});
+
+type Resolution =
+  | { status: "resolved"; submissions: Submissions; retrievedAt: number }
+  | { status: "unresolved"; retrievedAt: number };
+
+/** The company's submissions copy, `unresolved` when they do not list its ticker. Rejects when there is no copy and the request fails. */
+async function resolveIssuer(
+  env: SnapshotEnv,
+  issuer: Issuer,
+): Promise<Resolution> {
+  const { rows, fetchedAt } = await loadSnapshot(
+    filingsSource(issuer.cik),
+    env,
+  );
+
+  const retrievedAt = Date.parse(fetchedAt);
+
+  if (!listsTicker(rows[0].tickers, issuer.ticker))
+    return { status: "unresolved", retrievedAt };
+
+  return { status: "resolved", submissions: rows[0], retrievedAt };
 }
 
 function freshnessAt(retrievedAt: number): EquityFreshness {
@@ -346,19 +366,15 @@ const UNAVAILABLE = {
 } as const;
 
 /**
- * Every issuer with its latest annual report: one ticker-file request plus one submissions request per issuer, at most.
- * Each issuer resolves on its own. Unavailable only when the ticker file cannot be read or every issuer's request failed. Never rejects.
+ * Every issuer with its latest annual report, from one submissions copy per issuer.
+ * Each issuer resolves on its own. Unavailable only when every issuer's copy is missing and its request failed. Never rejects.
  */
-export async function getIssuerList(): Promise<EquityPanel<IssuerListData>> {
-  let tickersRetrievedAt: number;
-
-  try {
-    tickersRetrievedAt = (await loadTickers()).retrievedAt;
-  } catch {
-    return UNAVAILABLE;
-  }
-
-  const resolutions = await Promise.allSettled(ISSUERS.map(resolveIssuer));
+export async function getIssuerList(
+  env: SnapshotEnv,
+): Promise<EquityPanel<IssuerListData>> {
+  const resolutions = await Promise.allSettled(
+    ISSUERS.map((issuer) => resolveIssuer(env, issuer)),
+  );
 
   const rows = ISSUERS.map((issuer, index): IssuerRow => {
     const result = resolutions[index];
@@ -370,7 +386,7 @@ export async function getIssuerList(): Promise<EquityPanel<IssuerListData>> {
     return {
       issuer,
       status: "available",
-      cik: result.value.cik,
+      cik: issuer.cik,
       secName: result.value.submissions.name,
       latestAnnual: result.value.submissions.latestAnnual,
     };
@@ -379,11 +395,8 @@ export async function getIssuerList(): Promise<EquityPanel<IssuerListData>> {
   if (rows.every((row) => row.status === "unavailable")) return UNAVAILABLE;
 
   const retrievedAt = Math.min(
-    tickersRetrievedAt,
     ...resolutions.flatMap((result) =>
-      result.status === "fulfilled" && result.value.status === "resolved"
-        ? [result.value.retrievedAt]
-        : [],
+      result.status === "fulfilled" ? [result.value.retrievedAt] : [],
     ),
   );
 
@@ -394,22 +407,23 @@ export async function getIssuerList(): Promise<EquityPanel<IssuerListData>> {
   };
 }
 
-/** One issuer's recent filings and latest annual report: the ticker file and its submissions. Never rejects. */
+/** One issuer's recent filings and latest annual report, from its submissions copy. Never rejects. */
 export async function getCompanyFilings(
+  env: SnapshotEnv,
   ticker: string,
 ): Promise<CompanyPanel<CompanyFilingsData>> {
   const issuer = findIssuer(ticker);
   if (!issuer) return unresolvedPanel();
 
   try {
-    const resolution = await resolveIssuer(issuer);
+    const resolution = await resolveIssuer(env, issuer);
     if (resolution.status === "unresolved") return unresolvedPanel();
 
     return {
       status: "available",
       data: {
         issuer,
-        cik: resolution.cik,
+        cik: issuer.cik,
         secName: resolution.submissions.name,
         filings: resolution.submissions.filings,
         latestAnnual: resolution.submissions.latestAnnual,
@@ -421,140 +435,94 @@ export async function getCompanyFilings(
   }
 }
 
-type ConceptResult = PromiseSettledResult<Loaded<ConceptUnits | null>>;
-
-function loadTaxonomy(cik: number, taxonomy: Taxonomy) {
-  return Promise.allSettled(
-    FIGURES.map((figure) => loadConcept(cik, taxonomy, figure.tags[taxonomy])),
-  );
-}
-
-/**
- * The latest annual revenue, profit, total assets and equity as the company reported them, each with its unit, period and form.
- * Asks the four `ifrs-full` tags first; only when all four answer 404 does it ask the `us-gaap` ones, so a company costs four concept requests, or eight for a US-GAAP filer.
- * A tag the company does not report reads as `null`; a failed request also reads as `null` and is named in `missing`. Never rejects.
- */
+/** One issuer's annual figures, from its figures copy (see `requestFigures`). Never rejects. */
 export async function getCompanyFigures(
+  env: SnapshotEnv,
   ticker: string,
 ): Promise<CompanyPanel<CompanyFiguresData>> {
   const issuer = findIssuer(ticker);
   if (!issuer) return unresolvedPanel();
 
-  let resolution: Resolution;
-
   try {
-    resolution = await resolveIssuer(issuer);
+    const resolution = await resolveIssuer(env, issuer);
+    if (resolution.status === "unresolved") return unresolvedPanel();
+
+    const { rows, fetchedAt } = await loadSnapshot(
+      figuresSource(
+        issuer.cik,
+        resolution.submissions.latestAnnual?.accessionNumber ?? null,
+      ),
+      env,
+    );
+
+    return {
+      status: "available",
+      data: rows[0].data,
+      freshness: freshnessAt(
+        Math.min(resolution.retrievedAt, Date.parse(fetchedAt)),
+      ),
+    };
   } catch {
     return UNAVAILABLE;
   }
-
-  if (resolution.status === "unresolved") return unresolvedPanel();
-
-  const { cik } = resolution;
-
-  let taxonomy: Taxonomy = TAXONOMIES[0];
-  let results: ConceptResult[] = await loadTaxonomy(cik, taxonomy);
-
-  const nothingReported = (settled: ConceptResult[]) =>
-    settled.every(
-      (result) => result.status === "fulfilled" && result.value.value === null,
-    );
-
-  if (nothingReported(results)) {
-    taxonomy = TAXONOMIES[1];
-    results = await loadTaxonomy(cik, taxonomy);
-  }
-
-  if (results.every((result) => result.status === "rejected"))
-    return UNAVAILABLE;
-
-  const figures = {} as Record<FigureId, ReportedFigure | null>;
-  const missing: FigureId[] = [];
-
-  FIGURES.forEach((figure, index) => {
-    const result = results[index];
-
-    if (result.status === "rejected") {
-      figures[figure.id] = null;
-      missing.push(figure.id);
-
-      return;
-    }
-
-    const units = result.value.value;
-    const latest = units && latestAnnualFact(units, figure.kind);
-
-    figures[figure.id] = latest
-      ? toReportedFigure(taxonomy, figure.tags[taxonomy], latest)
-      : null;
-  });
-
-  const retrievedAt = Math.min(
-    resolution.retrievedAt,
-    ...results.flatMap((result) =>
-      result.status === "fulfilled" ? [result.value.retrievedAt] : [],
-    ),
-  );
-
-  return {
-    status: "available",
-    data: {
-      taxonomy: nothingReported(results) ? null : taxonomy,
-      figures: alignToOneReport(figures),
-      missing,
-    },
-    freshness: freshnessAt(retrievedAt),
-  };
 }
+
+/** Companies refreshed on each day of the week (UTC), so the weekly refresh spreads over the days: company `n` on weekday `n mod 7`. */
+export const companiesDueOn = (now: Date): readonly Issuer[] =>
+  ISSUERS.filter((_, index) => index % 7 === now.getUTCDay());
 
 /**
- * One row for `/api-status` summarising every SEC request this process has made; a snapshot, not a real-time availability monitor.
- * A 404 for a concept the company does not report counts as an answer, not a failure.
+ * The cron's weekly refresh of one company: its submissions (one request), then its figures, asked again only when a new annual report was filed or a figure was missing.
+ * `current` when both copies are already from today.
  */
-export function getCompanyFilingSourceHealth(): SourceHealth {
-  const keys = [...requestHealth.keys()];
-  const all = keys.map((key) => requestHealth.get(key)!);
+export async function refreshCompany(
+  env: SnapshotEnv,
+  now: Date,
+  issuer: Issuer,
+): Promise<RefreshOutcome> {
+  const key = `${KEY_PREFIX}company:${issuer.ticker}`;
+  const filings = await refreshSnapshot(filingsSource(issuer.cik), env, now);
 
-  const checked = keys
-    .filter(
-      (key) =>
-        !inFlight.has(key) && requestHealth.get(key)!.status !== "not-checked",
-    )
-    .map((key) => requestHealth.get(key)!);
+  if (filings.status === "failed") return { ...filings, key };
 
-  const unanswered = keys.length - checked.length;
+  const stored = env.DB
+    ? await readSnapshot(
+        env.DB,
+        filingsSource(issuer.cik).key,
+        storedSubmissionsSchema,
+      )
+    : null;
 
-  const latest = (values: (string | null)[]) =>
-    values.reduce<string | null>(
-      (max, value) =>
-        value !== null && (max === null || value > max) ? value : max,
-      null,
-    );
+  const submissions = stored?.rows[0];
 
-  const failed = checked.filter((health) => health.status === "failed").length;
+  if (!submissions || !listsTicker(submissions.tickers, issuer.ticker))
+    return { ...filings, key };
 
-  const status: SourceHealth["status"] = !checked.length
-    ? "not-checked"
-    : failed === checked.length
-      ? "failed"
-      : failed > 0 || unanswered > 0
-        ? "partial"
-        : checked.every((health) => health.status === "cached")
-          ? "cached"
-          : "fetched";
-
-  return {
-    status,
-    lastSuccessfulFetchAt: latest(
-      all.map((health) => health.lastSuccessfulFetchAt),
+  const figures = await refreshSnapshot(
+    figuresSource(
+      issuer.cik,
+      submissions.latestAnnual?.accessionNumber ?? null,
     ),
-    lastFailureAt: latest(all.map((health) => health.lastFailureAt)),
-  };
+    env,
+    now,
+  );
+
+  if (figures.status === "failed") return { ...figures, key };
+
+  return filings.status === "current" && figures.status === "current"
+    ? { key, status: "current" }
+    : { key, status: "refreshed", rows: 2 };
 }
 
-/** Loads the issuer list, the same requests the panel makes, so `/api-status` reflects them; then reports health. */
-export async function checkCompanyFilingSources(): Promise<SourceHealth> {
-  await getIssuerList();
+/** One row for `/api-status` summarising every SEC copy this process has read; a snapshot, not a real-time availability monitor. A 404 for a concept the company does not report counts as an answer, not a failure. */
+export const getCompanyFilingSourceHealth = (): SourceHealth =>
+  snapshotHealth(KEY_PREFIX);
+
+/** Loads the issuer list, the same copies the panel reads, so `/api-status` reflects them; then reports health. */
+export async function checkCompanyFilingSources(
+  env: SnapshotEnv,
+): Promise<SourceHealth> {
+  await getIssuerList(env);
 
   return getCompanyFilingSourceHealth();
 }

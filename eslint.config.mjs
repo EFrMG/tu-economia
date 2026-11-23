@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["build/**", ".react-router/**", "node_modules/**"],
+    ignores: ["build/**", ".react-router/**", "node_modules/**", "DOCS/**"],
   },
   {
     files: ["**/*.{js,mjs,ts,tsx}"],

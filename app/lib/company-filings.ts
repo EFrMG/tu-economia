@@ -6,30 +6,57 @@
 import type { EquityPanel, EquitySector } from "~/lib/equities";
 
 export interface Issuer {
-  /** The US ticker, as `company_tickers.json` and the submissions `tickers` array list it. */
+  /** The US ticker, as the submissions `tickers` array lists it. */
   ticker: string;
+  /** The SEC's company number. Fixed for the life of a registrant; the company's own submissions must list `ticker`, or it reads as unresolved. */
+  cik: number;
   name: string;
   sector: EquitySector;
 }
 
 /**
  * Argentine companies with shares or ADRs listed in the United States, in display order.
- * Tickers only: the CIK is resolved at run time from the SEC's ticker file and never written here.
+ * The CIKs come from the SEC's `company_tickers.json`; a company that changes registrant needs its new CIK here.
  */
 export const ISSUERS: readonly Issuer[] = [
-  { ticker: "YPF", name: "YPF", sector: "Energía" },
-  { ticker: "PAM", name: "Pampa Energía", sector: "Energía" },
-  { ticker: "TGS", name: "Transportadora de Gas del Sur", sector: "Energía" },
-  { ticker: "CEPU", name: "Central Puerto", sector: "Servicios públicos" },
-  { ticker: "EDN", name: "Edenor", sector: "Servicios públicos" },
-  { ticker: "GGAL", name: "Grupo Financiero Galicia", sector: "Financiero" },
-  { ticker: "BMA", name: "Banco Macro", sector: "Financiero" },
-  { ticker: "BBAR", name: "BBVA Argentina", sector: "Financiero" },
-  { ticker: "SUPV", name: "Grupo Supervielle", sector: "Financiero" },
-  { ticker: "TEO", name: "Telecom Argentina", sector: "Telecomunicaciones" },
-  { ticker: "LOMA", name: "Loma Negra", sector: "Materiales" },
-  { ticker: "IRS", name: "IRSA", sector: "Inmobiliario" },
-  { ticker: "CRESY", name: "Cresud", sector: "Agropecuario" },
+  { ticker: "YPF", cik: 904851, name: "YPF", sector: "Energía" },
+  { ticker: "PAM", cik: 1469395, name: "Pampa Energía", sector: "Energía" },
+  {
+    ticker: "TGS",
+    cik: 931427,
+    name: "Transportadora de Gas del Sur",
+    sector: "Energía",
+  },
+  {
+    ticker: "CEPU",
+    cik: 1717161,
+    name: "Central Puerto",
+    sector: "Servicios públicos",
+  },
+  { ticker: "EDN", cik: 1395213, name: "Edenor", sector: "Servicios públicos" },
+  {
+    ticker: "GGAL",
+    cik: 1114700,
+    name: "Grupo Financiero Galicia",
+    sector: "Financiero",
+  },
+  { ticker: "BMA", cik: 1347426, name: "Banco Macro", sector: "Financiero" },
+  { ticker: "BBAR", cik: 913059, name: "BBVA Argentina", sector: "Financiero" },
+  {
+    ticker: "SUPV",
+    cik: 1517399,
+    name: "Grupo Supervielle",
+    sector: "Financiero",
+  },
+  {
+    ticker: "TEO",
+    cik: 932470,
+    name: "Telecom Argentina",
+    sector: "Telecomunicaciones",
+  },
+  { ticker: "LOMA", cik: 1711375, name: "Loma Negra", sector: "Materiales" },
+  { ticker: "IRS", cik: 933267, name: "IRSA", sector: "Inmobiliario" },
+  { ticker: "CRESY", cik: 1034957, name: "Cresud", sector: "Agropecuario" },
 ];
 
 /** The issuer for a `?empresa=` value, matched without regard to case; `null` for a ticker outside the table. */
@@ -351,7 +378,7 @@ export function toReportedFigure(
   };
 }
 
-/** A company resolved through the ticker file and confirmed by its submissions. */
+/** A company confirmed by its submissions, which must list its ticker. */
 export type IssuerRow =
   | {
       issuer: Issuer;
@@ -363,7 +390,7 @@ export type IssuerRow =
     }
   /** The request failed; worth a retry. */
   | { issuer: Issuer; status: "unavailable" }
-  /** The ticker is not in the SEC's file, or the CIK it maps to does not list it; a retry will not change that. */
+  /** The company's submissions do not list the ticker; a retry will not change that. */
   | { issuer: Issuer; status: "unresolved" };
 
 export interface IssuerListData {

@@ -10,6 +10,7 @@ describe("indicator search", () => {
   it("finds the INDEC tables by their common names, with or without accents", () => {
     expect(titles("Canasta básica")).toEqual(["Canasta básica"]);
     expect(titles("linea de pobreza")).toEqual(["Canasta básica"]);
+    expect(titles("tasa de pobreza")).toEqual(["Pobreza e indigencia"]);
     expect(titles("sueldos")).toEqual(["Salarios"]);
     expect(titles("inflación núcleo")).toEqual([
       "Inflación por rubro y región",

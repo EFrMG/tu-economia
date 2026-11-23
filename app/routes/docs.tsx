@@ -146,9 +146,10 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
               Las cotizaciones en vivo se conservan en memoria del servidor por
-              hasta un minuto. Las consultas históricas se conservan por hasta
-              diez minutos. Las solicitudes simultáneas reutilizan la misma
-              consulta pendiente para cada fuente. Estos plazos regulan nuestras
+              hasta un minuto. Los cierres históricos se actualizan una vez por
+              día, por la mañana, e incluyen hasta el cierre del día hábil
+              anterior. Las solicitudes simultáneas reutilizan la misma consulta
+              pendiente para cada fuente. Estos plazos regulan nuestras
               consultas; no indican cada cuánto actualiza sus datos el
               proveedor. Si falta alguna cotización esperada, ese resultado
               parcial se conserva como máximo cinco segundos para permitir una
@@ -259,8 +260,10 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               por la serie, no a la hora de publicación.
             </p>
             <p>
-              Los valores se conservan en memoria del servidor por hasta treinta
-              minutos. Las series del BCRA y el riesgo país se consultan por
+              Los valores se actualizan una vez por día, por la mañana, de modo
+              que un dato publicado durante el día aparece al día siguiente. Si
+              la fuente no responde, se sigue mostrando el último valor
+              guardado. Las series del BCRA y el riesgo país se consultan por
               separado, y una serie con datos inválidos no impide mostrar las
               demás. Las tarjetas con datos permiten copiar el valor, período y
               fuente al portapapeles. Las fuentes pueden corregir observaciones
@@ -286,8 +289,24 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               interanual del mismo mes. La tabla de inflación muestra el IPC por
               división, por categoría (núcleo, regulados, estacionales, bienes y
               servicios) y por región. Cada tabla indica el mes al que
-              corresponde, la fecha de la próxima publicación según el
-              calendario semestral del INDEC, y se conserva en memoria del hora.
+              corresponde y la fecha de la próxima publicación según el
+              calendario semestral del INDEC. Tu Economía guarda la última
+              respuesta de cada servicio del INDEC y la actualiza una vez por
+              día, por la mañana: un dato que el INDEC publica a las 16 aparece
+              al día siguiente. Si el INDEC no responde, se sigue mostrando la
+              última copia guardada, con el período al que corresponde.
+            </p>
+            <p>
+              El panel de pobreza e indigencia utiliza el servicio de pobreza de
+              la Encuesta Permanente de Hogares del INDEC: el porcentaje de
+              personas y de hogares con ingresos por debajo de la línea de
+              pobreza (canasta básica total) y de la de indigencia (canasta
+              básica alimentaria), por semestre, desde el segundo semestre de
+              2016 y para el total de los 31 aglomerados urbanos relevados. La
+              variación se expresa en puntos porcentuales frente al mismo
+              semestre del año anterior. Los semestres con observaciones del
+              INDEC, como un dato provisorio o un aglomerado no relevado, se
+              marcan en el gráfico con la observación correspondiente.
             </p>
             <p>
               El panel de actividad utiliza las series del EMAE de{" "}
@@ -313,10 +332,9 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
                 recurso CSV oficial
               </a>
               . La fecha identifica el mes observado; se conservan doce meses
-              para el gráfico interanual. El panel se consulta y almacena en
-              memoria por separado durante treinta minutos, de modo que una
-              falla no oculta las otras tarjetas. INDEC documenta el método de
-              cálculo en su{" "}
+              para el gráfico interanual. El panel se actualiza una vez por día,
+              por la mañana, por separado de las demás tarjetas, de modo que una
+              falla no las oculta. INDEC documenta el método de cálculo en su{" "}
               <a
                 className={sourceLinkClass}
                 href={ACTIVITY_METHOD_URL}
@@ -427,13 +445,14 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               al nombre del formulario.
             </p>
             <p>
-              La identidad de cada empresa se obtiene del registro de tickers de
-              la SEC y se confirma con sus propias presentaciones; si no
-              coincide, la empresa figura como no disponible. Los informes se
-              conservan en memoria del servidor por hasta seis horas. La
-              información publicada en sec.gov es pública y puede copiarse y
-              redistribuirse. Se presenta como referencia y no constituye una
-              recomendación de inversión.
+              La identidad de cada empresa se confirma con sus propias
+              presentaciones ante la SEC; si no coincide, la empresa figura como
+              no disponible. Los informes se guardan y se actualizan una vez por
+              semana; las cifras anuales se vuelven a consultar cuando la
+              empresa presenta un nuevo informe anual. La información publicada
+              en sec.gov es pública y puede copiarse y redistribuirse. Se
+              presenta como referencia y no constituye una recomendación de
+              inversión.
             </p>
             <p>
               La calculadora de CEDEAR estima el precio teórico de un CEDEAR en

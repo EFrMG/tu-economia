@@ -75,7 +75,7 @@ describe("economic indicators", () => {
     const { getIndicators, getIndicatorSourceHealth } =
       await import("./indicators.server");
 
-    const results = await getIndicators();
+    const results = await getIndicators({});
 
     expect(results.map((result) => result.id)).toEqual(
       INDICATOR_DEFINITIONS.map((definition) => definition.id),
@@ -122,7 +122,7 @@ describe("economic indicators", () => {
     const { getIndicators } = await import("./indicators.server");
 
     const byId = new Map(
-      (await getIndicators()).map((result) => [result.id, result.point]),
+      (await getIndicators({})).map((result) => [result.id, result.point]),
     );
 
     expect(byId.get("inflation-monthly")).toBeNull();
@@ -155,7 +155,7 @@ describe("economic indicators", () => {
     const { getIndicators, getIndicatorSourceHealth } =
       await import("./indicators.server");
 
-    const first = await getIndicators();
+    const first = await getIndicators({});
     expect(first.filter((result) => result.point !== null)).toEqual([
       { id: "country-risk", point: { date: "2026-11-11", value: 640 } },
     ]);
@@ -163,9 +163,9 @@ describe("economic indicators", () => {
     expect(getIndicatorSourceHealth().bcra.status).toBe("failed");
 
     bcraUp = true;
-    await vi.advanceTimersByTimeAsync(30 * 60_000 + 1);
+    await vi.advanceTimersByTimeAsync(60 * 60_000 + 1);
 
-    const second = await getIndicators();
+    const second = await getIndicators({});
     expect(
       second.find((result) => result.id === "country-risk")?.point,
     ).toBeNull();
@@ -188,8 +188,8 @@ describe("economic indicators", () => {
     const { getIndicators } = await import("./indicators.server");
 
     const [first, concurrent] = await Promise.all([
-      getIndicators(),
-      getIndicators(),
+      getIndicators({}),
+      getIndicators({}),
     ]);
 
     expect(first[0].point).toBeNull();
@@ -197,12 +197,12 @@ describe("economic indicators", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
 
     // Inside the failure backoff the catalogue is not requested again.
-    await getIndicators();
+    await getIndicators({});
     expect(fetch).toHaveBeenCalledTimes(2);
 
     await vi.advanceTimersByTimeAsync(5_000);
 
-    const retried = await getIndicators();
+    const retried = await getIndicators({});
     expect(retried[0].point?.value).toBe(27);
     expect(fetch).toHaveBeenCalledTimes(3);
   });
@@ -241,7 +241,7 @@ describe("economic indicators", () => {
 
     const { getDepositRateHistory } = await import("./indicators.server");
 
-    expect(await getDepositRateHistory()).toEqual([
+    expect(await getDepositRateHistory({})).toEqual([
       { date: "2000-01-03", value: 8.15 },
       { date: "2010-01-04", value: 9.5 },
       { date: "2026-11-04", value: 21.18 },
@@ -269,7 +269,7 @@ describe("economic indicators", () => {
 
     const { getMonthlyInflationHistory } = await import("./indicators.server");
 
-    expect(await getMonthlyInflationHistory()).toEqual([
+    expect(await getMonthlyInflationHistory({})).toEqual([
       { date: "2026-08-31", value: 1.7 },
       { date: "2026-09-30", value: 1.9 },
     ]);
@@ -295,8 +295,8 @@ describe("economic indicators", () => {
     const { getDepositRateHistory, getMonthlyInflationHistory } =
       await import("./indicators.server");
 
-    await expect(getDepositRateHistory()).rejects.toThrow("5 páginas");
-    await expect(getMonthlyInflationHistory()).rejects.toThrow(
+    await expect(getDepositRateHistory({})).rejects.toThrow("5 páginas");
+    await expect(getMonthlyInflationHistory({})).rejects.toThrow(
       "variable pedida",
     );
   });

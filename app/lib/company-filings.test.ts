@@ -37,14 +37,16 @@ const fact = (overrides: Partial<ConceptFact>): ConceptFact => ({
 });
 
 describe("issuer table", () => {
-  it("lists unique upper-case tickers and nothing else to identify a company", () => {
+  it("lists unique upper-case tickers and CIKs", () => {
     const tickers = ISSUERS.map((issuer) => issuer.ticker);
 
     expect(new Set(tickers).size).toBe(tickers.length);
     expect(tickers.every((ticker) => /^[A-Z]+$/.test(ticker))).toBe(true);
 
-    for (const issuer of ISSUERS)
-      expect(Object.keys(issuer).sort()).toEqual(["name", "sector", "ticker"]);
+    const ciks = ISSUERS.map((issuer) => issuer.cik);
+
+    expect(new Set(ciks).size).toBe(ciks.length);
+    expect(ciks.every((cik) => Number.isInteger(cik) && cik > 0)).toBe(true);
   });
 
   it("finds an issuer without regard to case and rejects unknown tickers", () => {
