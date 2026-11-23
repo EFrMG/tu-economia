@@ -1,13 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import Lenis from "lenis";
 
+import { SupportDialog } from "~/components/features/SupportDialog";
 import { Navbar } from "~/components/layout/Navbar";
 import { Footer } from "~/components/layout/Footer";
 
 /** Public pages: smooth-scrolled narrative layout with header and footer. */
 export default function MarketingLayout() {
   const isHome = useLocation().pathname === "/";
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     // Hijacking the scroll is a comfort choice, so users who asked the OS for less motion keep the browser's native scrolling.
@@ -44,11 +46,18 @@ export default function MarketingLayout() {
         aria-hidden="true"
       />
 
-      {!isHome && <Navbar />}
+      {!isHome && <Navbar onSupport={() => setSupportOpen(true)} />}
       <main className="grow">
         <Outlet />
       </main>
       <Footer />
+
+      {!isHome && (
+        <SupportDialog
+          open={supportOpen}
+          onClose={() => setSupportOpen(false)}
+        />
+      )}
     </div>
   );
 }
