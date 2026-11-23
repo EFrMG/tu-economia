@@ -33,13 +33,16 @@
     // The Boletín Oficial digest: the cron steps, the /noticias tab and the Resumen card.
     "BOLETIN_DIGEST_ENABLED": "true",
   },
-  // Workers Logs, matching the dashboard setting so a deploy does not switch them off. Invocation logs record each request's URL and metadata; Cloudflare keeps them for its plan's retention window.
   "observability": {
     "logs": {
       "enabled": true,
       "invocation_logs": true,
       "persist": true,
     },
+    // Groups uncaught exceptions, failed invocations (a run past the CPU limit among them), 5xx responses and console.error lines, such as a failed Boletín step or source refresh.
+    "issues": { "enabled": true },
+    // Spans for every fetch, D1 and Workers AI call. Every run is traced while the Boletín digest settles; lower the rate once the cron has run cleanly for a while.
+    "traces": { "enabled": true, "head_sampling_rate": 1 },
   },
   // One trigger for every scheduled job: every five minutes from 06:00 to 15:55 UTC.
   // The 06:00 run is the daily maintenance (lapsed Mi economía records, old Boletín editions); the others are steps of the Boletín Oficial digest.
