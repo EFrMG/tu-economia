@@ -8,6 +8,7 @@ import {
 import {
   LISTING_URL,
   exclusionReason,
+  isContingencyPage,
   isRelevantListing,
   noticeUrl,
   operativeText,
@@ -48,6 +49,57 @@ export const editionDateFor = (now: Date) => argentinaDate.format(now);
 
 type FetchLike = typeof fetch;
 
+/** How far into a page the contingency marker is looked for; it sits about 21 KB in. */
+const CONTINGENCY_HEAD_BYTES = 64 * 1024;
+
+/** The site's contingency page, recognized from its start; the download stops there. */
+class ContingencyPageError extends Error {
+  constructor() {
+    super("El Boletín Oficial muestra su página de contingencia.");
+  }
+}
+
+/**
+ * The body as text, stopping the download as soon as it is the contingency page or passes 2 MB.
+ * The site sends the page compressed and chunked, without a length, so the size is only known while reading.
+ */
+async function readPage(response: Response) {
+  const declared = Number(response.headers.get("content-length") ?? 0);
+  const reader = response.body?.getReader();
+  if (!reader) return "";
+
+  const decoder = new TextDecoder();
+  let text = "";
+  let bytes = 0;
+  let headChecked = false;
+
+  const stop = (error: Error) => {
+    void reader.cancel().catch(() => undefined);
+
+    return error;
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return text + decoder.decode();
+
+    bytes += value.byteLength;
+    text += decoder.decode(value, { stream: true });
+
+    if (!headChecked && bytes >= CONTINGENCY_HEAD_BYTES) {
+      headChecked = true;
+
+      if (isContingencyPage(text)) throw stop(new ContingencyPageError());
+    }
+
+    if (
+      bytes > MAX_RESPONSE_BYTES ||
+      (headChecked && declared > MAX_RESPONSE_BYTES)
+    )
+      throw stop(new Error("La página excede el tamaño permitido."));
+  }
+}
+
 /** The page as text, refusing anything over 2 MB so a broken upstream cannot exhaust the run. */
 async function fetchPage(url: string, fetcher: FetchLike) {
   return withUpstreamTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
@@ -62,25 +114,14 @@ async function fetchPage(url: string, fetcher: FetchLike) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const length = Number(response.headers.get("content-length") ?? 0);
-
-    if (length > MAX_RESPONSE_BYTES) {
-      void response.body?.cancel().catch(() => undefined);
-
-      throw new Error("La página excede el tamaño permitido.");
-    }
-
-    const text = await response.text();
-    if (text.length > MAX_RESPONSE_BYTES)
-      throw new Error("La página excede el tamaño permitido.");
-
-    return text;
+    return readPage(response);
   });
 }
 
 export type BoletinStepResult =
   | { step: "disabled" }
   | { step: "waiting-edition" }
+  | { step: "contingency" }
   | { step: "collected"; edition: string; listed: number; selected: number }
   | { step: "processed"; id: string; status: NoticeOutcome }
   | { step: "retry"; id: string; reason: string }
@@ -144,7 +185,20 @@ async function collectEdition(
   now: Date,
   fetcher: FetchLike,
 ): Promise<BoletinStepResult> {
-  const notices = parseListing(await fetchPage(LISTING_URL, fetcher));
+  let page: string;
+
+  try {
+    page = await fetchPage(LISTING_URL, fetcher);
+  } catch (error) {
+    // The site's state, not a failure here: nothing can be collected until the listing returns.
+    if (error instanceof ContingencyPageError) return { step: "contingency" };
+
+    throw error;
+  }
+
+  if (isContingencyPage(page)) return { step: "contingency" };
+
+  const notices = parseListing(page);
 
   const latest = notices.reduce<string | null>(
     (date, notice) =>

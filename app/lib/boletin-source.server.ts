@@ -9,6 +9,12 @@ export const LISTING_URL = `${BOLETIN_ORIGIN}/seccion/primera`;
 export const noticeUrl = (id: string, editionDate: string) =>
   `${BOLETIN_ORIGIN}/detalleAviso/primera/${id}/${editionDate.replaceAll("-", "")}`;
 
+/**
+ * The section page's contingency mode, seen on 2026-11-23: instead of the listing, the whole edition embedded as a base64 PDF of several MB, with no notice links. The iframe that shows it comes about 21 KB into the page, before the PDF.
+ */
+export const isContingencyPage = (html: string) =>
+  html.includes('id="iframeContingencia"');
+
 /** About 5k tokens. The longest operative text on 2026-11-19 was 8,610 characters; a longer one is cut at an article boundary and summarized as partial. */
 export const MAX_OPERATIVE_CHARS = 16_000;
 

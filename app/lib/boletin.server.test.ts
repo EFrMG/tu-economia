@@ -192,6 +192,64 @@ describe("Boletín digest cron", () => {
     ).toEqual({ n: 1 });
   });
 
+  it("reports the site's contingency page, reading only its start, and records nothing", async ({
+    onTestFinished,
+  }) => {
+    const { db, database } = setup(onTestFinished);
+
+    // The edition as a base64 PDF of several MB, after the iframe that shows it.
+    const page = `<div>Edición del 20 de Noviembre de 2026</div><iframe id="iframeContingencia" type="application/pdf"></iframe><script>pdfUrl = convertBase64InUrlBlob("${"A".repeat(3 * 1024 * 1024)}");</script>`;
+
+    const bytes = new TextEncoder().encode(page);
+
+    // Like the site, chunked and without a length; then with one.
+    const headerSets: HeadersInit[] = [
+      {},
+      { "content-length": String(bytes.length) },
+    ];
+
+    for (const headers of headerSets) {
+      let pulled = 0;
+
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (pulled >= bytes.length) return controller.close();
+
+          controller.enqueue(bytes.subarray(pulled, pulled + 16_384));
+          pulled += 16_384;
+        },
+      });
+
+      const fetcher = vi.fn(
+        async () => new Response(body, { headers }),
+      ) as unknown as typeof fetch;
+
+      expect(
+        await runBoletinStep(env(db), morning, { fetch: fetcher }),
+      ).toEqual({ step: "contingency" });
+
+      expect(pulled).toBeLessThan(256 * 1024);
+    }
+
+    expect(
+      database.prepare("SELECT COUNT(*) AS n FROM boletin_editions").get(),
+    ).toEqual({ n: 0 });
+  });
+
+  it("still fails on an oversized page that is not the contingency page", async ({
+    onTestFinished,
+  }) => {
+    const { db } = setup(onTestFinished);
+
+    const fetcher = vi.fn(
+      async () => new Response("A".repeat(3 * 1024 * 1024)),
+    ) as unknown as typeof fetch;
+
+    await expect(
+      runBoletinStep(env(db), morning, { fetch: fetcher }),
+    ).rejects.toThrow("excede el tamaño permitido");
+  });
+
   it("collects the section's edition on the first run, whatever its date", async ({
     onTestFinished,
   }) => {

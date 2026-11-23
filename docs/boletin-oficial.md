@@ -51,6 +51,8 @@ A notice ends as:
 
 Each run writes one JSON line to Workers Logs (`{"job":"boletin","step":…}`), which is also where the CPU time per invocation shows.
 
+The site sometimes switches the section page to a contingency mode (first seen on 2026-11-23): the edition as a base64 PDF of several MB in an `iframeContingencia`, with no notice links, while the notice pages keep working. A collect step recognizes it from the page's first 64 KB, stops the download, records nothing and logs `"step":"contingency"`; the listing is read again on the next run. Any other page over 2 MB still fails the step.
+
 The page opens on the latest edition with at least one notice past `pending`, so the previous edition stays until the first summary of the new one is ready.
 
 An edition bar under the intro steps through the kept editions; the edition is in the URL, `?panel=boletin&edicion=YYYY-MM-DD`; an unknown or deleted date opens the latest.
