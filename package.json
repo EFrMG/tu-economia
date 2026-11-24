@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "better-auth": "1.7.10",
+    "d3-shape": "^3.2.0",
     "fast-xml-parser": "^5.11.1",
     "html-entities": "2.6.0",
     "isbot": "^5.1.36",
@@ -38,6 +39,7 @@
     "@eslint/js": "10.0.1",
     "@react-router/dev": "8.4.0",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/d3-shape": "^3.2.0",
     "@types/node": "^26",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

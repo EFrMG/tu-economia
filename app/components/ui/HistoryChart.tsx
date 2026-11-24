@@ -38,8 +38,6 @@ interface HistoryChartProps {
   /** Caption and first column of the screen-reader table. */
   caption: string;
   xHeader: string;
-  /** `linear` for discrete observations such as survey semesters, where a curve would suggest values in between. */
-  curve?: "monotone" | "linear";
   /** Starts the value axis at zero, for rates whose size matters as much as their movement. */
   fromZero?: boolean;
   className?: string;
@@ -115,7 +113,6 @@ const HistoryChart = ({
   caption,
   xHeader,
   formatAxis = formatValue,
-  curve = "monotone",
   fromZero = false,
   className = "h-64",
 }: HistoryChartProps) => {
@@ -191,7 +188,7 @@ const HistoryChart = ({
             {series.map((entry) => (
               <Line
                 key={entry.key}
-                type={curve}
+                type="monotone"
                 dataKey={entry.key}
                 name={entry.label}
                 stroke={entry.stroke}

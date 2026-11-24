@@ -275,7 +275,6 @@ const PovertySection = ({ data }: PovertySectionProps) => {
             formatTick={formatSemesterShort}
             caption={`Pobreza e indigencia de ${unit} por semestre`}
             xHeader="Semestre"
-            curve="linear"
             fromZero
           />
         ) : (
