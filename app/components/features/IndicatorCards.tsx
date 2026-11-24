@@ -37,39 +37,41 @@ const IndicatorCard = ({
       ariaHidden={loading}
       className={`stack-4 border bg-surface-950 p-5 transition-colors duration-200 ${borderClassName} ${result?.point ? "focus-within:border-primary-500/50 focus-within:bg-surface-900/80 hover:border-primary-500/50" : ""}`}
     >
-      <div className="stack-2">
-        <p className="font-mono text-label-caps text-text-200 uppercase">
-          {definition.cadence}
-        </p>
-        <h3 className="font-heading text-body-lg font-semibold text-text-100">
-          {definition.title}
-        </h3>
-        <p className="text-body-sm text-text-300">{definition.description}</p>
-      </div>
-
-      {loading ? (
-        <div className="stack-2" aria-hidden="true">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-3 w-24" />
-        </div>
-      ) : result?.point ? (
+      <div className="stack-4 grow justify-between">
         <div className="stack-2">
-          <p className="font-mono text-data-display text-text-100">
-            {formatIndicatorValue(result.point.value, definition.unit)}
+          <p className="font-mono text-label-caps text-text-200 uppercase">
+            {definition.cadence}
           </p>
-          <p className="font-mono text-data-label text-text-200">
-            Período:{" "}
-            {formatIndicatorPeriod(result.point.date, definition.period)}
-          </p>
+          <h3 className="font-heading text-body-lg font-semibold text-text-100">
+            {definition.title}
+          </h3>
+          <p className="text-body-sm text-text-300">{definition.description}</p>
         </div>
-      ) : (
-        <p
-          className="font-mono text-label-caps text-tertiary-text-400 uppercase"
-          role="status"
-        >
-          Esta serie no está disponible en este momento.
-        </p>
-      )}
+
+        {loading ? (
+          <div className="stack-2" aria-hidden="true">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        ) : result?.point ? (
+          <div className="stack-2">
+            <p className="text-center font-mono text-data-display text-text-100">
+              {formatIndicatorValue(result.point.value, definition.unit)}
+            </p>
+            <p className="text-center font-mono text-data-label text-text-200">
+              Período:{" "}
+              {formatIndicatorPeriod(result.point.date, definition.period)}
+            </p>
+          </div>
+        ) : (
+          <p
+            className="text-center font-mono text-label-caps text-tertiary-text-400 uppercase"
+            role="status"
+          >
+            Esta serie no está disponible en este momento.
+          </p>
+        )}
+      </div>
 
       <div className="mt-auto flex justify-end border-t border-base-700 pt-4">
         <a

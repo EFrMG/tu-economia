@@ -129,7 +129,7 @@ const RateTile = ({
   period,
   provisional,
 }: RateTileProps) => (
-  <div className="stack-2 border border-base-700 bg-base-900 p-4">
+  <div className="stack-2 border border-base-700 bg-base-900/75 p-4">
     <p className="font-mono text-label-caps text-text-200 uppercase">{label}</p>
     {value === undefined ? (
       <>
@@ -139,15 +139,15 @@ const RateTile = ({
       </>
     ) : (
       <>
-        <p className="font-mono text-data-display text-text-100">
+        <p className="text-center font-mono text-data-display text-text-100">
           {value === null ? "s/d" : formatPovertyRate(value)}
         </p>
-        <p className="min-h-[1lh] font-mono text-data-label text-text-400">
+        <p className="min-h-lh text-center font-mono text-data-label text-text-400">
           {period
             ? `${formatSemester(period)}${provisional ? " · provisorio" : ""}`
             : ""}
         </p>
-        <p className="min-h-[1lh] font-mono text-data-label text-text-400">
+        <p className="min-h-lh text-center font-mono text-data-label text-text-400">
           {change != null ? (
             <>
               <span className={changeColor(change)}>
@@ -231,7 +231,7 @@ const PovertySection = ({ data }: PovertySectionProps) => {
         {tile("indigence", "Indigencia")}
       </div>
 
-      <div className="stack-4 border-t border-base-700 pt-4">
+      <div className="stack-4">
         <div className="flex flex-wrap justify-between gap-2">
           <Segmented
             label="Unidad"
@@ -280,7 +280,7 @@ const PovertySection = ({ data }: PovertySectionProps) => {
         ) : (
           <>
             {/* Keeps the legend's line, so the notice takes the plot's place and nothing below moves. */}
-            <div className="mb-3 min-h-[1lh] font-mono text-data-label" />
+            <div className="mb-3 min-h-lh font-mono text-data-label" />
             <div className="flex h-64 w-full items-center justify-center px-4">
               <UnavailableNotice>
                 No fue posible consultar la serie de pobreza del INDEC en este
@@ -293,8 +293,8 @@ const PovertySection = ({ data }: PovertySectionProps) => {
 
       {/* A fixed line in every state: the observations themselves live in the tooltip and the screen-reader table. */}
       <p className="text-body-sm text-text-400">
-        Los puntos huecos marcan semestres con una observación del INDEC, como
-        un dato provisorio o un aglomerado no relevado; se leen al señalarlos.
+        Los puntos huecos marcan semestres con una observación del INDEC; se
+        leen al señalarlos.
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-base-700 pt-4 font-mono text-data-label text-text-400">

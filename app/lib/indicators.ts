@@ -65,7 +65,7 @@ export const INDICATOR_DEFINITIONS = [
     bcraVariable: 29,
     title: "Inflación esperada a 12 meses",
     description:
-      "Mediana de la inflación interanual esperada para los próximos 12 meses según el Relevamiento de Expectativas de Mercado (REM). El período es el mes del relevamiento.",
+      "Mediana de la inflación interanual esperada para los próximos 12 meses según el Relevamiento de Expectativas de Mercado (REM).",
     cadence: "Mensual",
     period: "month",
     unit: "percent",

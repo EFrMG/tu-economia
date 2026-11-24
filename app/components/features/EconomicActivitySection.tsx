@@ -90,7 +90,7 @@ const ActivityLoading = () => {
         ].map((label) => (
           <div
             key={label}
-            className="stack-2 border border-base-700 bg-base-900 p-4"
+            className="stack-2 border border-base-700 bg-base-900/75 p-4"
           >
             <p className="font-mono text-label-caps text-text-200 uppercase">
               {label}
@@ -155,32 +155,32 @@ const EconomicActivitySection = ({
       {latest ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="stack-2 border border-base-700 bg-base-900 p-4">
+            <div className="stack-2 border border-base-700 bg-base-900/75 p-4">
               <p className="font-mono text-label-caps text-text-200 uppercase">
                 Variación interanual · serie original
               </p>
               <p
-                className={`font-mono text-data-display ${activityValueColor(latest.yearOverYear)}`}
+                className={`text-center font-mono text-data-display ${activityValueColor(latest.yearOverYear)}`}
               >
                 {formatActivityChange(latest.yearOverYear)}
               </p>
-              <p className="font-mono text-data-label text-text-400">
+              <p className="text-center font-mono text-data-label text-text-400">
                 Período: {formatActivityMonth(latest.date)}
                 {nextRelease("emae")
                   ? ` (Próxima: ${formatReleaseDate(nextRelease("emae")!.releaseDate)})`
                   : null}
               </p>
             </div>
-            <div className="stack-2 border border-base-700 bg-base-900 p-4">
+            <div className="stack-2 border border-base-700 bg-base-900/75 p-4">
               <p className="font-mono text-label-caps text-text-200 uppercase">
                 Variación mensual · desestacionalizada
               </p>
               <p
-                className={`font-mono text-data-display ${activityValueColor(latest.monthOverMonth)}`}
+                className={`text-center font-mono text-data-display ${activityValueColor(latest.monthOverMonth)}`}
               >
                 {formatActivityChange(latest.monthOverMonth)}
               </p>
-              <p className="font-mono text-data-label text-text-400">
+              <p className="text-center font-mono text-data-label text-text-400">
                 Período: {formatActivityMonth(latest.date)}
               </p>
             </div>

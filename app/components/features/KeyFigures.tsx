@@ -81,7 +81,7 @@ const figuresOf = (results: IndicatorResult[], indec: IndecData): Figure[] => {
 
 const FIGURE_COUNT = 4;
 
-const frameClassName = "stack-2 border border-base-700 bg-surface-950 p-5";
+const frameClassName = "stack-2 border border-base-700 bg-surface-950 p-4";
 
 interface KeyFiguresProps {
   /** Both omitted while loading. */
@@ -120,15 +120,15 @@ export const KeyFigures = ({ indicators, indec }: KeyFiguresProps) => {
                 <Link
                   to={figure.href}
                   aria-label={`${figure.label}: ${figure.value ?? "sin datos"}. Ver en ${figure.destination}`}
-                  className={`${frameClassName} block h-full transition-colors duration-200 hover:border-primary-500/50 focus-visible:border-primary-500/50 focus-visible:bg-surface-900/80 focus-visible:outline-none`}
+                  className={`${frameClassName} h-full transition-colors duration-200 hover:border-primary-500/50 focus-visible:border-primary-500/50 focus-visible:bg-surface-900/80 focus-visible:outline-none`}
                 >
                   <span className="block font-mono text-label-caps text-text-200 uppercase">
                     {figure.label}
                   </span>
-                  <span className="block font-mono text-data-display text-text-100">
+                  <span className="block text-center font-mono text-data-display text-text-100">
                     {figure.value ?? "s/d"}
                   </span>
-                  <span className="block font-mono text-data-label text-text-400 first-letter:uppercase">
+                  <span className="block text-center font-mono text-data-label text-text-400 first-letter:uppercase">
                     {figure.period ?? "No disponible en este momento"}
                   </span>
                 </Link>
