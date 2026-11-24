@@ -6,6 +6,7 @@ import {
   MAX_ATTEMPTS,
   editionDateFor,
   getBoletinDigest,
+  getResumenBoletin,
   pruneBoletin,
   runBoletinStep,
 } from "~/lib/boletin.server";
@@ -645,6 +646,69 @@ describe("Boletín digest reading", () => {
       affectsHouseholds: true,
       points: ["Punto"],
     });
+  });
+
+  it("fills Resumen with household summaries of any edition, then the latest edition's others", async ({
+    onTestFinished,
+  }) => {
+    const { db, database } = setup(onTestFinished);
+    const env = { DB: db } as CloudflareEnvironment;
+
+    expect(await getResumenBoletin(env)).toEqual({
+      editionDate: null,
+      notices: [],
+    });
+
+    insertEdition(database, "2026-11-17", 2);
+    insertEdition(database, "2026-11-18", 1);
+    insertEdition(database, "2026-11-19", 4);
+    insertEdition(database, "2026-11-20", 1);
+
+    const notices = [
+      ["older-household", "2026-11-17", 0, "summarized", 1],
+      ["older-other", "2026-11-17", 1, "summarized", 0],
+      ["newer-household", "2026-11-18", 0, "summarized", 1],
+      ["latest-other-1", "2026-11-19", 0, "summarized", 0],
+      ["latest-title-only", "2026-11-19", 1, "title_only", 0],
+      ["latest-other-2", "2026-11-19", 2, "summarized", 0],
+      ["latest-other-3", "2026-11-19", 3, "summarized", 0],
+      ["still-pending", "2026-11-20", 0, "pending", 0],
+    ] as const;
+
+    for (const [id, date, position, status, households] of notices) {
+      insertNotice(database, { id, date, position, status, households });
+    }
+
+    // The 20th is still being summarized, so the 19th is the latest on screen.
+    expect(await getResumenBoletin(env)).toMatchObject({
+      editionDate: "2026-11-19",
+      notices: [
+        expect.objectContaining({ id: "newer-household" }),
+        expect.objectContaining({ id: "older-household" }),
+        expect.objectContaining({ id: "latest-other-1" }),
+      ],
+    });
+  });
+
+  it("leaves Resumen empty when the latest edition has no summaries", async ({
+    onTestFinished,
+  }) => {
+    const { db, database } = setup(onTestFinished);
+
+    insertEdition(database, "2026-11-18", 1);
+
+    insertNotice(database, {
+      id: "older-other",
+      date: "2026-11-18",
+      position: 0,
+      status: "summarized",
+    });
+
+    insertEdition(database, "2026-11-19", 0);
+
+    expect(
+      await getResumenBoletin({ DB: db } as CloudflareEnvironment),
+    ).toEqual({ editionDate: "2026-11-19", notices: [] });
   });
 
   it("prunes editions past the retention window", async ({

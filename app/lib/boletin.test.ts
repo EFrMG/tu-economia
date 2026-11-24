@@ -5,7 +5,6 @@ import {
   formatEditionDate,
   noticeHeadline,
   resolveNewsPanel,
-  resumenBoletinNotices,
   type BoletinNotice,
 } from "~/lib/boletin";
 
@@ -35,27 +34,6 @@ describe("Noticias panels", () => {
 });
 
 describe("Boletín digest presentation", () => {
-  it("shows at most three household summaries on Resumen", () => {
-    const notices = [
-      notice({ id: "1" }),
-      notice({ id: "2", affectsHouseholds: false }),
-      notice({ id: "3", status: "title_only" }),
-      notice({ id: "4" }),
-      notice({ id: "5" }),
-      notice({ id: "6" }),
-    ];
-
-    expect(
-      resumenBoletinNotices({
-        editionDate: "2026-11-19",
-        notices,
-        pending: 0,
-        previous: null,
-        next: null,
-      }).map((item) => item.id),
-    ).toEqual(["1", "4", "5"]);
-  });
-
   it("reads an edition date from the URL and ignores anything else", () => {
     expect(editionParam("2026-11-18")).toBe("2026-11-18");
     expect(editionParam(null)).toBeNull();

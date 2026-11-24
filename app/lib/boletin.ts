@@ -74,13 +74,12 @@ export const boletinEditionHref = (editionDate: string) =>
 /** How many notices the Resumen card shows. */
 export const RESUMEN_BOLETIN_LIMIT = 3;
 
-/** The Resumen card: summarized notices the model marked as affecting households, in edition order. */
-export const resumenBoletinNotices = (digest: BoletinDigest) =>
-  digest.notices
-    .filter(
-      (notice) => notice.status === "summarized" && notice.affectsHouseholds,
-    )
-    .slice(0, RESUMEN_BOLETIN_LIMIT);
+/** The Resumen card's notices: household summaries of every kept edition, newest first, then the latest edition's other summaries. */
+export interface BoletinResumen {
+  /** The latest edition on screen; null before the first edition is collected. */
+  editionDate: string | null;
+  notices: BoletinNotice[];
+}
 
 /** The card headline: the generated title, or the official reference when there is none. */
 export const noticeHeadline = (notice: BoletinNotice) =>

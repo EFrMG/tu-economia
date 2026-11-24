@@ -1,9 +1,11 @@
 import { z } from "zod";
 
 import {
+  RESUMEN_BOLETIN_LIMIT,
   isBoletinDigestEnabled,
   type BoletinDigest,
   type BoletinNotice,
+  type BoletinResumen,
 } from "~/lib/boletin";
 import {
   LISTING_URL,
@@ -500,8 +502,15 @@ function toNotice(row: z.infer<typeof noticeRowSchema>): BoletinNotice {
  * Household-affecting summaries lead, then the listing order.
  */
 /** An edition is shown once a notice is past `pending` (or it selected none), so the previous one stays until the new one has something to read. */
-const SHOWN_EDITIONS =
-  "SELECT e.edition_date FROM boletin_editions e WHERE e.selected_count = 0 OR EXISTS (SELECT 1 FROM boletin_notices n WHERE n.edition_date = e.edition_date AND n.status <> 'pending') ORDER BY e.edition_date DESC";
+const SHOWN_EDITION =
+  "e.selected_count = 0 OR EXISTS (SELECT 1 FROM boletin_notices n WHERE n.edition_date = e.edition_date AND n.status <> 'pending')";
+
+const SHOWN_EDITIONS = `SELECT e.edition_date FROM boletin_editions e WHERE ${SHOWN_EDITION} ORDER BY e.edition_date DESC`;
+
+const LATEST_SHOWN_EDITION = `SELECT MAX(e.edition_date) AS edition_date FROM boletin_editions e WHERE ${SHOWN_EDITION}`;
+
+const NOTICE_COLUMNS =
+  "id, url, rubro, heading, norm, has_annexes, status, title, summary, points, affects_households, partial";
 
 const editionRowsSchema = z.array(z.object({ edition_date: z.string() }));
 
@@ -535,7 +544,7 @@ export async function getBoletinDigest(
   const [shown, pending] = await db.batch([
     db
       .prepare(
-        "SELECT id, url, rubro, heading, norm, has_annexes, status, title, summary, points, affects_households, partial FROM boletin_notices WHERE edition_date = ? AND status IN ('summarized', 'title_only') ORDER BY (status = 'summarized' AND affects_households = 1) DESC, position",
+        `SELECT ${NOTICE_COLUMNS} FROM boletin_notices WHERE edition_date = ? AND status IN ('summarized', 'title_only') ORDER BY (status = 'summarized' AND affects_households = 1) DESC, position`,
       )
       .bind(editionDate),
     db
@@ -554,5 +563,34 @@ export async function getBoletinDigest(
     pending: count,
     previous: dates[index + 1] ?? null,
     next: index > 0 ? dates[index - 1] : null,
+  };
+}
+
+/**
+ * The Resumen card: household summaries first, from any kept edition and newest first, then the latest edition's other summaries, in listing order.
+ * A summarized notice always belongs to a shown edition, so only the latest needs resolving.
+ */
+export async function getResumenBoletin(
+  env: CloudflareEnvironment,
+): Promise<BoletinResumen | null> {
+  const db = env.DB;
+  if (!db) return null;
+
+  const [latest, shown] = await db.batch([
+    db.prepare(LATEST_SHOWN_EDITION),
+    db
+      .prepare(
+        `SELECT ${NOTICE_COLUMNS} FROM boletin_notices WHERE status = 'summarized' AND (affects_households = 1 OR edition_date = (${LATEST_SHOWN_EDITION})) ORDER BY affects_households DESC, edition_date DESC, position LIMIT ?`,
+      )
+      .bind(RESUMEN_BOLETIN_LIMIT),
+  ]);
+
+  const editionDate = z
+    .object({ edition_date: z.string().nullable() })
+    .parse(latest.results[0]).edition_date;
+
+  return {
+    editionDate,
+    notices: z.array(noticeRowSchema).parse(shown.results).map(toNotice),
   };
 }

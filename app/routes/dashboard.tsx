@@ -17,7 +17,7 @@ import {
 } from "~/components/features/MarketRates";
 import { RouteFooter } from "~/components/ui/RouteFooter";
 import { isBoletinDigestEnabled } from "~/lib/boletin";
-import { getBoletinDigest } from "~/lib/boletin.server";
+import { getResumenBoletin } from "~/lib/boletin.server";
 import { getEconomicNews } from "~/lib/economic-news.server";
 import { isUnavailablePreview } from "~/lib/data-preview";
 import { getDashboardRates } from "~/lib/exchange-rates.server";
@@ -72,7 +72,7 @@ export function loader({ request, context }: Route.LoaderArgs) {
     indec: getIndecData(env),
     news: getEconomicNews().catch(() => null),
     boletin: boletinEnabled
-      ? getBoletinDigest(env).catch(() => null)
+      ? getResumenBoletin(env).catch(() => null)
       : Promise.resolve(null),
   };
 }
@@ -167,9 +167,9 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         <Suspense fallback={<BoletinLoading compact />}>
           <Await
             resolve={loaderData.boletin}
-            errorElement={<BoletinResumenCard digest={null} />}
+            errorElement={<BoletinResumenCard resumen={null} />}
           >
-            {(digest) => <BoletinResumenCard digest={digest} />}
+            {(resumen) => <BoletinResumenCard resumen={resumen} />}
           </Await>
         </Suspense>
       ) : null}

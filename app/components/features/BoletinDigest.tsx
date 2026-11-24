@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { Link } from "react-router";
 
@@ -9,9 +10,9 @@ import {
   boletinEditionHref,
   formatEditionDate,
   noticeHeadline,
-  resumenBoletinNotices,
   type BoletinDigest,
   type BoletinNotice,
+  type BoletinResumen,
 } from "~/lib/boletin";
 
 const BOLETIN_PANEL_HREF = "/noticias?panel=boletin";
@@ -228,12 +229,13 @@ const BoletinLoading = ({ compact = false }: { compact?: boolean }) => (
   </section>
 );
 
+/** Every non-populated state of the grid, failed or empty, takes the shared amber notice inside the grid's reserved height. */
 const Unavailable = ({
   className,
   children = "No fue posible consultar los resúmenes del Boletín Oficial en este momento.",
 }: {
   className: string;
-  children?: string;
+  children?: ReactNode;
 }) => (
   <div className={className}>
     <div className="lg:col-span-full">
@@ -245,11 +247,8 @@ const Unavailable = ({
 const NO_EDITIONS_MESSAGE =
   "Todavía no hay ediciones procesadas. Los resúmenes se preparan cada mañana, después de la publicación del Boletín Oficial.";
 
-const EmptyState = ({ children }: { children: string }) => (
-  <p className="border border-base-700 bg-surface-950 px-4 py-5 text-body-sm text-text-200 lg:col-span-full">
-    {children}
-  </p>
-);
+const EMPTY_EDITION_MESSAGE =
+  "Esta edición no incluye normas de los organismos seguidos.";
 
 /** The `/noticias?panel=boletin` listing: every notice of one kept edition, the latest by default. */
 const BoletinDigestPanel = ({ digest }: { digest: BoletinDigest | null }) => (
@@ -263,17 +262,15 @@ const BoletinDigestPanel = ({ digest }: { digest: BoletinDigest | null }) => (
       <Unavailable className={panelGridClassName}>
         {NO_EDITIONS_MESSAGE}
       </Unavailable>
+    ) : digest.notices.length === 0 ? (
+      <Unavailable className={panelGridClassName}>
+        {EMPTY_EDITION_MESSAGE}
+      </Unavailable>
     ) : (
       <div className={panelGridClassName}>
-        {digest.notices.length > 0 ? (
-          digest.notices.map((notice) => (
-            <NoticeCard key={notice.id} notice={notice} />
-          ))
-        ) : (
-          <EmptyState>
-            Esta edición no incluye normas de los organismos seguidos.
-          </EmptyState>
-        )}
+        {digest.notices.map((notice) => (
+          <NoticeCard key={notice.id} notice={notice} />
+        ))}
       </div>
     )}
     {digest && digest.pending > 0 ? (
@@ -286,34 +283,35 @@ const BoletinDigestPanel = ({ digest }: { digest: BoletinDigest | null }) => (
   </section>
 );
 
-/** The Resumen card: up to three summaries the model marked as affecting households. */
-const BoletinResumenCard = ({ digest }: { digest: BoletinDigest | null }) => {
-  const notices = digest ? resumenBoletinNotices(digest) : [];
-
-  return (
-    <section aria-labelledby="boletin-heading">
-      <BoletinHeading compact />
-      {digest === null ? (
-        <Unavailable className={resumenGridClassName} />
-      ) : digest.editionDate === null ? (
-        <Unavailable className={resumenGridClassName}>
-          Todavía no hay ediciones procesadas del Boletín Oficial.
-        </Unavailable>
-      ) : (
-        <div className={resumenGridClassName}>
-          {notices.length > 0 ? (
-            notices.map((notice) => (
-              <NoticeCard key={notice.id} notice={notice} compact />
-            ))
-          ) : (
-            <EmptyState>
-              {`La edición del ${formatEditionDate(digest.editionDate)} no incluye normas con impacto directo en los hogares.`}
-            </EmptyState>
-          )}
-        </div>
-      )}
-    </section>
-  );
-};
+/** The Resumen card: up to three summaries, those affecting households first even from an earlier edition, then the latest edition's others. */
+const BoletinResumenCard = ({
+  resumen,
+}: {
+  resumen: BoletinResumen | null;
+}) => (
+  <section aria-labelledby="boletin-heading">
+    <BoletinHeading compact />
+    {resumen === null ? (
+      <Unavailable className={resumenGridClassName} />
+    ) : resumen.editionDate === null ? (
+      <Unavailable className={resumenGridClassName}>
+        Todavía no hay ediciones procesadas del Boletín Oficial.
+      </Unavailable>
+    ) : resumen.notices.length === 0 ? (
+      <Unavailable className={resumenGridClassName}>
+        {`La edición del ${formatEditionDate(resumen.editionDate)} no incluye resúmenes de normas. `}
+        <Link to={BOLETIN_PANEL_HREF} className={linkClassName}>
+          Ver la edición
+        </Link>
+      </Unavailable>
+    ) : (
+      <div className={resumenGridClassName}>
+        {resumen.notices.map((notice) => (
+          <NoticeCard key={notice.id} notice={notice} compact />
+        ))}
+      </div>
+    )}
+  </section>
+);
 
 export { BoletinDigestPanel, BoletinLoading, BoletinResumenCard };

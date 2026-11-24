@@ -85,7 +85,7 @@ The prompt asks for formal, calm Spanish, only figures that appear in the text, 
 - any figure in it is not in the source or the norm's reference. "USD 4.800 millones" counts as present when 4.800.000.000 is. This catches invented numbers, not real numbers put in the wrong place, which is why model quality still matters;
 - it contains a DNI or a person's CUIT.
 
-`afecta_hogares` only decides what the Resumen card shows (up to three such summaries); the panel shows every notice. The panel's intro says the summaries are automatic and the official text prevails, and Resumen's sources footer names them as automatic; each card links to the notice and only notes what sets it apart ("Sin resumen automático", "Resumen de los primeros artículos").
+`afecta_hogares` only decides the order of the Resumen card (`getResumenBoletin`); the panel shows every notice. The card shows up to three summaries: those affecting households first, from any kept edition and newest first, then the latest edition's other summaries in listing order. Cards carry no date, so an earlier edition's household notice can sit beside today's. The card is empty, with a link to the panel, only when no kept edition has a household summary and the latest has no summary at all. The panel's intro says the summaries are automatic and the official text prevails, and Resumen's sources footer names them as automatic; each card links to the notice and only notes what sets it apart ("Sin resumen automático", "Resumen de los primeros artículos").
 
 ### Model choice
 
