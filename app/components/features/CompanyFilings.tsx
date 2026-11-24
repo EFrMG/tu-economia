@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MdArrowBack, MdOpenInNew } from "react-icons/md";
+import { MdArrowBack } from "react-icons/md";
 import { Link } from "react-router";
 
 import {
@@ -14,6 +14,7 @@ import {
   stickyClassName,
 } from "~/components/features/EquityTables";
 import { Button } from "~/components/ui/Button";
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import { Skeleton } from "~/components/ui/Skeleton";
 import {
   UnavailableNotice,
@@ -69,10 +70,7 @@ const SecLink = ({ href, label, children }: SecLinkProps) => (
     className={linkClassName}
   >
     {children}
-    <MdOpenInNew
-      className="ml-1 inline-block align-middle text-sm"
-      aria-hidden="true"
-    />
+    <ExternalLinkIcon />
   </a>
 );
 

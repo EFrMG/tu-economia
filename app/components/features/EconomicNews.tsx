@@ -1,6 +1,6 @@
-import { MdOpenInNew } from "react-icons/md";
 import { Link } from "react-router";
 
+import { ExternalLinkIcon } from "~/components/ui/ExternalLinkIcon";
 import { UnavailableNotice } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import {
@@ -101,10 +101,7 @@ const NewsItemCard = ({ item }: { item: NewsItem }) => (
       </div>
       <h3 className="font-heading text-body-lg leading-tight text-text-100 md:leading-base">
         {item.headline}
-        <MdOpenInNew
-          className="ml-1 inline-block align-middle text-sm"
-          aria-hidden="true"
-        />
+        <ExternalLinkIcon />
       </h3>
       {item.summary ? (
         <p className="mt-2 text-body-sm text-text-300">{item.summary}</p>

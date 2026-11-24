@@ -172,7 +172,8 @@ const NoticeCard = ({
       {cardNote(notice) ? (
         <p className="text-tertiary-text-400">{cardNote(notice)}</p>
       ) : null}
-      <p className="flex flex-wrap gap-x-4 gap-y-1 text-text-400">
+      <p className="flex flex-wrap justify-end gap-x-4 gap-y-1 text-text-400">
+        {notice.hasAnnexes ? <span>Incluye anexos</span> : null}
         <a
           href={notice.url}
           target="_blank"
@@ -183,7 +184,6 @@ const NoticeCard = ({
           Texto oficial
           <ExternalLinkIcon />
         </a>
-        {notice.hasAnnexes ? <span>Incluye anexos</span> : null}
       </p>
     </div>
   </article>
