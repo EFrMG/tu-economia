@@ -208,25 +208,31 @@ const PovertySection = ({ data }: PovertySectionProps) => {
       aria-labelledby="pobreza"
       aria-busy={loading || undefined}
     >
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
-        <div className="stack-2">
-          <p className="font-mono text-label-caps text-text-200 uppercase">
-            EPH · INDEC
-          </p>
-          <h2
-            id="pobreza"
-            className="font-heading text-headline-md text-text-100"
-          >
-            Pobreza e indigencia
-          </h2>
-          <p className="max-w-2xl text-body-sm text-text-300">
-            Porcentaje de {unit} con ingresos por debajo de la línea de pobreza
-            (la canasta básica total) y de la de indigencia (la canasta
-            alimentaria), por semestre, en los 31 aglomerados urbanos que releva
-            la Encuesta Permanente de Hogares.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 lg:justify-end">
+      <div className="stack-2">
+        <p className="font-mono text-label-caps text-text-200 uppercase">
+          EPH · INDEC
+        </p>
+        <h2
+          id="pobreza"
+          className="font-heading text-headline-md text-text-100"
+        >
+          Pobreza e indigencia
+        </h2>
+        <p className="max-w-2xl text-body-sm text-text-300">
+          Porcentaje de {unit} con ingresos por debajo de la línea de pobreza
+          (la canasta básica total) y de la de indigencia (la canasta
+          alimentaria), por semestre, en los 31 aglomerados urbanos que releva
+          la Encuesta Permanente de Hogares.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {tile("poverty", "Pobreza")}
+        {tile("indigence", "Indigencia")}
+      </div>
+
+      <div className="stack-4 border-t border-base-700 pt-4">
+        <div className="flex flex-wrap justify-between gap-2">
           <Segmented
             label="Unidad"
             options={POVERTY_UNITS.map(({ id, label }) => ({
@@ -239,6 +245,7 @@ const PovertySection = ({ data }: PovertySectionProps) => {
               update(POVERTY_UNIT_PARAM, value === "personas" ? null : value)
             }
           />
+
           <Segmented
             label="Período del gráfico"
             options={RANGES.map(({ years: value, label }) => ({
@@ -252,14 +259,7 @@ const PovertySection = ({ data }: PovertySectionProps) => {
             }
           />
         </div>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {tile("poverty", "Pobreza")}
-        {tile("indigence", "Indigencia")}
-      </div>
-
-      <div className="border-t border-base-700 pt-4">
         {loading ? (
           <>
             <Skeleton className="mb-3 h-4 w-40" />
