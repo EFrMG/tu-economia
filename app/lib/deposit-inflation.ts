@@ -11,13 +11,35 @@ export interface DepositInflationComparison {
 
 const DAY_MS = 86_400_000;
 
+/** ISO dates and months order by code point, which also spares a cold Worker the collator a locale-aware comparison initializes. */
+const compareText = (left: string, right: string) =>
+  left < right ? -1 : left > right ? 1 : 0;
+
+/** The last point dated before `date` in `points`, sorted oldest first: a binary search, since the deposit series has thousands of daily points. */
+function lastBefore(
+  points: readonly IndicatorPoint[],
+  date: string,
+): IndicatorPoint | undefined {
+  let low = 0;
+  let high = points.length;
+
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+
+    if (points[middle].date < date) low = middle + 1;
+    else high = middle;
+  }
+
+  return points[low - 1];
+}
+
 /** Historical 30-day calendar months allow a direct comparison with published monthly IPC. */
 export function depositInflationComparisons(
   inflationHistory: IndicatorPoint[],
   depositHistory: IndicatorPoint[],
 ): DepositInflationComparison[] {
   const rates = [...depositHistory].sort((left, right) =>
-    left.date.localeCompare(right.date),
+    compareText(left.date, right.date),
   );
 
   return inflationHistory
@@ -31,7 +53,7 @@ export function depositInflationComparisons(
 
       if ((end.getTime() - start.getTime()) / DAY_MS !== 30) return [];
 
-      const rate = rates.filter((point) => point.date < `${month}-01`).at(-1);
+      const rate = lastBefore(rates, `${month}-01`);
       if (!rate) return [];
 
       const ageDays =
@@ -65,7 +87,7 @@ export function depositInflationComparisons(
         },
       ];
     })
-    .sort((left, right) => left.month.localeCompare(right.month));
+    .sort((left, right) => compareText(left.month, right.month));
 }
 
 export function simulateDeposit(

@@ -31,6 +31,22 @@ describe("deposit and inflation comparison", () => {
     );
   });
 
+  it("takes the latest rate dated before the month, whatever the series order", () => {
+    const comparisons = depositInflationComparisons(
+      [{ date: "2026-09-30", value: 2 }],
+      [
+        { date: "2026-09-01", value: 40 },
+        { date: "2026-08-27", value: 20 },
+        { date: "2026-08-31", value: 30 },
+        { date: "2026-08-28", value: 25 },
+      ],
+    );
+
+    expect(comparisons.map(({ rateDate, tna }) => ({ rateDate, tna }))).toEqual(
+      [{ rateDate: "2026-08-31", tna: 30 }],
+    );
+  });
+
   it("excludes months with an old or missing starting reference rate", () => {
     expect(
       depositInflationComparisons(

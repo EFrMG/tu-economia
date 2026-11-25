@@ -21,13 +21,9 @@ import {
 import { RouteError } from "~/components/layout/RouteError";
 import { RouteFooter } from "~/components/ui/RouteFooter";
 import { isUnavailablePreview } from "~/lib/data-preview";
-import { depositInflationComparisons } from "~/lib/deposit-inflation";
+import { getDepositInflationComparisons } from "~/lib/deposit-inflation.server";
 import { INDICATOR_DEFINITIONS, type IndicatorResult } from "~/lib/indicators";
-import {
-  getDepositRateHistory,
-  getIndicators,
-  getMonthlyInflationHistory,
-} from "~/lib/indicators.server";
+import { getIndicators } from "~/lib/indicators.server";
 import { pageMeta } from "~/lib/meta";
 import {
   DEFAULT_RATES_PANEL,
@@ -116,12 +112,7 @@ export function loader({ request, context }: Route.LoaderArgs) {
     ...panels,
     indicators: getIndicators(env),
     comparisons: withUpstreamTimeout(10_000, () =>
-      Promise.all([
-        getMonthlyInflationHistory(env),
-        getDepositRateHistory(env),
-      ]).then(([inflation, deposits]) =>
-        depositInflationComparisons(inflation, deposits),
-      ),
+      getDepositInflationComparisons(env),
     ).catch(() => null),
   };
 }
