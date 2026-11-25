@@ -37,6 +37,7 @@ Rates in the Régimen de Transparencia are ceilings: the rate a lender offers ca
 - **Loan filters**: `perfil` (beneficiary; a product open to everyone matches every profile), `plazo` (6 to 60 months; a product matches when its maximum term reaches it), `monto` (whole pesos, dots allowed; within the product's range) and `provincia`.
 - **Card filters**: `segmento` (Nacional, Internacional, Gold, Platinum, and Signature, Black or similar, which the endpoint reports as one value) and `provincia`.
 - **URL**: the loader redirects any query to its canonical form, panel first and each set filter in a fixed order, removing unknown or invalid values, the other panel's parameters and page 1; a page past the last becomes the last. A bare `/tasas` shows the loans panel without a redirect. The filters are a GET form, so the page works without JavaScript; selects submit on change.
+- **Crawlers**: every filter and page is its own URL and a full server render, so `robots.txt` disallows `/tasas` with any panel parameter but `panel` (built from `LOAN_PARAMS` and `CARD_PARAMS` in `app/routes/robots.ts`); crawlers keep to the two panels, and the page's canonical is the bare `/tasas`.
 
 The logic is in `app/lib/transparency-rates.ts` (client-safe, with tests) and the tables in `app/components/features/RatesTables.tsx`.
 
