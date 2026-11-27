@@ -109,8 +109,8 @@ const PreciosHeader = () => (
       Precios e ingresos
     </h1>
     <p className="max-w-2xl text-body-lg text-text-200">
-      Inflación, canasta básica, pobreza y salarios, con el período de cada
-      dato, y el poder adquisitivo de un monto a lo largo del tiempo.
+      Inflación, canasta básica, pobreza y salarios, y el poder adquisitivo de
+      un monto a lo largo del tiempo.
     </p>
   </header>
 );

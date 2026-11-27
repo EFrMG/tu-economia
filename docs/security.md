@@ -43,6 +43,6 @@ The handlers (`finance-store.server.ts`, `billing.server.ts`, the account route)
 
 ## Secrets and personal data
 
-- Credentials are Worker secrets, or the gitignored `.dev.vars` locally. Sign-in links and their tokens are never logged. Never share `build/`, which can contain a copy of `.dev.vars` (see [cloudflare-deployment.md](cloudflare-deployment.md#workers-builds)).
+- Credentials are Worker secrets, or the gitignored `.dev.vars` locally. Sign-in links and their tokens are never logged. Never share `build/`, which can contain a copy of `.dev.vars`.
 - Without an account the app stores no personal data. Signed-in records are scoped to the account, exportable and deletable at any time, and deleted after a retention period once access lapses ([cloud-finance-setup.md](cloud-finance-setup.md#retention-of-lapsed-records)).
 - The SEPA archive used to build the price basket is untrusted input, parsed under size, entry-count and compression-ratio limits ([product-price-feed.md](product-price-feed.md#refreshing-monthly)).

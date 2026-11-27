@@ -1,6 +1,6 @@
 # Economic news RSS sources
 
-The dashboard news preview and `/noticias` use three Argentine economy desks, declared in `app/lib/economic-news.ts`. Each publisher lists its feed in an RSS directory, where to confirm or replace a URL that changes.
+The dashboard news preview and `/noticias` use three Argentine economy desks, declared in `app/lib/economic-news.ts`. If a feed URL changes, the publisher's RSS directory, linked in the table, lists the current one.
 
 | Source | Economy feed | Why include it |
 | --- | --- | --- |

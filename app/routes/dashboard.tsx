@@ -88,7 +88,7 @@ const ResumenRates = ({
     rates={rates}
     loading={loading}
     title="Resumen."
-    lead="Cotizaciones y cifras clave del mercado argentino. Datos claros, sin ruido."
+    lead="Cotizaciones y cifras clave de la economía argentina."
     withConverter
     withGrid={false}
   />

@@ -348,8 +348,8 @@ const BudgetSection = ({ data }: FinanceDataProps) => {
           Presupuesto por categorías
         </h2>
         <p className="text-body-sm text-text-300">
-          Lo previsto y lo gastado son importes distintos. Los próximos pagos
-          forman parte del plan de cada categoría.
+          Cada categoría compara lo previsto con lo gastado; los próximos pagos
+          se cuentan dentro de lo previsto.
         </p>
       </div>
       {overPlan.length ? (

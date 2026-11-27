@@ -44,8 +44,8 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           Documentación
         </h1>
         <p className="max-w-2xl text-body-lg text-text-300">
-          Esta página explica el origen, el tratamiento y los límites de la
-          información que se muestra en Tu Economía.
+          El origen, el tratamiento y los límites de la información que muestra
+          Tu Economía.
         </p>
       </header>
 
@@ -69,8 +69,7 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               >
                 Dólar API
               </a>
-              . Los valores de compra y venta provienen de esa respuesta. La
-              hora del panel corresponde a la actualización más reciente
+              . La hora del panel corresponde a la actualización más reciente
               informada entre las cotizaciones recibidas.
             </p>
             <p>
@@ -148,28 +147,25 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               Las cotizaciones en vivo se conservan en memoria del servidor por
               hasta un minuto. Los cierres históricos se actualizan una vez por
               día, por la mañana, e incluyen hasta el cierre del día hábil
-              anterior. Las solicitudes simultáneas reutilizan la misma consulta
-              pendiente para cada fuente. Estos plazos regulan nuestras
-              consultas; no indican cada cuánto actualiza sus datos el
-              proveedor. Si falta alguna cotización esperada, ese resultado
-              parcial se conserva como máximo cinco segundos para permitir una
-              nueva consulta.
+              anterior. Estos plazos regulan nuestras consultas; no indican cada
+              cuánto actualiza sus datos el proveedor. Si falta alguna
+              cotización, ese resultado se conserva solo cinco segundos, para
+              volver a consultarla.
             </p>
             <p>
               En las páginas del terminal, el control Actualizar vuelve a
               consultar los datos de la página. Si alguna fuente no está
-              disponible, la página intenta actualizarla cada cinco segundos
+              disponible, la página vuelve a intentarlo, primero a los 30
+              segundos y luego con intervalos crecientes de hasta cinco minutos,
               mientras la pestaña está visible. Los reintentos se detienen
               cuando se recuperan todas las fuentes. Las respuestas válidas
               pueden seguir viniendo de la caché durante los plazos indicados.
             </p>
             <p>
-              Si no se puede renovar una cotización en vivo, el panel puede
-              mostrar el último resultado obtenido por este proceso durante un
-              máximo de quince minutos. En ese caso se identifica que los
-              valores no están actualizados e informa la hora de la última
-              consulta exitosa. Si no hay un resultado reciente disponible, las
-              cotizaciones no se muestran.
+              Si no se puede renovar una cotización en vivo, el panel muestra el
+              último resultado obtenido durante quince minutos como máximo,
+              marcado como no actualizado y con la hora de la última consulta
+              exitosa. Pasado ese plazo, las cotizaciones no se muestran.
             </p>
             <p>
               El historial es complementario: una falla al consultarlo no impide
@@ -195,16 +191,15 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
             <p>
               Se conservan hasta 90 días calendario de cierres. Blue y Oficial
               se unen por fecha; cuando una fuente no informa un cierre para un
-              día, esa observación queda ausente en su serie. El período elegido
-              se guarda en la URL para poder compartirlo.
+              día, esa observación queda ausente en su serie. La vista y el
+              período elegidos se guardan en la URL para poder compartirlos.
             </p>
             <p>
               En la sección Dólar, el gráfico de brecha compara solo cierres
               Blue y Oficial de la misma fecha: (Blue / Oficial − 1) × 100. El
               cambio del período resta la primera brecha disponible de la última
               y se expresa en puntos porcentuales. Las fechas sin ambos cierres
-              no se calculan ni se completan con valores de otros días. La vista
-              elegida y el período se guardan en la URL.
+              no se calculan ni se completan con valores de otros días.
             </p>
           </div>
         </section>
@@ -230,8 +225,7 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               con un enlace a cada sección. Cada tarjeta indica su unidad y
               presenta el valor tal como lo informa la serie, sin conversiones
               de escala o frecuencia. Las tasas se expresan como nominales
-              anuales. Ninguna de ellas equivale a una tasa de política
-              monetaria.
+              anuales.
             </p>
             <p>
               Todas las series, salvo el riesgo país, se consultan directamente
@@ -263,8 +257,7 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               Los valores se actualizan una vez por día, por la mañana, de modo
               que un dato publicado durante el día aparece al día siguiente. Si
               la fuente no responde, se sigue mostrando el último valor
-              guardado. Las series del BCRA y el riesgo país se consultan por
-              separado, y una serie con datos inválidos no impide mostrar las
+              guardado. Una serie con datos inválidos no impide mostrar las
               demás. Las tarjetas con datos permiten copiar el valor, período y
               fuente al portapapeles. Las fuentes pueden corregir observaciones
               anteriores; Tu Economía no guarda versiones históricas de esas
@@ -290,11 +283,10 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               división, por categoría (núcleo, regulados, estacionales, bienes y
               servicios) y por región. Cada tabla indica el mes al que
               corresponde y la fecha de la próxima publicación según el
-              calendario semestral del INDEC. Tu Economía guarda la última
-              respuesta de cada servicio del INDEC y la actualiza una vez por
-              día, por la mañana: un dato que el INDEC publica a las 16 aparece
-              al día siguiente. Si el INDEC no responde, se sigue mostrando la
-              última copia guardada, con el período al que corresponde.
+              calendario semestral del INDEC. Como las series del BCRA, se
+              actualizan cada mañana: un dato que el INDEC publica a las 16
+              aparece al día siguiente. Si el INDEC no responde, se sigue
+              mostrando la última copia guardada.
             </p>
             <p>
               El panel de pobreza e indigencia utiliza el servicio de pobreza de
@@ -320,9 +312,8 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               </a>
               , cuya fuente primaria es INDEC. Muestra la variación interanual
               de la serie original y la variación mensual de la serie
-              desestacionalizada. La API entrega ambas como fracciones y Tu
-              Economía las multiplica por 100 para expresarlas como porcentajes.
-              Si falla la API, se consulta el{" "}
+              desestacionalizada. La API las entrega como fracciones, que se
+              expresan como porcentajes. Si falla la API, se consulta el{" "}
               <a
                 className={sourceLinkClass}
                 href={ACTIVITY_CSV_URL}
@@ -332,9 +323,9 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
                 recurso CSV oficial
               </a>
               . La fecha identifica el mes observado; se conservan doce meses
-              para el gráfico interanual. El panel se actualiza una vez por día,
-              por la mañana, por separado de las demás tarjetas, de modo que una
-              falla no las oculta. INDEC documenta el método de cálculo en su{" "}
+              para el gráfico interanual. El panel se actualiza cada mañana, por
+              separado de las demás tarjetas, de modo que una falla no las
+              oculta. INDEC documenta el método de cálculo en su{" "}
               <a
                 className={sourceLinkClass}
                 href={ACTIVITY_METHOD_URL}
@@ -465,7 +456,7 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               CCL o del MEP de Dólar API, el mismo que figura en el panel de
               cotizaciones, y puede reemplazarse por otro valor; la página
               indica en todo momento cuál se está usando. Si la cotización no
-              está disponible, el campo queda para que usted lo complete.
+              está disponible, el campo queda vacío para que usted lo complete.
             </p>
             <p>
               Si además ingresa el precio de mercado del CEDEAR, se calculan el
@@ -659,7 +650,8 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
                 Ver condiciones
               </Link>
               . Si la suscripción termina, puede seguir consultando, exportando
-              o eliminando sus registros desde la sección Usuario.
+              o eliminando sus registros desde la sección Usuario durante tres
+              meses.
             </p>
           </div>
         </section>
@@ -696,8 +688,8 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
             <p>
               Las noticias se obtienen de los feeds RSS de economía de
               iProfesional, Clarín y Página/12. Cada feed se consulta por
-              separado y se conserva en memoria del servidor por hasta cinco
-              minutos, por lo que la falta de una fuente no oculta las demás.
+              separado, de modo que la falta de una fuente no oculta las demás,
+              y se conserva en memoria del servidor por hasta cinco minutos.
             </p>
             <p>
               Se muestran el titular, el medio, la fecha de publicación y un

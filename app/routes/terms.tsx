@@ -44,9 +44,8 @@ export default function Terms() {
               Tu Economía es un servicio de información económica para
               Argentina. Las secciones públicas —cotizaciones, indicadores,
               tasas por entidad, información de empresas, noticias, normativa y
-              documentación— pueden utilizarse sin cuenta. La edición de los
-              registros de Mi economía en su cuenta requiere una cuenta y una
-              suscripción activa.
+              documentación— pueden utilizarse sin cuenta. Editar los registros
+              de Mi economía requiere una cuenta y una suscripción activa.
             </p>
             <p>
               Estos términos rigen esa suscripción. La sección «Interfaces y
@@ -177,11 +176,7 @@ export default function Terms() {
               . La cancelación detiene el próximo cobro y conserva el acceso
               hasta el final del mes gratuito o del período ya pagado.
             </p>
-            <p>
-              La cancelación no genera el reintegro del período en curso. Si
-              canceló dentro de un período pagado, conserva el acceso hasta su
-              final.
-            </p>
+            <p>La cancelación no genera el reintegro del período en curso.</p>
             <p>
               La Ley N.º 24.240 reconoce el derecho de arrepentimiento dentro de
               los diez días de contratado el servicio. En la primera

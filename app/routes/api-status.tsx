@@ -277,12 +277,10 @@ const ApiStatusHeader = () => (
       Estado de fuentes
     </h1>
     <p className="max-w-2xl text-body-lg text-text-300">
-      Este registro resume los últimos resultados de las fuentes de
-      cotizaciones, informes de empresas, indicadores, actividad económica,
-      precios y noticias económicas obtenidos por esta instancia. Precios Claros
-      se informa según su último uso y no se consulta al abrir esta página. El
-      registro no mide disponibilidad en tiempo real ni la hora de publicación
-      de una noticia o cotización.
+      El último resultado de cada fuente de datos, según las consultas de esta
+      instancia del servidor. Precios Claros se informa según su último uso y no
+      se consulta al abrir esta página. El registro no mide la disponibilidad en
+      tiempo real ni la hora de publicación de una noticia o cotización.
     </p>
   </header>
 );

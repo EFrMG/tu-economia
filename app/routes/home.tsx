@@ -40,7 +40,7 @@ export default function Home() {
         <div className="page-container marketing-hero-content pointer-events-none relative z-10 flex flex-col gap-24 pt-32 pb-24 lg:pb-48">
           <div className="stack-6 items-center">
             <h1 className="marketing-hero-title text-center font-heading text-marketing-display text-text-100">
-              El mercado argentino.
+              La economía argentina.
             </h1>
             <p className="block max-w-2xl text-center text-body-lg text-text-300 md:text-marketing-lead">
               <span>
@@ -48,7 +48,7 @@ export default function Home() {
                 y normativa.
               </span>{" "}
               <br />
-              <span>Registre sus ahorros y gastos en un solo lugar.</span>
+              <span>Registre su sueldo y sus gastos en un solo lugar.</span>
               <br /> <span>Información clara en un contexto volátil.</span>
             </p>
           </div>
@@ -86,7 +86,7 @@ export default function Home() {
             <ScrollFeature
               id="Dólar"
               title="Dólar"
-              description="Las cinco referencias del mercado en una sola pantalla, con su evolución, la brecha contra el Oficial y las series del BCRA sobre el sector externo."
+              description="Las cinco cotizaciones del mercado, con su evolución, la brecha contra el Oficial y las series del sector externo."
               points={[
                 "Blue, Oficial, MEP, CCL y Cripto, con compra, venta y variación diaria",
                 "Cierres y brecha Blue–Oficial de 7, 30 o 90 días",
@@ -103,6 +103,7 @@ export default function Home() {
                 "Canasta básica alimentaria y total, por adulto y para un hogar de cuatro personas",
                 "Salarios por sector y su variación real",
                 "Inflación por rubro y por región",
+                "Pobreza e indigencia por semestre",
                 "Equivalencia de un monto según el IPC",
               ]}
               icon={<HiOutlineShoppingCart />}
@@ -114,9 +115,9 @@ export default function Home() {
               description="Las tasas de referencia, lo que cada entidad informa al BCRA sobre sus préstamos, hipotecarios y tarjetas, y el rendimiento real de un depósito."
               points={[
                 "Depósitos a 30 días, BADLAR, TAMAR, UVA, UVI, CER e ICL",
-                "Costo financiero total de préstamos personales por entidad, según perfil, plazo, monto y provincia",
-                "Préstamos hipotecarios en UVA para comprar vivienda, por entidad, según perfil, destino, plazo y provincia",
-                "Tasas y comisiones de tarjetas de crédito por segmento",
+                "Préstamos personales: costo financiero total según perfil, plazo, monto y provincia",
+                "Hipotecarios en UVA para comprar vivienda, según perfil, destino, plazo y provincia",
+                "Tarjetas de crédito: tasas y comisiones por segmento",
                 "Retorno de un depósito frente a la inflación",
               ]}
               icon={<HiOutlineCreditCard />}
@@ -124,7 +125,7 @@ export default function Home() {
             <ScrollFeature
               id="Actividad"
               title="Actividad"
-              description="La evolución de la economía y del dinero en circulación, con la fecha de cada dato."
+              description="La evolución de la economía y del dinero en circulación."
               points={[
                 "EMAE: variación interanual y mensual desestacionalizada",
                 "Base monetaria y M2 privado",
@@ -149,7 +150,7 @@ export default function Home() {
               description="Titulares recientes de medios argentinos y un resumen diario de las normas del Boletín Oficial que afectan a los hogares."
               points={[
                 "iProfesional, Clarín y Página/12",
-                "Decretos y resoluciones de la primera sección del Boletín Oficial, resumidos cada mañana",
+                "Resúmenes automáticos de decretos y resoluciones, cada mañana, con enlace al texto oficial",
               ]}
               icon={<HiOutlineNewspaper />}
               reverse
@@ -157,7 +158,7 @@ export default function Home() {
             <ScrollFeature
               id="Mi economía"
               title="Sueldo, gastos y precios"
-              description="Registre su sueldo y presupuesto; anote sus gastos y pagos. Compare además los precios de productos habituales entre los comercios de su ciudad."
+              description="Registre su sueldo, su presupuesto y sus gastos, y compare los precios de productos habituales en los comercios de su ciudad."
               points={[
                 "Ingreso mensual, presupuesto y gastos por categoría",
                 "Próximos pagos y metas de ahorro",
@@ -182,10 +183,9 @@ export default function Home() {
 
               <p className="text-body-lg text-text-300">
                 El ruido del mercado empuja a decidir con ansiedad y a corto
-                plazo. Tu Economía presenta cada dato con su fuente, su fecha y
-                su método de cálculo, para leerlo con calma. Sin alertas ni
-                titulares alarmistas: solo información verificable y bien
-                estructurada.
+                plazo. Tu Economía presenta cada dato con su fuente y su fecha,
+                y documenta cómo se calcula, para leerlo con calma. Sin alertas
+                ni notificaciones: información verificable y bien estructurada.
               </p>
 
               <ul className="mt-8 ml-4 stack-4 font-mono text-base text-text-300 uppercase">

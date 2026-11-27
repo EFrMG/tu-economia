@@ -126,7 +126,7 @@ const MarketContent = ({ market, loading = false }: MarketContentProps) => {
       rates={market?.rates ?? null}
       loading={loading}
       title="Dólar"
-      lead="Cotizaciones del mercado argentino y su evolución histórica."
+      lead="Cotizaciones del dólar, su evolución y la brecha, y las series del sector externo."
     >
       <HistoricalExchangeChart
         points={history?.historicalChart ?? []}

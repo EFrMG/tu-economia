@@ -15,11 +15,7 @@ The page is `noindex`, and since the month bar links each month to the one befor
 
 ## Data
 
-Each account's records are one JSON document in a `finance_documents` row. `localFinanceSchema` in `app/lib/local-finance.ts` validates it on load, import and save. It holds monthly net salaries, budget categories, per-month allocations, recorded expenses, planned expenses with their paid or skipped resolutions, and savings goals. Amounts are integer centavos.
-
-- `app/lib/local-finance.ts`: the document schema, `applyFinanceCommand` (one case per form intent, such as `expense.add` or `plan.pay`) and `buildLocalFinanceMonth`, which derives what the tabs show for a month.
-- `app/lib/finance-store.server.ts`: sessions, entitlement checks, revisioned saves, export, import and deletion.
-- `app/lib/personal-finance.ts` and `app/lib/upcoming-expenses.ts`: the calculations, kept free of storage and presentation.
+Each account's records are one JSON document in a `finance_documents` row. `localFinanceSchema` in `app/lib/local-finance.ts` validates it on load, import and save. It holds monthly net salaries, budget categories, per-month allocations, recorded expenses, planned expenses with their paid or skipped resolutions, and savings goals. Amounts are integer centavos. Each form intent (such as `expense.add` or `plan.pay`) is a case of `applyFinanceCommand`, and `buildLocalFinanceMonth` derives what the tabs show for a month.
 
 ## Upcoming expenses
 

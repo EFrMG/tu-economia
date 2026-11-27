@@ -232,8 +232,7 @@ const SupportDialog = ({
                 </h3>
                 <p className="text-body-sm text-text-300">
                   Tu Economía es un proyecto independiente. Si le resulta útil,
-                  puede colaborar con su mantenimiento y desarrollo a través de
-                  estas plataformas.
+                  puede colaborar con su mantenimiento y desarrollo.
                 </p>
               </div>
 

@@ -15,20 +15,20 @@
 | `RESEND_API_KEY` | secret | Enables email sign-in links and retention notices. Required together with `EMAIL_FROM`. |
 | `EMAIL_FROM` | variable | Sender on a domain verified with Resend, for example `"Tu Economía <acceso@example.com>"`. Not a secret. |
 | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` | secrets | Mercado Pago credentials for [billing](billing.md). |
-| `INDEC_API_TOKEN` | secret | Catálogo API-INDEC token for the canasta, wages, IPC and poverty sections on `/precios` and two Resumen figures ([market-data.md](market-data.md#indec-canastas-salarios-ipc-pobreza)). Generated under "Gestionar la cuenta" at `https://api.indec.gob.ar/` and shown once. It expires 12 months after it is generated; regenerating revokes the old one, so set the new one right away. Without it, those sections keep serving their saved copies in D1 (reported as `stale` on `/api-status` after a missed day, and as errors by the daily refresh in Workers Logs) and show as unavailable only once there is no copy. |
+| `INDEC_API_TOKEN` | secret | Catálogo API-INDEC token for the canasta, wages, IPC and poverty sections on `/precios` and two Resumen figures ([market-data.md](market-data.md#indec-canastas-salarios-ipc-pobreza)). Generated under "Gestionar la cuenta" at `https://api.indec.gob.ar/`, shown once, and valid for 12 months; regenerating revokes the old one, so set the new one right away. Without it, those sections serve their saved copies, and are unavailable only where there is none. |
 
 Variables go in `vars` in `wrangler.jsonc`, and a deploy replaces variables set in the dashboard with them. Secrets are set with `wrangler secret put <NAME>` and, locally, in `.dev.vars`.
 
 ## Database
 
-The Worker reads and writes D1 through the `DB` binding in `wrangler.jsonc`: *Mi economía*, accounts and billing, the Boletín digest, and the saved copies of the slow-changing sources (`source_snapshots`: INDEC, EMAE, the BCRA, country risk, the dollar closes and SEC EDGAR; without that migration those sections still work, asking their source on every memory-cache miss and logging the failed copy reads). `pnpm dev` runs against Miniflare's simulated D1 in `.wrangler/state`. It starts empty and needs the migrations before *Mi economía* can store anything. Applied migrations are tracked in `d1_migrations`, so the command skips them (do not also run them with `d1 execute --file`):
+The Worker reads and writes D1 through the `DB` binding in `wrangler.jsonc`: *Mi economía*, accounts and billing, the Boletín digest, and the [saved copies](market-data.md#saved-copies) of the slow-changing sources. `pnpm dev` runs against Miniflare's simulated D1 in `.wrangler/state`. It starts empty and needs the migrations before *Mi economía* can store anything. Applied migrations are tracked in `d1_migrations`, so the command skips them (do not also run them with `d1 execute --file`):
 
 ```sh
 pnpm exec wrangler d1 migrations apply tu-economia --local   # mise run d1-migrate-local
 pnpm exec wrangler d1 migrations list tu-economia --remote   # mise run d1-migrations-remote
 ```
 
-Deleting `.wrangler/state` resets the local one. See Cloudflare's [D1 Wrangler command reference](https://developers.cloudflare.com/d1/wrangler-commands/).
+Deleting `.wrangler/state` resets the local one.
 
 The auth tables were generated from the installed Better Auth version. When updating Better Auth, regenerate its schema and add a new migration for any difference instead of editing an applied one.
 
@@ -58,13 +58,13 @@ Find the user ID with `SELECT id, email FROM "user"`. Run SQL with `pnpm exec wr
 Better Auth stores opaque sessions in D1 and checks the database on each request, so signing out revokes a session immediately. Sessions expire after seven days and slide at most once per day. Magic links expire after five minutes, are stored hashed and are consumed once. Accounts with matching email addresses are never linked automatically; linking Google to an existing account requires a signed-in session.
 
 - **Google**: register `<AUTH_BASE_URL>/api/auth/callback/google` as an authorized redirect URI on the OAuth client.
-- **Email links**: `app/lib/email.server.ts` posts every message to Resend's API and resolves only after Resend accepts it. The Spanish wording is in `app/lib/email-templates.ts`. URLs and their tokens are never logged.
+- **Email links**: every message is posted to Resend's API, and sending resolves only after Resend accepts it. The Spanish wording is in `app/lib/email-templates.ts`. URLs and their tokens are never logged.
 
 The Usuario tab offers only the methods whose configuration is complete.
 
 ## Cloud storage and access
 
-Each account's records are one validated JSON document in `finance_documents` (`localFinanceSchema` in `app/lib/local-finance.ts`), read and written by the `/mi-economia` loader and action in `app/lib/finance-store.server.ts`.
+Each account's records are one JSON document in `finance_documents` ([personal-finance.md](personal-finance.md#data)), read and written by the `/mi-economia` loader and action.
 
 What a visitor can do:
 
@@ -72,15 +72,15 @@ What a visitor can do:
 - **Signed in with a current trial or paid period**: edit.
 - **Signed in without one**: read, download `GET /api/finance-export`, and delete the records by typing `BORRAR`.
 
-Storage requires a Better Auth session, the `DB` binding and `FINANCE_STORAGE_ENABLED=true`, and form posts must be same-origin. Each edit is applied to the latest stored revision with an atomic revision check, retried up to three times when another session saved first. Starter categories carry stable `starter-n` IDs, so a page rendered before the first save matches what that save creates. Imports accept an exported JSON file (document `version` 1) of up to 512 KiB.
+Storage requires a Better Auth session, the `DB` binding and `FINANCE_STORAGE_ENABLED=true`, and form posts must be same-origin. Each edit is applied to the latest stored revision with an atomic revision check, tried up to three times when another session saved in between. Starter categories carry stable `starter-n` IDs, so a page rendered before the first save matches what that save creates. Imports accept an exported JSON file (document `version` 1) of up to 512 KiB.
 
 ## Retention of lapsed records
 
-Records of an account without a current trial or paid period are deleted no sooner than three calendar months after access ends (`app/lib/finance-retention.ts`). The deadline anchors to the **later** of the entitlement end and the record's last write.
+Records of an account without a current trial or paid period are deleted no sooner than three calendar months after access ends. The deadline anchors to the **later** of the entitlement end and the record's last write.
 
-The daily maintenance run of the shared cron trigger (06:00 UTC; see [boletin-oficial.md](boletin-oficial.md#pipeline) and `app/lib/scheduled-tasks.ts`) runs `runFinanceRetention` from `workers/app.ts`, and does nothing unless `FINANCE_STORAGE_ENABLED=true`:
+The daily maintenance run of the shared cron trigger (06:00 UTC; see [boletin-oficial.md](boletin-oficial.md#pipeline)) runs `runFinanceRetention`, and does nothing unless `FINANCE_STORAGE_ENABLED=true`:
 
-- Two calendar months after access ends it attempts a notice through Resend (`app/lib/finance-retention.server.ts`). The notice states the deletion date and links to the Usuario tab for export or reactivation. It needs `AUTH_BASE_URL` for that link.
+- Two calendar months after access ends it attempts a notice through Resend. The notice states the deletion date and links to the Usuario tab for export or reactivation. It needs `AUTH_BASE_URL` for that link.
 - The first attempt is recorded even when Resend rejects the message, so an address that cannot receive mail does not keep lapsed records forever. Deletion happens no sooner than thirty days after that attempt and no sooner than the three-month deadline; a failed delivery is retried daily until then.
 - Missing sending configuration does not count as an attempt, so a deployment without `RESEND_API_KEY` or `EMAIL_FROM` never starts the clock or deletes silently.
 - A resumed entitlement clears both the attempt and the delivered notice. Deletion re-checks the entitlement and the record's last write immediately before removing it.
@@ -94,9 +94,7 @@ It first cancels an active Mercado Pago subscription (see [billing.md](billing.m
 
 ## Testing the email and retention flow locally
 
-This flow exercises the sign-in link and the retention notice against Resend from local state.
-
-It needs the `.dev.vars` example above including `RESEND_API_KEY` and `EMAIL_FROM`, and the entitlement grant from [Local development](#local-development).
+This flow sends the sign-in link and the retention notice through Resend from local state. It needs the `.dev.vars` example above, with `RESEND_API_KEY` and `EMAIL_FROM`, and the entitlement grant from [Local development](#local-development).
 
 The retention logic is also unit-tested in `app/lib/finance-retention.test.ts` and `app/lib/finance-store.server.test.ts`.
 

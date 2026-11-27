@@ -10,13 +10,13 @@ BCRA Régimen de Transparencia v1.0, `https://api.bcra.gob.ar/transparencia/v1.0
 - `Prestamos/Hipotecarios`: one row per product, with the same rate, term, beneficiary, currency and province fields as personal loans, plus the purpose (`destinoFondos`) and the largest share of the appraisal financed (`relacionMontoTasacion`). It has no minimum amount. On a UVA product the TEA and CFT are on top of the UVA adjustment of the capital: they run from about 3.5 % to 23 %, against 16 % and up on peso mortgages, and lenders describe them that way in `masInformacion` ("CAPITAL AJUSTADO POR UVA Y TASA DE INTERES…").
 - `TarjetasCredito`: one row per card, with the maximum effective annual rates for financing and for cash advances, the monthly maintenance and yearly renewal fees at list price, the segment and province.
 
-Both answer the whole list in one response, without pagination. Every row carries `fechaInformacion`, the date the lender last reported it, which differs widely between lenders. The BCRA limits traffic per client IP address and publishes no figures.
+All three answer the whole list in one response, without pagination. Every row carries `fechaInformacion`, the date the lender last reported it, which differs widely between lenders. The BCRA limits traffic per client IP address and publishes no figures.
 
 The plazo fijo endpoint is not used: its `denominacion` is empty on every row, so peso and dollar deposits cannot be told apart.
 
 ## Why the data is built ahead of time
 
-The personal-loan response is about 1.7 MB of JSON. Parsing and validating it takes about 20 ms of CPU in a cold Worker, twice the Free plan's 10 ms per invocation, and a cron run is no exception. `scripts/build-transparency-rates.py` therefore does it outside the Worker and writes `app/lib/transparency-rates.generated.json`, which only `transparency-rates.server.ts` imports. The mortgage response is smaller (about 250 KB) but goes the same way, so the page has one build and one refresh. A request filters that file in well under a millisecond and calls no upstream, so the page has no loading state and no `/api-status` row.
+The personal-loan response is about 1.7 MB of JSON, too much to parse and validate within a Worker invocation's CPU time, cron runs included. `scripts/build-transparency-rates.py` therefore does it outside the Worker and writes `app/lib/transparency-rates.generated.json`, which only `transparency-rates.server.ts` imports. The smaller mortgage response (about 250 KB) goes through the same build. A request filters that file in well under a millisecond and calls no upstream, so the page has no loading state and no `/api-status` row.
 
 ## Rules
 
@@ -41,8 +41,6 @@ Rates in the Régimen de Transparencia are ceilings: the rate a lender offers ca
 - **Card filters**: `segmento` (Nacional, Internacional, Gold, Platinum, and Signature, Black or similar, which the endpoint reports as one value) and `provincia`.
 - **URL**: the loader redirects any query to its canonical form, panel first and each set filter in a fixed order, removing unknown or invalid values, the other panel's parameters and page 1; a page past the last becomes the last. A bare `/tasas` shows the loans panel without a redirect. The filters are a GET form, so the page works without JavaScript; selects submit on change.
 - **Crawlers**: every filter and page is its own URL and a full server render, so `robots.txt` disallows `/tasas` with any panel parameter but `panel` (built from `LOAN_PARAMS`, `MORTGAGE_PARAMS` and `CARD_PARAMS` in `app/routes/robots.ts`); crawlers keep to the three panels, and the page's canonical is the bare `/tasas`.
-
-The logic is in `app/lib/transparency-rates.ts` (client-safe, with tests) and the tables in `app/components/features/RatesTables.tsx`.
 
 ## Refreshing (weekly)
 

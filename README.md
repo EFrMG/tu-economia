@@ -11,11 +11,11 @@ Economic monitoring platform for Argentina.
 </div>
 <br>
 
-**Tu Economía** provides a precise, minimalist interface for monitoring exchange rates and economic indicators. It is a reliable reference for freelancers, remote workers and savers who need to preserve purchasing power and make independent, informed decisions without the noise of economic anxiety.
+**Tu Economía** is a minimalist interface for following Argentina's exchange rates and economic indicators, for freelancers, remote workers and savers who want to protect their purchasing power and decide on their own, without the noise.
 
 ## 1. Argentine Economic Context
 
-In Argentina, volatility is a daily reality and the "Dólar" is a unit of account as much as a currency. Centralizing the relevant numbers in one place gives people a coherent view of an otherwise fragmented landscape.
+In Argentina the dollar is a unit of account as much as a currency, and the figures that matter are spread across many sources. Tu Economía gathers them in one place.
 
 ## 2. Tech Stack and Development
 
@@ -37,29 +37,15 @@ Exchange rates, indicators, activity data, company filings, equity quotations, l
 
 ##### 2.1.1.1 Search Entities
 
-The top-bar search indexes the five exchange-rate cards, identified by their Dólar API `casa` code, the Acciones and Tasas panels, and every indicator card, table, chart view and calculator (canasta básica, salarios, inflation by division and region, the gap chart, the converter, EMAE). A result opens its destination at the matching element, from another page or the current one: the URL carries its id as the hash, the terminal shell scrolls to it and moves focus there when the element can take it, and the element highlights its border (`useAnchorHighlight`; see "Anchor highlight" in [DESIGN.md](DESIGN.md)). Choosing the same result again replaces the history entry and restarts the highlight. Single tickers, companies and lenders are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
+The top-bar search indexes the five exchange-rate cards, the Acciones and Tasas panels, and every indicator card, table, chart view and calculator. A result opens its page at the matching element, which scrolls into view, takes focus when it can and highlights its border (see "Anchor highlight" in [DESIGN.md](DESIGN.md)). Single tickers, companies and lenders are not indexed. A record belongs in the index only when its destination can reveal the selected item, so search never returns a dead entry.
 
-The shared model is `app/lib/search-entities.ts`, the rate index `app/lib/exchange-rate-search.ts` and the panel index `app/lib/equity-search.ts`.
+The shared model is `app/lib/search-entities.ts`; each page's records are in its own `app/lib/*-search.ts` module.
 
 ### 2.2 Code Quality Standards
 
-- Strict TypeScript configurations are non-negotiable.
-- **Styling:** Use the custom Tailwind v4 utilities in `/app/css` and the design tokens in `tailwind-theme.css`; avoid hardcoded values in JSX.
-- Contributor rules, including the codebase layout and verification steps, are in [AGENTS.md](AGENTS.md).
-
-#### 2.2.1 Component Architecture
-
-Components are organized by responsibility:
-
-- **UI Components** (`app/components/ui`): Atomized, reusable elements (Button, Card, Sparkline) with zero side effects.
-- **Feature Components** (`app/components/features`): Domain-specific logic (ExchangeRateCard, HistoricalExchangeChart, PersonalFinanceTracker).
-- **Layout Components** (`app/components/layout`): Page chrome (Navbar, Sidebar, TopBar, Footer).
-- **Page shells** (`app/layouts`): `marketing` for the front pages and `terminal` for the dashboard app.
-
-#### 2.2.2 Quirks
-
-- **Meta Tags:** Every page route builds its title, canonical, OpenGraph and Twitter tags through the `pageMeta` helper in `app/lib/meta.ts`, which attaches the shared 1200×630 social preview image (`app/assets/OG-image.png`).
-- **Internationalization:** While the UI is in Spanish, the codebase and documentation remain in English to maintain engineering standards.
+- TypeScript runs in strict mode.
+- The UI is in Spanish; code and documentation are in English.
+- Contributor rules are in [AGENTS.md](AGENTS.md): the codebase layout (components by responsibility, page shells, client-safe and server-only modules), routing and data loading, page metadata through `pageMeta`, styling with the Tailwind tokens and utilities, and the verification steps.
 
 ### 2.3 Build
 
@@ -67,13 +53,13 @@ Vite serves as the build tool and development server.
 
 The Cloudflare Vite plugin runs server code in the Workers runtime during development and preview.
 
-The project is pnpm-managed. mise provisions the toolchain: `mise.toml` pins pnpm (the same version as `packageManager` in `package.json`) and Python, and `.node-version` pins Node.js, which Cloudflare's build and mise both read. Commands below assume mise is activated in your shell (`mise activate`, see the mise docs); otherwise prefix them with `mise exec --`. `mise tasks` lists the shortcuts for the Wrangler and Precios commands.
+The project is pnpm-managed. mise provisions the toolchain: `mise.toml` pins pnpm (the same version as `packageManager` in `package.json`) and Python, and `.node-version` pins Node.js, which Cloudflare's build and mise both read. Commands below assume mise is activated in your shell (`mise activate`); otherwise prefix them with `mise exec --`. `mise tasks` lists the shortcuts for the Wrangler and Precios commands.
 
 1. Clone the repository.
 2. Provision Node.js, Python and pnpm: `mise install`.
 3. Install dependencies: `pnpm install --frozen-lockfile`.
 4. Local D1 (Miniflare) starts empty; see [docs/cloud-finance-setup.md](docs/cloud-finance-setup.md).
-5. Start the development server: `pnpm dev`. It runs without remote bindings, so the Boletín Oficial digest cannot summarize locally; `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` connects the Workers AI binding, which needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`) and spends the account's daily Neurons.
+5. Start the development server: `pnpm dev`. It runs without remote bindings, so the Boletín Oficial digest cannot summarize; `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` connects Workers AI, with `wrangler login` (or `CLOUDFLARE_API_TOKEN`).
 
 > For a local production preview, run `pnpm build` followed by `pnpm preview`.
 
@@ -103,10 +89,10 @@ Every route, page or endpoint, is declared in `app/routes.ts`.
 
 | Route                | Description                                                                                                                                                                                                                                        |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                  | Home: introduction to the quotations, history and news, with their sources and methodology                                                                                                                                                         |
-| `/dashboard`         | Resumen: the blue rate and the quick converter, key figures linking to their pages (inflation, CBT, real wages, country risk) and the news preview                                                                                                 |
+| `/`                  | Home: an overview of every section                                                                                                                                                                                                                 |
+| `/dashboard`         | Resumen: the blue rate and the quick converter, key figures linking to their pages (inflation, CBT, real wages, country risk), the news preview and, with `BOLETIN_DIGEST_ENABLED`, the Boletín Oficial card                                       |
 | `/dolar`             | Exchange rates, quotes and Blue–Oficial gap over time (`?view=quotes\|gap`, `?period=`), retail and wholesale dollar, reserves and country risk                                                                                                    |
-| `/precios`           | Precios e ingresos: monthly, yearly and expected inflation, INDEC's canasta básica, wages and IPC by division and region, and the purchasing-power estimate                                                                                        |
+| `/precios`           | Precios e ingresos: monthly, yearly and expected inflation, INDEC's canasta básica, poverty, wages and IPC by division and region, and the purchasing-power estimate                                                                               |
 | `/actividad`         | EMAE activity, monetary base and private M2                                                                                                                                                                                                        |
 | `/acciones`          | Argentine companies listed in the US (SEC EDGAR), a CEDEAR theoretical-price calculator and, while `EQUITIES_BYMA_ENABLED` is on, delayed BYMA quotations; panels and parameters in [docs/market-data.md](docs/market-data.md)                     |
 | `/tasas`             | Tasas y ahorro: reference rates and adjustment units, personal loans, UVA mortgages and credit cards per lender from the BCRA Régimen de Transparencia ([docs/transparency-rates.md](docs/transparency-rates.md)), deposit-vs-inflation comparison |

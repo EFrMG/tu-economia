@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   calendarMonthAfterArgentina,
   hasCloudEntitlement,
+  MONTHLY_PRICE_ARS,
   type BillingRecord,
 } from "~/lib/billing-entitlement";
 import {
@@ -338,13 +339,14 @@ async function storeAuthorizedPayment(
 
   await db
     .prepare(
-      "INSERT INTO billing_payments (provider_payment_id, subscription_id, debit_date, status, amount_ars, verified_at) VALUES (?, ?, ?, ?, 5000, ?) ON CONFLICT(provider_payment_id) DO UPDATE SET status = CASE WHEN billing_payments.status IN ('refunded', 'reversed', 'charged_back') AND excluded.status NOT IN ('refunded', 'reversed', 'charged_back') THEN billing_payments.status ELSE excluded.status END, verified_at = excluded.verified_at",
+      "INSERT INTO billing_payments (provider_payment_id, subscription_id, debit_date, status, amount_ars, verified_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(provider_payment_id) DO UPDATE SET status = CASE WHEN billing_payments.status IN ('refunded', 'reversed', 'charged_back') AND excluded.status NOT IN ('refunded', 'reversed', 'charged_back') THEN billing_payments.status ELSE excluded.status END, verified_at = excluded.verified_at",
     )
     .bind(
       payment.id,
       payment.preapproval_id,
       debitDate,
       payment.payment.status,
+      payment.transaction_amount,
       now,
     )
     .run();
@@ -362,9 +364,9 @@ async function storeAuthorizedPayment(
 
     const latest = await db
       .prepare(
-        "SELECT debit_date FROM billing_payments WHERE subscription_id = ? AND status = 'approved' AND amount_ars = 5000 ORDER BY julianday(debit_date) DESC, debit_date DESC LIMIT 1",
+        "SELECT debit_date FROM billing_payments WHERE subscription_id = ? AND status = 'approved' AND amount_ars = ? ORDER BY julianday(debit_date) DESC, debit_date DESC LIMIT 1",
       )
-      .bind(payment.preapproval_id)
+      .bind(payment.preapproval_id, MONTHLY_PRICE_ARS)
       .first<{ debit_date: string }>();
 
     const latestDate = latest?.debit_date
