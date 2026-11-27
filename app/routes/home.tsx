@@ -21,7 +21,7 @@ import {
 export function meta() {
   return pageMeta({
     description:
-      "Dólar, inflación, canasta básica y salarios, tasas de préstamos y tarjetas por entidad, actividad económica, empresas, noticias, resúmenes del Boletín Oficial y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
+      "Dólar, inflación, canasta básica y salarios, tasas de préstamos, hipotecarios UVA y tarjetas por entidad, actividad económica, empresas, noticias, resúmenes del Boletín Oficial y un registro personal de sueldo y gastos, con fuentes y metodología documentadas.",
     path: "/",
   });
 }
@@ -44,8 +44,8 @@ export default function Home() {
             </h1>
             <p className="block max-w-2xl text-center text-body-lg text-text-300 md:text-marketing-lead">
               <span>
-                Dólar, precios e ingresos, tasas, empresas, noticias y
-                normativa.
+                Dólar, precios e ingresos, tasas, actividad, empresas, noticias
+                y normativa.
               </span>{" "}
               <br />
               <span>Registre sus ahorros y gastos en un solo lugar.</span>
@@ -111,10 +111,11 @@ export default function Home() {
             <ScrollFeature
               id="Tasas y ahorro"
               title="Tasas y ahorro"
-              description="Las tasas de referencia, lo que cada entidad informa al BCRA sobre sus préstamos y tarjetas, y el rendimiento real de un depósito."
+              description="Las tasas de referencia, lo que cada entidad informa al BCRA sobre sus préstamos, hipotecarios y tarjetas, y el rendimiento real de un depósito."
               points={[
                 "Depósitos a 30 días, BADLAR, TAMAR, UVA, UVI, CER e ICL",
                 "Costo financiero total de préstamos personales por entidad, según perfil, plazo, monto y provincia",
+                "Préstamos hipotecarios en UVA para comprar vivienda, por entidad, según perfil, destino, plazo y provincia",
                 "Tasas y comisiones de tarjetas de crédito por segmento",
                 "Retorno de un depósito frente a la inflación",
               ]}
@@ -145,7 +146,7 @@ export default function Home() {
             <ScrollFeature
               id="Noticias"
               title="Noticias y normativa"
-              description="Titulares recientes de medios argentinos y un resumen diario de las normas del Boletín Oficial que afectan al hogares."
+              description="Titulares recientes de medios argentinos y un resumen diario de las normas del Boletín Oficial que afectan a los hogares."
               points={[
                 "iProfesional, Clarín y Página/12",
                 "Decretos y resoluciones de la primera sección del Boletín Oficial, resumidos cada mañana",
@@ -175,15 +176,16 @@ export default function Home() {
             <div className="relative z-10 stack-8">
               <div className="stack-2">
                 <h2 className="font-heading text-headline-lg text-text-100 md:text-marketing-section">
-                  Transparencia y Serenidad.
+                  Transparencia y serenidad.
                 </h2>
               </div>
 
               <p className="text-body-lg text-text-300">
-                El ruido del mercado está diseñado para provocar ansiedad a
-                corto plazo. Nuestro enfoque es técnico, hacia una conciencia
-                futura. Sin notificaciones de pánico, solo datos crudos y bien
-                estructurados.
+                El ruido del mercado empuja a decidir con ansiedad y a corto
+                plazo. Tu Economía presenta cada dato con su fuente, su fecha y
+                su método de cálculo, para leerlo con calma. Sin alertas ni
+                titulares alarmistas: solo información verificable y bien
+                estructurada.
               </p>
 
               <ul className="mt-8 ml-4 stack-4 font-mono text-base text-text-300 uppercase">
@@ -192,14 +194,14 @@ export default function Home() {
                     className="text-2xl text-primary-text-100"
                     aria-hidden="true"
                   />{" "}
-                  Datos Oficiales
+                  Fuentes documentadas
                 </li>
                 <li className="flex items-center gap-[1ch]">
                   <HiOutlineCheckCircle
                     className="text-2xl text-primary-text-100"
                     aria-hidden="true"
                   />{" "}
-                  Sin Publicidad
+                  Sin publicidad
                 </li>
               </ul>
             </div>
@@ -218,7 +220,7 @@ export default function Home() {
       <section className="stack-12 items-center border-t border-base-700/50 bg-linear-to-b from-transparent to-surface-900/30 px-4 py-24 text-center md:px-8 lg:py-48">
         <div className="stack-8 items-center">
           <h2 className="font-heading text-headline-lg text-text-100 md:text-marketing-feature">
-            Inicie su terminal personal.
+            Acceda a la terminal económica.
           </h2>
         </div>
 

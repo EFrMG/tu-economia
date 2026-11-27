@@ -33,7 +33,7 @@ In Argentina, volatility is a daily reality and the "Dólar" is a unit of accoun
 
 #### 2.1.1 Data Sources
 
-Exchange rates, indicators, activity data, company filings, equity quotations, news and product prices come from public APIs, feeds and archives. Each source, its cache and its fallback are listed in [docs/market-data.md](docs/market-data.md), [docs/rss-sources.md](docs/rss-sources.md) and [docs/product-price-feed.md](docs/product-price-feed.md).
+Exchange rates, indicators, activity data, company filings, equity quotations, lender rates, news, Boletín Oficial notices and product prices come from public APIs, feeds and archives. Each source, its cache and its fallback are listed in [docs/market-data.md](docs/market-data.md), [docs/transparency-rates.md](docs/transparency-rates.md), [docs/rss-sources.md](docs/rss-sources.md), [docs/boletin-oficial.md](docs/boletin-oficial.md) and [docs/product-price-feed.md](docs/product-price-feed.md).
 
 ##### 2.1.1.1 Search Entities
 
