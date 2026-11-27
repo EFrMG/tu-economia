@@ -4,11 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   MAX_ATTEMPTS,
+  NOTICES_PER_RUN,
   editionDateFor,
   getBoletinDigest,
   getResumenBoletin,
   pruneBoletin,
-  runBoletinStep,
+  runBoletinSteps,
+  type BoletinStepResult,
 } from "~/lib/boletin.server";
 import { BOLETIN_MODEL } from "~/lib/boletin-summary.server";
 
@@ -111,6 +113,12 @@ const listingFor = (date: string) => `
   ${listingLink("102", date, "MINISTERIO DE SALUD", "Resolución 1709/2026")}
   ${listingLink("103", date, "MINISTERIO DE ECONOMÍA", "Resolución 2000/2026")}`;
 
+/** The same edition with two more selected notices, five in all. */
+const longListingFor = (date: string) => `
+  ${listingFor(date)}
+  ${listingLink("104", date, "MINISTERIO DE ECONOMÍA", "Resolución 2001/2026")}
+  ${listingLink("105", date, "MINISTERIO DE ECONOMÍA", "Resolución 2002/2026")}`;
+
 const noticePage = (text: string) =>
   `<div id="cuerpoDetalleAviso">${text
     .split("\n")
@@ -122,6 +130,9 @@ const notices: Record<string, string> = {
     "DECRETA:\nARTÍCULO 1°.- Modifícase el Presupuesto 2026 por $ 1.000.000.",
   "101": "DECRETA:\nARTÍCULO 1°.- Dase por designada a X (DNI 30.111.222).",
   "103": "RESUELVE:\nARTÍCULO 1°.- Apruébase el reglamento de la zona franca.",
+  "104":
+    "RESUELVE:\nARTÍCULO 1°.- Prorrógase el régimen de facilidades de pago.",
+  "105": "RESUELVE:\nARTÍCULO 1°.- Apruébase el procedimiento de devolución.",
 };
 
 /** Serves the listing and the notice pages; `failing` ids answer 503. */
@@ -157,6 +168,21 @@ const env = (db: D1Database, run?: (...args: unknown[]) => unknown) =>
     AI: run ? ({ run } as unknown as Ai) : undefined,
   }) as CloudflareEnvironment;
 
+/** Every step of one cron run, in order. */
+async function runOnce(...args: Parameters<typeof runBoletinSteps>) {
+  const steps: BoletinStepResult[] = [];
+  for await (const step of runBoletinSteps(...args)) steps.push(step);
+
+  return steps;
+}
+
+/** The notice pages the fetcher was asked for, by id. */
+const noticeRequests = (fetcher: ReturnType<typeof vi.fn>) =>
+  fetcher.mock.calls
+    .map(([url]) => String(url))
+    .filter((url) => !url.endsWith("/seccion/primera"))
+    .map((url) => url.split("/").at(-2));
+
 describe("Boletín digest cron", () => {
   it("uses Argentina's date for the edition", () => {
     expect(editionDateFor(new Date("2026-11-20T02:59:00Z"))).toBe("2026-11-19");
@@ -168,10 +194,10 @@ describe("Boletín digest cron", () => {
     const fetcher = boletinFetch(listingFor("20261119"));
 
     expect(
-      await runBoletinStep({ DB: db } as CloudflareEnvironment, morning, {
+      await runOnce({ DB: db } as CloudflareEnvironment, morning, {
         fetch: fetcher,
       }),
-    ).toEqual({ step: "disabled" });
+    ).toEqual([{ step: "disabled" }]);
 
     expect(fetcher).not.toHaveBeenCalled();
   });
@@ -183,10 +209,10 @@ describe("Boletín digest cron", () => {
     storeEdition(database, "2026-11-18");
 
     expect(
-      await runBoletinStep(env(db), morning, {
+      await runOnce(env(db), morning, {
         fetch: boletinFetch(listingFor("20261118")),
       }),
-    ).toEqual({ step: "waiting-edition" });
+    ).toEqual([{ step: "waiting-edition" }]);
 
     expect(
       database.prepare("SELECT COUNT(*) AS n FROM boletin_editions").get(),
@@ -225,9 +251,9 @@ describe("Boletín digest cron", () => {
         async () => new Response(body, { headers }),
       ) as unknown as typeof fetch;
 
-      expect(
-        await runBoletinStep(env(db), morning, { fetch: fetcher }),
-      ).toEqual({ step: "contingency" });
+      expect(await runOnce(env(db), morning, { fetch: fetcher })).toEqual([
+        { step: "contingency" },
+      ]);
 
       expect(pulled).toBeLessThan(256 * 1024);
     }
@@ -246,9 +272,9 @@ describe("Boletín digest cron", () => {
       async () => new Response("A".repeat(3 * 1024 * 1024)),
     ) as unknown as typeof fetch;
 
-    await expect(
-      runBoletinStep(env(db), morning, { fetch: fetcher }),
-    ).rejects.toThrow("excede el tamaño permitido");
+    await expect(runOnce(env(db), morning, { fetch: fetcher })).rejects.toThrow(
+      "excede el tamaño permitido",
+    );
   });
 
   it("collects the section's edition on the first run, whatever its date", async ({
@@ -257,10 +283,10 @@ describe("Boletín digest cron", () => {
     const { db } = setup(onTestFinished);
 
     expect(
-      await runBoletinStep(env(db), morning, {
+      await runOnce(env(db), morning, {
         fetch: boletinFetch(listingFor("20261118")),
       }),
-    ).toMatchObject({ step: "collected", edition: "2026-11-18" });
+    ).toMatchObject([{ step: "collected", edition: "2026-11-18" }]);
   });
 
   it("collects the next day an edition missed on its own day", async ({
@@ -273,10 +299,10 @@ describe("Boletín digest cron", () => {
     const friday = new Date("2026-11-20T12:00:00Z");
 
     expect(
-      await runBoletinStep(env(db), friday, {
+      await runOnce(env(db), friday, {
         fetch: boletinFetch(listingFor("20261119")),
       }),
-    ).toMatchObject({ step: "collected", edition: "2026-11-19" });
+    ).toMatchObject([{ step: "collected", edition: "2026-11-19" }]);
   });
 
   it("finishes the pending notices before reading the section page again", async ({
@@ -285,14 +311,16 @@ describe("Boletín digest cron", () => {
     const { db } = setup(onTestFinished);
     const fetcher = boletinFetch(listingFor("20261119"));
 
-    await runBoletinStep(env(db), morning, { fetch: fetcher });
+    await runOnce(env(db), morning, { fetch: fetcher });
 
     // The next day, with no new edition yet: the previous one is still summarized.
     const nextDay = new Date("2026-11-20T12:00:00Z");
 
-    expect(
-      await runBoletinStep(env(db), nextDay, { fetch: fetcher }),
-    ).toMatchObject({ step: "processed", id: "100" });
+    expect(await runOnce(env(db), nextDay, { fetch: fetcher })).toMatchObject([
+      { step: "processed", id: "100" },
+      { step: "processed", id: "101" },
+      { step: "processed", id: "103" },
+    ]);
 
     expect(
       fetcher.mock.calls.filter(([url]) =>
@@ -301,50 +329,30 @@ describe("Boletín digest cron", () => {
     ).toHaveLength(1);
   });
 
-  it("collects the edition once, then summarizes one notice per run", async ({
+  it("collects the edition in a run of its own, then summarizes a run's worth of notices", async ({
     onTestFinished,
   }) => {
     const { db, database } = setup(onTestFinished);
     const fetcher = boletinFetch(listingFor("20261119"));
     const run = vi.fn(async () => summaryOutput(goodSummary));
 
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({
-      step: "collected",
-      edition: "2026-11-19",
-      listed: 4,
-      selected: 3,
-    });
+    expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+      { step: "collected", edition: "2026-11-19", listed: 4, selected: 3 },
+    ]);
 
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({
-      step: "processed",
-      id: "100",
-      status: "summarized",
-    });
-
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({
-      step: "processed",
-      id: "101",
-      status: "excluded",
-    });
+    expect(noticeRequests(fetcher)).toEqual([]);
+    expect(run).not.toHaveBeenCalled();
 
     // The zona franca summary repeats the decree's figure, which is not in its source.
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({
-      step: "processed",
-      id: "103",
-      status: "title_only",
-    });
+    expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+      { step: "processed", id: "100", status: "summarized" },
+      { step: "processed", id: "101", status: "excluded" },
+      { step: "processed", id: "103", status: "title_only" },
+    ]);
 
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({ step: "idle" });
+    expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+      { step: "idle" },
+    ]);
 
     expect(run).toHaveBeenCalledTimes(2);
 
@@ -379,6 +387,78 @@ describe("Boletín digest cron", () => {
     ]);
   });
 
+  it(`summarizes at most ${NOTICES_PER_RUN} notices per run, and leaves collecting to the next run after the last ones`, async ({
+    onTestFinished,
+  }) => {
+    const { db } = setup(onTestFinished);
+    const fetcher = boletinFetch(longListingFor("20261119"));
+    const run = vi.fn(async () => summaryOutput(goodSummary));
+
+    expect(
+      await runOnce(env(db, run), morning, { fetch: fetcher }),
+    ).toMatchObject([{ step: "collected", selected: 5 }]);
+
+    expect(
+      await runOnce(env(db, run), morning, { fetch: fetcher }),
+    ).toMatchObject([
+      { step: "processed", id: "100" },
+      { step: "processed", id: "101" },
+      { step: "processed", id: "103" },
+    ]);
+
+    // The next day, with fewer pending than a full run: the run ends after them without reading the section page.
+    const nextDay = new Date("2026-11-20T12:00:00Z");
+
+    expect(
+      await runOnce(env(db, run), nextDay, { fetch: fetcher }),
+    ).toMatchObject([
+      { step: "processed", id: "104" },
+      { step: "processed", id: "105" },
+    ]);
+
+    const listingReads = () =>
+      fetcher.mock.calls.filter(([url]) =>
+        String(url).endsWith("/seccion/primera"),
+      ).length;
+
+    expect(listingReads()).toBe(1);
+
+    expect(await runOnce(env(db, run), nextDay, { fetch: fetcher })).toEqual([
+      { step: "waiting-edition" },
+    ]);
+
+    expect(listingReads()).toBe(2);
+  });
+
+  it("stops the run at the first notice that will be retried", async ({
+    onTestFinished,
+  }) => {
+    const { db, database } = setup(onTestFinished);
+    const fetcher = boletinFetch(listingFor("20261119"), new Set(["101"]));
+    const run = vi.fn(async () => summaryOutput(goodSummary));
+
+    await runOnce(env(db, run), morning, { fetch: fetcher });
+
+    expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+      { step: "processed", id: "100", status: "summarized" },
+      { step: "retry", id: "101", reason: "fetch-failed" },
+    ]);
+
+    expect(noticeRequests(fetcher)).toEqual(["100", "101"]);
+
+    expect(
+      database
+        .prepare(
+          "SELECT id, status, attempts FROM boletin_notices ORDER BY position",
+        )
+        .all(),
+    ).toEqual([
+      { id: "100", status: "summarized", attempts: 1 },
+      { id: "101", status: "pending", attempts: 1 },
+      { id: "103", status: "pending", attempts: 0 },
+    ]);
+  });
+
   it("retries a failing model and keeps the official reference after the last attempt", async ({
     onTestFinished,
   }) => {
@@ -389,49 +469,53 @@ describe("Boletín digest cron", () => {
       throw new Error("Daily free allocation exceeded");
     });
 
-    await runBoletinStep(env(db, run), morning, { fetch: fetcher });
+    await runOnce(env(db, run), morning, { fetch: fetcher });
 
-    for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++)
-      expect(
-        await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-      ).toEqual({
-        step: "retry",
-        id: "100",
-        reason: "model-failed",
-      });
+    // A spent allocation costs each run one attempt, not one per notice.
+    for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
+      expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+        { step: "retry", id: "100", reason: "model-failed" },
+      ]);
 
-    expect(
-      await runBoletinStep(env(db, run), morning, { fetch: fetcher }),
-    ).toEqual({
-      step: "processed",
-      id: "100",
-      status: "title_only",
-    });
+      expect(run).toHaveBeenCalledTimes(attempt);
+    }
+
+    // A notice on its last attempt is not retried, so the run goes on to the next ones.
+    expect(await runOnce(env(db, run), morning, { fetch: fetcher })).toEqual([
+      { step: "processed", id: "100", status: "title_only" },
+      { step: "processed", id: "101", status: "excluded" },
+      { step: "retry", id: "103", reason: "model-failed" },
+    ]);
 
     expect(
       database
         .prepare(
-          "SELECT status, attempts, outcome FROM boletin_notices WHERE id = '100'",
+          "SELECT id, status, attempts, outcome FROM boletin_notices ORDER BY position",
         )
-        .get(),
-    ).toEqual({
-      status: "title_only",
-      attempts: MAX_ATTEMPTS,
-      outcome: "model-failed",
-    });
+        .all(),
+    ).toEqual([
+      {
+        id: "100",
+        status: "title_only",
+        attempts: MAX_ATTEMPTS,
+        outcome: "model-failed",
+      },
+      { id: "101", status: "excluded", attempts: 1, outcome: "personal-data" },
+      { id: "103", status: "pending", attempts: 1, outcome: "model-failed" },
+    ]);
   });
 
   it("retries a notice page that fails to load", async ({ onTestFinished }) => {
     const { db } = setup(onTestFinished);
     const fetcher = boletinFetch(listingFor("20261119"), new Set(["100"]));
 
-    await runBoletinStep(env(db), morning, { fetch: fetcher });
+    await runOnce(env(db), morning, { fetch: fetcher });
 
-    expect(await runBoletinStep(env(db), morning, { fetch: fetcher })).toEqual({
-      step: "retry",
-      id: "100",
-      reason: "fetch-failed",
-    });
+    expect(await runOnce(env(db), morning, { fetch: fetcher })).toEqual([
+      { step: "retry", id: "100", reason: "fetch-failed" },
+    ]);
+
+    expect(noticeRequests(fetcher)).toEqual(["100"]);
   });
 });
 

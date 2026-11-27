@@ -26,7 +26,7 @@ import { SITE_URL } from "~/lib/site";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 
 /**
- * The Boletín Oficial digest. The shared cron runs every five minutes through the morning; each run does one small step (collect today's edition, or summarize one notice) so it stays inside the Free plan's 10 ms of CPU and 50 subrequests. Pages only read D1. See docs/boletin-oficial.md.
+ * The Boletín Oficial digest. The shared cron runs every five minutes through the morning; each run does one small job (collect today's edition, or summarize a few notices) so it stays inside the Free plan's 10 ms of CPU and 50 subrequests. Pages only read D1. See docs/boletin-oficial.md.
  */
 
 const USER_AGENT = `TuEconomia/1.0 (+${SITE_URL})`;
@@ -35,6 +35,12 @@ const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 /** A notice whose page or summary fails this many runs is kept with its official reference only. */
 export const MAX_ATTEMPTS = 3;
+
+/**
+ * Notices one run summarizes at most, one after another. Each takes about 4 s of wall time, which does not count as CPU, and three subrequests: its page, the model and the D1 write.
+ * A whole run with one notice measured 1 to 3 ms of CPU on 2026-11-27, so three stay inside the Free plan's 10 ms. With the pending query a run makes 10 subrequests, and 17 after a refresh run that found nothing to refresh, against the limit of 50.
+ */
+export const NOTICES_PER_RUN = 3;
 
 /** Editions older than this are deleted by the daily maintenance run; readers can page back through the rest. Three weeks is about fifteen editions, some 30 KB of summaries. The latest is never deleted, so a longer gap without editions still leaves something to show. */
 export const BOLETIN_RETENTION_DAYS = 21;
@@ -146,24 +152,41 @@ export interface BoletinDeps {
 }
 
 /**
- * One cron step. Summarizes the oldest pending notice; with none left, and today's edition not on file yet, reads the section page for an edition newer than the stored ones.
- * Pending notices come first so a day without an edition, which reads the page on every run, still finishes the previous one.
+ * One cron run, yielding each step as it ends so the caller can log it at once. Summarizes up to `NOTICES_PER_RUN` pending notices, oldest first, one after another; with none pending, and today's edition not on file yet, reads the section page for an edition newer than the stored ones instead.
+ * Pending notices come first so a day without an edition, which reads the page on every run, still finishes the previous one. Collecting is a run of its own, so a run never adds the cost of the listing to that of its notices.
+ * The run stops at the first notice that will be retried: a quota spent for the day or a network spell would otherwise use up the attempts of every notice in the run at once.
  */
-export async function runBoletinStep(
+export async function* runBoletinSteps(
   env: CloudflareEnvironment,
   now = new Date(),
   { fetch: fetcher = fetch }: BoletinDeps = {},
-): Promise<BoletinStepResult> {
+): AsyncGenerator<BoletinStepResult, void, undefined> {
   const db = env.DB;
-  if (!isBoletinDigestEnabled(env) || !db) return { step: "disabled" };
+
+  if (!isBoletinDigestEnabled(env) || !db) {
+    yield { step: "disabled" };
+
+    return;
+  }
 
   const pending = await db
     .prepare(
-      "SELECT id, edition_date, rubro, heading, norm, has_annexes, attempts FROM boletin_notices WHERE status = 'pending' ORDER BY edition_date, position LIMIT 1",
+      "SELECT id, edition_date, rubro, heading, norm, has_annexes, attempts FROM boletin_notices WHERE status = 'pending' ORDER BY edition_date, position LIMIT ?",
     )
-    .first<PendingRow>();
+    .bind(NOTICES_PER_RUN)
+    .all<PendingRow>();
 
-  if (pending) return processNotice(db, env.AI, pending, now, fetcher);
+  if (pending.results.length > 0) {
+    for (const row of pending.results) {
+      const result = await processNotice(db, env.AI, row, now, fetcher);
+
+      yield result;
+
+      if (result.step === "retry") return;
+    }
+
+    return;
+  }
 
   const newest = await db
     .prepare("SELECT MAX(edition_date) AS date FROM boletin_editions")
@@ -171,10 +194,13 @@ export async function runBoletinStep(
 
   const newestStored = newest?.date ?? null;
 
-  if (newestStored !== null && newestStored >= editionDateFor(now))
-    return { step: "idle" };
+  if (newestStored !== null && newestStored >= editionDateFor(now)) {
+    yield { step: "idle" };
 
-  return collectEdition(db, newestStored, now, fetcher);
+    return;
+  }
+
+  yield await collectEdition(db, newestStored, now, fetcher);
 }
 
 /**

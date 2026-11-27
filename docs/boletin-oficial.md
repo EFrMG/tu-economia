@@ -10,7 +10,7 @@ The whole feature sits behind `BOLETIN_DIGEST_ENABLED`, in `wrangler.jsonc`: whi
 | --- | --- |
 | `app/lib/boletin-source.server.ts` | Parses the section page and the notice pages, selects notices, trims the text and detects personal data. |
 | `app/lib/boletin-summary.server.ts` | The prompt, the Workers AI call, validation of the answer and the figure and personal-data checks. |
-| `app/lib/boletin.server.ts` | The cron step, the D1 queue, the retention prune and the read for loaders. |
+| `app/lib/boletin.server.ts` | The cron run, the D1 queue, the retention prune and the read for loaders. |
 | `app/lib/boletin.ts` | Client-safe types, the flag, the `/noticias` panels and presentation helpers. |
 | `app/lib/scheduled-tasks.ts` | Which job a run of the shared cron trigger does. |
 | `app/components/features/BoletinDigest.tsx` | The panel and the Resumen card. |
@@ -30,14 +30,16 @@ So linking to notices and showing their official reference are not restricted by
 
 ## Pipeline
 
-One cron trigger serves every scheduled job: `*/5 6-15 * * *` in `wrangler.jsonc`, every five minutes from 06:00 to 15:55 UTC (03:00 to 12:55 in Argentina). The 06:00 run is the daily maintenance (lapsed Mi economía records, and Boletín editions older than 21 days); the runs from 06:05 to 08:25 refresh the saved copies of the market data ([market-data.md](market-data.md#saved-copies)) and give the digest only the runs they do not need; every later run is one digest step. A manual run with the former daily expression, `0 6 * * *`, forces the maintenance.
+One cron trigger serves every scheduled job: `*/5 6-15 * * *` in `wrangler.jsonc`, every five minutes from 06:00 to 15:55 UTC (03:00 to 12:55 in Argentina). The 06:00 run is the daily maintenance (lapsed Mi economía records, and Boletín editions older than 21 days); the runs from 06:05 to 08:25 refresh the saved copies of the market data ([market-data.md](market-data.md#saved-copies)) and give the digest only the runs they do not need; every later run is a digest run. A manual run with the former daily expression, `0 6 * * *`, forces the maintenance.
 
-Each step does one small thing, because a Free-plan invocation gets 10 ms of CPU and 50 subrequests:
+Each run does one of two things:
 
-1. **Summarize.** Take the oldest `pending` notice: read its page, apply the exclusions, trim the text, call the model, check the answer and store the result.
+1. **Summarize.** Take the `N` oldest `pending` notices (`NOTICES_PER_RUN`) and, one after another, read each page, apply the exclusions, trim the text, call the model, check the answer and store the result. The run stops at the first notice that will be retried (a failed page or model call before its last attempt), so a spent daily allocation or a network spell costs one attempt per run rather than one for every notice in it. Fewer pending notices make a shorter run; the next run collects.
 2. **Collect.** With nothing pending and no edition stored for today's date in Argentina, read the section page. When the newest edition it lists is newer than every stored one, record it and insert its selected notices as `pending`; otherwise (before the morning edition, and on days without one) nothing is recorded. The edition need not be today's, so one missed on its own day (published after the last run, or while the cron or the site was down) is collected the next day if the page still shows it, and the first run on an empty database collects whatever the page shows. An edition the page has already replaced is lost.
 
-Pending notices come first so that a day without an edition, which reads the page on every run, still finishes the previous one.
+Pending notices come first so that a day without an edition, which reads the page on every run, still finishes the previous one. Collecting is always a run of its own.
+
+A notice costs about 4 s of wall time (the model call), which does not count as CPU, and three subrequests: its page, the model and the D1 write. A run with one notice measured 1 to 3 ms of CPU. A summarizing run makes 10 subrequests with the pending query, and 17 when it follows a refresh run that found nothing to refresh (that run's D1 reads of the saved copies); a collect run makes 4.
 
 A notice ends as:
 
@@ -49,7 +51,7 @@ A notice ends as:
 
 `outcome` records why (`ok`, `invented-figures`, `personal-data`, `invalid-output`, `model-failed`, `fetch-failed`, `individual-act`, `edict`, ...), and `neurons` what the call costs, from the response's `usage.neurons`.
 
-Each run writes one JSON line to Workers Logs (`{"job":"boletin","step":…}`), which is also where the CPU time per invocation shows.
+Each step writes one JSON line to Workers Logs as it ends (`{"job":"boletin","step":…}`): a collect run writes one, a summarizing run one per notice, so up to three `processed` lines, or `processed` lines followed by the `retry` that stopped it. Workers Logs is also where the CPU time per invocation shows.
 
 The site sometimes switches the section page to a contingency mode (first seen on 2026-11-23): the edition as a base64 PDF of several MB in an `iframeContingencia`, with no notice links, while the notice pages keep working. A collect step recognizes it from the page's first 64 KB, stops the download, records nothing and logs `"step":"contingency"`; the listing is read again on the next run. Any other page over 2 MB still fails the step.
 
@@ -105,10 +107,10 @@ At about 50 Neurons per notice, a typical day (7 to 15 summaries) uses 350 to 75
 
 ## Enabling and operating
 
-1. Deploy with `BOLETIN_DIGEST_ENABLED` set to `"true"` in `wrangler.jsonc` (setting it to anything else turns the cron and the pages off). The next morning's runs collect the edition; the panel fills as notices are summarized, one every five minutes.
+1. Deploy with `BOLETIN_DIGEST_ENABLED` set to `"true"` in `wrangler.jsonc` (setting it to anything else turns the cron and the pages off). The next morning's runs collect the edition; the panel fills as notices are summarized.
 2. Check: Workers Logs show `collected`, then `processed` lines; `wrangler d1 execute tu-economia --remote --command "SELECT status, outcome, COUNT(*), SUM(neurons) FROM boletin_notices GROUP BY 1, 2"` shows how notices ended and what they cost.
 
-To run a step locally, start `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` with the flag set in `.dev.vars` (`BOLETIN_DIGEST_ENABLED=true`) and fire the scheduled handler with the shared expression; each call is one step, and summarizing reaches the remote Workers AI with your Wrangler login.
+To run a step locally, start `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` with the flag set in `.dev.vars` (`BOLETIN_DIGEST_ENABLED=true`) and fire the scheduled handler with the shared expression; each call is one run, and summarizing reaches the remote Workers AI with your Wrangler login.
 
 ```sh
 curl -X POST "http://localhost:5173/cdn-cgi/local/explorer/api/local/scheduled?worker=tu-economia" -H "Content-Type: application/json" -d '{"cron": "*/5 6-15 * * *"}'
