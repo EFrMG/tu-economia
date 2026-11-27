@@ -27,7 +27,7 @@ export default function Terms() {
           finaliza y qué uso puede darse a los datos del servicio.
         </p>
         <p className="font-mono text-data-label text-text-400">
-          Última actualización: 22 de noviembre de 2026
+          Última actualización: 27 de noviembre de 2026
         </p>
       </header>
 
@@ -43,9 +43,10 @@ export default function Terms() {
             <p>
               Tu Economía es un servicio de información económica para
               Argentina. Las secciones públicas —cotizaciones, indicadores,
-              noticias, normativa y documentación— pueden utilizarse sin cuenta.
-              La edición de los registros de Mi economía en su cuenta requiere
-              una cuenta y una suscripción activa.
+              tasas por entidad, información de empresas, noticias, normativa y
+              documentación— pueden utilizarse sin cuenta. La edición de los
+              registros de Mi economía en su cuenta requiere una cuenta y una
+              suscripción activa.
             </p>
             <p>
               Estos términos rigen esa suscripción. La sección «Interfaces y
@@ -76,10 +77,17 @@ export default function Terms() {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              Las cotizaciones, los indicadores y las noticias provienen de
-              fuentes públicas y se ofrecen con fines informativos. Los datos
-              son referenciales y no constituyen asesoría financiera, impositiva
-              ni legal.
+              Las cotizaciones, los indicadores, las tasas por entidad, la
+              información de empresas y las noticias provienen de fuentes
+              públicas y se ofrecen con fines informativos. Los datos son
+              referenciales y no constituyen asesoría financiera, impositiva ni
+              legal.
+            </p>
+            <p>
+              Las tasas y comisiones de cada entidad son los valores máximos que
+              esta informa al BCRA en el Régimen de Transparencia. No
+              constituyen una oferta: las condiciones de un préstamo o una
+              tarjeta deben confirmarse con la entidad.
             </p>
             <p>
               Los resúmenes de normas del Boletín Oficial se generan de forma

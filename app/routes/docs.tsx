@@ -568,15 +568,15 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               >
                 BCRA
               </a>{" "}
-              en el Régimen de Transparencia. Para los préstamos se muestran el
-              costo financiero total (CFT) y la tasa efectiva anual (TEA)
-              máximos, el plazo máximo y los montos; para los hipotecarios, el
-              CFT y la TEA máximos que se suman al ajuste del capital por la
-              Unidad de Valor Adquisitivo (UVA), el destino (vivienda única o
-              segunda vivienda), el plazo máximo, la parte de la tasación que
-              financian y el tipo de tasa; para las tarjetas, las tasas
-              efectivas anuales máximas de financiación y de adelanto en
-              efectivo y las comisiones de mantenimiento y renovación, sin
+              en el Régimen de Transparencia. Para los préstamos personales se
+              muestran el costo financiero total (CFT) y la tasa efectiva anual
+              (TEA) máximos, el plazo máximo y los montos; para los
+              hipotecarios, el CFT y la TEA máximos que se suman al ajuste del
+              capital por la Unidad de Valor Adquisitivo (UVA), el destino
+              (vivienda única o segunda vivienda), el plazo máximo, la parte de
+              la tasación que financian y el tipo de tasa; para las tarjetas,
+              las tasas efectivas anuales máximas de financiación y de adelanto
+              en efectivo y las comisiones de mantenimiento y renovación, sin
               bonificaciones.
             </p>
             <p>
@@ -588,11 +588,13 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               la entidad lo informó.
             </p>
             <p>
-              Los datos se consultan una vez por semana. Se muestran los
-              préstamos personales en pesos, los hipotecarios en UVA para
-              comprar vivienda y los productos informados en los últimos doce
-              meses. Un CFT máximo menor al 10% se señala como valor
-              inusualmente bajo, para confirmarlo con la entidad.
+              Los datos se consultan una vez por semana. Se muestran solo los
+              productos informados en los últimos doce meses: los préstamos
+              personales en pesos y los hipotecarios en UVA destinados a comprar
+              vivienda. En los préstamos personales, un CFT máximo menor al 10%
+              se señala como valor inusualmente bajo, para confirmarlo con la
+              entidad; en los hipotecarios no se señala, porque se suma al
+              ajuste por UVA.
             </p>
           </div>
         </section>

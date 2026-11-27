@@ -23,7 +23,8 @@ export const Footer = () => {
             </Link>
           </h2>
           <p className="max-w-xs text-body-sm text-text-300">
-            Cotizaciones y noticias económicas de Argentina.
+            Datos económicos de Argentina, con fuentes y metodología
+            documentadas.
           </p>
         </div>
 

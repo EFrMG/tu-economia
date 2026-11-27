@@ -24,7 +24,7 @@ export default function Privacy() {
           conservan y protegen los datos personales en Tu Economía.
         </p>
         <p className="font-mono text-data-label text-text-400">
-          Última actualización: 22 de noviembre de 2026
+          Última actualización: 27 de noviembre de 2026
         </p>
       </header>
 
@@ -156,11 +156,11 @@ export default function Privacy() {
             <p>
               Las consultas a fuentes públicas de mercado (Dólar API,
               ArgentinaDatos, la API del BCRA, la API del INDEC, Datos
-              Argentina, canales RSS de noticias, el sitio del Boletín Oficial
-              de la República Argentina y la API no oficial de Precios Claros)
-              se efectúan de forma centralizada desde nuestro servidor. Su
-              navegador no se comunica directamente con esos proveedores
-              externos para cargar los paneles.
+              Argentina, SEC EDGAR, canales RSS de noticias, el sitio del
+              Boletín Oficial de la República Argentina y la API no oficial de
+              Precios Claros) se efectúan de forma centralizada desde nuestro
+              servidor. Su navegador no se comunica directamente con esos
+              proveedores externos para cargar los paneles.
             </p>
             <p>
               Los resúmenes del Boletín Oficial se generan con Cloudflare
@@ -175,25 +175,25 @@ export default function Privacy() {
             <dl className="grid gap-4 border border-base-700 bg-surface-950 p-4 sm:grid-cols-2">
               <div className="stack-2">
                 <dt className="font-mono text-label-caps text-text-200 uppercase">
-                  Alojamiento y Base de Datos
+                  Alojamiento y base de datos
                 </dt>
                 <dd>Cloudflare, Inc. (Workers y Cloudflare D1)</dd>
               </div>
               <div className="stack-2">
                 <dt className="font-mono text-label-caps text-text-200 uppercase">
-                  Procesamiento de Pagos
+                  Procesamiento de pagos
                 </dt>
-                <dd>MercadoPago S.A.</dd>
+                <dd>MercadoLibre S.R.L. (Mercado Pago)</dd>
               </div>
               <div className="stack-2">
                 <dt className="font-mono text-label-caps text-text-200 uppercase">
-                  Envío de Correos
+                  Envío de correos
                 </dt>
                 <dd>Resend, Inc. (enlaces mágicos y avisos del servicio)</dd>
               </div>
               <div className="stack-2">
                 <dt className="font-mono text-label-caps text-text-200 uppercase">
-                  Autenticación Opcional
+                  Autenticación opcional
                 </dt>
                 <dd>Google LLC (en inicio de sesión con Google)</dd>
               </div>
@@ -254,7 +254,7 @@ export default function Privacy() {
             <dl className="my-2 grid gap-4 border border-base-700 bg-surface-950 p-4 sm:grid-cols-2">
               <div className="stack-2">
                 <dt className="font-mono text-label-caps text-text-200 uppercase">
-                  Responsable de la Base de Datos
+                  Responsable de la base de datos
                 </dt>
                 <dd>Erwin Francisco Macias Ghiglione</dd>
               </div>
