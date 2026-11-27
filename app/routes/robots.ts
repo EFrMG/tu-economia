@@ -9,11 +9,19 @@ const TASAS_VARIANTS = [...new Set([...LOAN_PARAMS, ...CARD_PARAMS])].map(
   (param) => `Disallow: /tasas?*${param}=`,
 );
 
+/**
+ * Mi economía links each month to the one before and after it, so its `?month=` and `?tab=` variants have no end, and each is a full server render.
+ * The bare path stays crawlable so crawlers can still read its `noindex`.
+ */
+const MI_ECONOMIA_VARIANTS = "Disallow: /mi-economia?";
+
 export const ROBOTS_TXT = [
   "User-agent: *",
   "Allow: /",
   "Disallow: /api/",
+  "Disallow: /resources/",
   ...TASAS_VARIANTS,
+  MI_ECONOMIA_VARIANTS,
   `Sitemap: ${SITE_URL}/sitemap.xml`,
   "",
 ].join("\n");

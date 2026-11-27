@@ -45,11 +45,21 @@ describe("robots.txt", () => {
     expect(allowed("/tasas?panel=tarjetas&provincia=cordoba")).toBe(false);
   });
 
-  it("leaves the other pages open and the API closed", () => {
+  it("keeps crawlers off Mi economía's months and tabs, but not its bare path", () => {
+    expect(allowed("/mi-economia")).toBe(true);
+
+    expect(allowed("/mi-economia?month=2002-09&tab=precios")).toBe(false);
+    expect(allowed("/mi-economia?tab=presupuesto")).toBe(false);
+  });
+
+  it("leaves the other pages open and the API and data endpoints closed", () => {
     expect(allowed("/")).toBe(true);
     expect(allowed("/dolar")).toBe(true);
     expect(allowed("/noticias?panel=boletin")).toBe(true);
+
     expect(allowed("/api/prices")).toBe(false);
+    expect(allowed("/resources/prices?location=1&ids=2")).toBe(false);
+    expect(allowed("/resources/inflation-history")).toBe(false);
   });
 
   it("points to the sitemap", () => {

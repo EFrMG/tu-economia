@@ -11,6 +11,8 @@
 
 The month's net salary is saved from the sticky month bar above the tabs. Access rules, storage and setup are in [cloud-finance-setup.md](cloud-finance-setup.md).
 
+The page is `noindex`, and since the month bar links each month to the one before and after it, its query variants have no end. `robots.txt` disallows `/mi-economia?` (any month or tab) and keeps the bare path open, so crawlers still read the `noindex`.
+
 ## Data
 
 Each account's records are one JSON document in a `finance_documents` row. `localFinanceSchema` in `app/lib/local-finance.ts` validates it on load, import and save. It holds monthly net salaries, budget categories, per-month allocations, recorded expenses, planned expenses with their paid or skipped resolutions, and savings goals. Amounts are integer centavos.
