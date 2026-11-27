@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 
+import { Acronym } from "~/components/ui/Acronym";
 import { UnavailableNotice } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
@@ -42,7 +43,7 @@ export const PurchasingPowerLoading = () => {
     >
       <div className="mb-5">
         <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
-          Análisis histórico · IPC
+          Análisis histórico · <Acronym term="IPC" />
         </p>
         <h2 className="font-heading text-headline-md text-text-100">
           Poder adquisitivo
@@ -145,7 +146,7 @@ export const PurchasingPowerSection = ({
     >
       <div className="mb-5">
         <p className="mb-2 font-mono text-label-caps text-text-200 uppercase">
-          Análisis histórico · IPC
+          Análisis histórico · <Acronym term="IPC" />
         </p>
         <h2
           id="purchasing-power-title"

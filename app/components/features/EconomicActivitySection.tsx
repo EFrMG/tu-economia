@@ -10,6 +10,7 @@ import {
   type TooltipContentProps,
 } from "recharts";
 
+import { Acronym } from "~/components/ui/Acronym";
 import { UnavailableNotice } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { ChartSkeleton } from "~/components/ui/ChartSkeleton";
@@ -70,7 +71,7 @@ const ActivityLoading = () => {
     >
       <div className="stack-2">
         <p className="font-mono text-label-caps text-text-200 uppercase">
-          EMAE · INDEC
+          <Acronym term="EMAE" /> · INDEC
         </p>
         <h2
           id="activity-title"
@@ -138,7 +139,7 @@ const EconomicActivitySection = ({
     >
       <div className="stack-2">
         <p className="font-mono text-label-caps text-text-200 uppercase">
-          EMAE · INDEC
+          <Acronym term="EMAE" /> · INDEC
         </p>
         <h2
           id="activity-title"

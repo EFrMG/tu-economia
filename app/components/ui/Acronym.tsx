@@ -11,12 +11,13 @@ import {
   useHover,
   useInteractions,
   useRole,
-  useTransitionStyles,
+  useTransitionStatus,
 } from "@floating-ui/react";
 import { useState } from "react";
 
 import { ACRONYMS, type AcronymTerm } from "~/lib/acronyms";
-import { useReducedMotion } from "~/lib/use-reduced-motion";
+
+const FADE_MS = 120;
 
 interface AcronymProps {
   term: AcronymTerm;
@@ -25,10 +26,10 @@ interface AcronymProps {
 /**
  * An acronym with a dotted underline whose full name shows in a tooltip on hover, keyboard focus and tap.
  * The tooltip renders in a portal, so the scrolling table frames do not clip it, and it describes the acronym to screen readers while open.
+ * The fade is a CSS transition keyed on the transition status, so `motion-reduce` turns it off without any script.
  */
 export const Acronym = ({ term }: AcronymProps) => {
   const [open, setOpen] = useState(false);
-  const reducedMotion = useReducedMotion();
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -53,9 +54,9 @@ export const Acronym = ({ term }: AcronymProps) => {
     role,
   ]);
 
-  const { isMounted, styles } = useTransitionStyles(context, {
-    duration: reducedMotion ? 0 : 120,
-    initial: { opacity: 0 },
+  // Keeps the tooltip mounted through the fade out; `FADE_MS` matches `duration-120` below.
+  const { isMounted, status } = useTransitionStatus(context, {
+    duration: FADE_MS,
   });
 
   return (
@@ -77,8 +78,8 @@ export const Acronym = ({ term }: AcronymProps) => {
             {...getFloatingProps()}
           >
             <div
-              style={styles}
-              className="max-w-64 border border-base-700 bg-overlay-950 px-3 py-2 font-sans text-body-sm text-text-200 normal-case"
+              data-status={status}
+              className="max-w-64 border border-base-700 bg-overlay-950 px-3 py-2 font-sans text-body-sm text-text-200 normal-case transition-opacity duration-120 ease-out data-[status=close]:opacity-0 data-[status=initial]:opacity-0 motion-reduce:transition-none"
             >
               {ACRONYMS[term]}
             </div>

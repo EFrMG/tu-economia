@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 
+import { Acronym } from "~/components/ui/Acronym";
 import { UnavailableNotice } from "~/components/ui/UnavailableNotice";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
@@ -250,8 +251,8 @@ export const DepositInflationSection = ({
           {selected && estimate ? (
             <div className="mt-5">
               <p className="mb-4 font-mono text-data-label text-text-400">
-                Simulación para {pesos.format(amount)} · TNA de referencia
-                publicada el {formatDate(selected.rateDate)}.
+                Simulación para {pesos.format(amount)} · <Acronym term="TNA" />{" "}
+                de referencia publicada el {formatDate(selected.rateDate)}.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="min-w-0">
