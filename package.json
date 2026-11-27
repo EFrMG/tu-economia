@@ -19,6 +19,7 @@
     "test": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run typecheck:scripts && pnpm run test:unit && pnpm run test:scripts && pnpm run build"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.20",
     "better-auth": "1.7.10",
     "d3-shape": "^3.2.0",
     "fast-xml-parser": "^5.11.1",

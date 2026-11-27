@@ -11,6 +11,7 @@ import {
   stickyClassName,
   TableFrame,
 } from "~/components/features/EquityTables";
+import { Acronym } from "~/components/ui/Acronym";
 import { Button } from "~/components/ui/Button";
 import { fieldFocusClassName } from "~/components/ui/input-styles";
 import {
@@ -375,10 +376,10 @@ const LoanHead = () => (
         Destinatarios
       </th>
       <th scope="col" className={headClassName}>
-        CFT máx.
+        <Acronym term="CFT" /> máx.
       </th>
       <th scope="col" className={headClassName}>
-        TEA máx.
+        <Acronym term="TEA" /> máx.
       </th>
       <th scope="col" className={headClassName}>
         Plazo máx.
@@ -485,10 +486,10 @@ const CardHead = () => (
         Segmento
       </th>
       <th scope="col" className={headClassName}>
-        TEA financiación
+        <Acronym term="TEA" /> financiación
       </th>
       <th scope="col" className={headClassName}>
-        TEA adelanto
+        <Acronym term="TEA" /> adelanto
       </th>
       <th scope="col" className={headClassName}>
         Comisión mensual
