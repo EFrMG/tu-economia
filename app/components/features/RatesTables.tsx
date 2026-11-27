@@ -20,11 +20,15 @@ import {
   LOAN_BENEFICIARIES,
   LOAN_PROFILES,
   LOAN_TERMS,
+  MORTGAGE_DESTINATIONS,
+  MORTGAGE_TERMS,
   PROVINCES,
   RATES_PANELS,
   formatPesos,
   formatRate,
   formatRatesDate,
+  formatShare,
+  formatTerm,
   isRatesPanel,
   isUnusuallyLowCft,
   labelOf,
@@ -34,6 +38,9 @@ import {
   type LenderRow,
   type LoanFilters,
   type LoanProduct,
+  type MortgageFilters,
+  type MortgageProduct,
+  type RatesFilters,
   type RatesPage,
   type RatesPanelId,
 } from "~/lib/transparency-rates";
@@ -216,6 +223,57 @@ export const LoanFilterForm = ({ filters }: { filters: LoanFilters }) => (
   </FilterForm>
 );
 
+export const MortgageFilterForm = ({
+  filters,
+}: {
+  filters: MortgageFilters;
+}) => (
+  <FilterForm
+    panel="hipotecarios"
+    filtered={
+      filters.perfil !== null ||
+      filters.destino !== null ||
+      filters.plazo !== null ||
+      filters.provincia !== null
+    }
+  >
+    <SelectField
+      name="perfil"
+      label="Perfil"
+      value={filters.perfil ?? ""}
+      anyLabel="Todos los perfiles"
+      options={LOAN_PROFILES.map(({ id, label }) => ({ value: id, label }))}
+    />
+    <SelectField
+      name="destino"
+      label="Destino"
+      value={filters.destino ?? ""}
+      anyLabel="Única o segunda vivienda"
+      options={MORTGAGE_DESTINATIONS.map(({ id, label }) => ({
+        value: id,
+        label,
+      }))}
+    />
+    <SelectField
+      name="plazo"
+      label="Plazo mínimo"
+      value={filters.plazo === null ? "" : String(filters.plazo)}
+      anyLabel="Cualquier plazo"
+      options={MORTGAGE_TERMS.map((term) => ({
+        value: String(term),
+        label: formatTerm(term),
+      }))}
+    />
+    <SelectField
+      name="provincia"
+      label="Provincia"
+      value={filters.provincia ?? ""}
+      anyLabel="Todo el país"
+      options={provinceOptions}
+    />
+  </FilterForm>
+);
+
 export const CardFilterForm = ({ filters }: { filters: CardFilters }) => (
   <FilterForm
     panel="tarjetas"
@@ -301,14 +359,14 @@ const PageLink = ({
     </Link>
   );
 
-interface PaginationProps<Filters extends LoanFilters | CardFilters> {
+interface PaginationProps<Filters extends RatesFilters> {
   panel: RatesPanelId;
   filters: Filters;
   page: number;
   pages: number;
 }
 
-const Pagination = <Filters extends LoanFilters | CardFilters>({
+const Pagination = <Filters extends RatesFilters>({
   panel,
   filters,
   page,
@@ -465,6 +523,135 @@ export const LoanTable = ({
           El CFT incluye intereses, comisiones, gastos e impuestos; la TEA, solo
           intereses. Ambos son máximos: la tasa ofrecida puede ser menor según
           el perfil de quien solicita el préstamo.
+        </p>
+      </>
+    }
+  />
+);
+
+const MORTGAGE_COLUMNS = 10;
+
+const MortgageHead = () => (
+  <thead className="border-b border-base-700">
+    <tr>
+      <th scope="col" className={`${headBaseClassName} ${stickyClassName}`}>
+        Entidad
+      </th>
+      <th scope="col" className={headLeftClassName}>
+        Producto
+      </th>
+      <th scope="col" className={headLeftClassName}>
+        Destinatarios
+      </th>
+      <th scope="col" className={headClassName}>
+        <Acronym term="CFT" /> máx. sobre <Acronym term="UVA" />
+      </th>
+      <th scope="col" className={headClassName}>
+        <Acronym term="TEA" /> máx. sobre <Acronym term="UVA" />
+      </th>
+      <th scope="col" className={headClassName}>
+        Plazo máx.
+      </th>
+      <th scope="col" className={headClassName}>
+        Financia hasta
+      </th>
+      <th scope="col" className={headLeftClassName}>
+        Destino
+      </th>
+      <th scope="col" className={headLeftClassName}>
+        Tasa
+      </th>
+      <th scope="col" className={headClassName}>
+        Informado
+      </th>
+    </tr>
+  </thead>
+);
+
+const RATE_TYPE_LABELS = {
+  fija: "Fija",
+  variable: "Variable",
+  mixta: "Mixta",
+} as const;
+
+const MortgageRow = ({ row }: { row: LenderRow<MortgageProduct> }) => {
+  const { best } = row;
+
+  return (
+    <tr className={rowClassName}>
+      <LenderCell name={best.entity} matches={row.matches} />
+      <ProductCell name={best.product} />
+      <td className={textCellClassName}>
+        {labelOf(LOAN_BENEFICIARIES, best.beneficiary)}
+      </td>
+      <Figure value={formatRate(best.cft)} />
+      <Figure value={formatRate(best.tea)} />
+      <Figure value={formatTerm(best.termMonths)} />
+      <Figure
+        value={
+          best.financedShare === null
+            ? null
+            : `${formatShare(best.financedShare)} de la tasación`
+        }
+      />
+      <td className={textCellClassName}>
+        {labelOf(MORTGAGE_DESTINATIONS, best.destination)}
+      </td>
+      <td className={textCellClassName}>
+        {best.rateType ? RATE_TYPE_LABELS[best.rateType] : <Unavailable />}
+      </td>
+      <Figure value={formatRatesDate(best.date)} />
+    </tr>
+  );
+};
+
+export const MortgageTable = ({
+  data,
+  filters,
+}: {
+  data: PanelData<MortgageProduct>;
+  filters: MortgageFilters;
+}) => (
+  <TableFrame
+    id="hipotecarios"
+    title="Préstamos hipotecarios UVA"
+    caption="Por entidad, el préstamo hipotecario en UVA para comprar vivienda con menor costo financiero total máximo entre los que cumplen los filtros: producto, destinatarios, CFT y TEA máximos sobre el ajuste por UVA, plazo máximo, porcentaje máximo de la tasación que financia, destino, tipo de tasa y fecha en que la entidad lo informó."
+    meta={
+      <PanelMeta
+        builtOn={data.builtOn}
+        lenders={data.lenders}
+        products={data.products}
+      />
+    }
+    loading={false}
+    head={<MortgageHead />}
+    body={
+      data.rows.length ? (
+        data.rows.map((row) => (
+          <MortgageRow key={row.best.entityCode} row={row} />
+        ))
+      ) : (
+        <EmptyBody columns={MORTGAGE_COLUMNS} />
+      )
+    }
+    notes={
+      <>
+        <Pagination
+          panel="hipotecarios"
+          filters={filters}
+          page={data.page}
+          pages={data.pages}
+        />
+        <p>
+          El capital de estos préstamos se ajusta por la Unidad de Valor
+          Adquisitivo, que se actualiza con la inflación; el CFT y la TEA se
+          suman a ese ajuste. El CFT incluye intereses, comisiones, gastos e
+          impuestos; la TEA, solo intereses. Ambos son máximos: la tasa ofrecida
+          puede ser menor según el perfil de quien solicita el préstamo.
+        </p>
+        <p>
+          Varias entidades reservan su menor tasa a quienes cobran el sueldo en
+          ellas; el filtro Perfil muestra la oferta para cada caso.
         </p>
       </>
     }

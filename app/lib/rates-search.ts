@@ -5,7 +5,7 @@ export interface RatesPanelSearchResult extends SearchEntity<"rates-panel"> {
   id: RatesPanelId;
 }
 
-/** Both Tasas panels; single lenders are not indexed, since a lender's row depends on the filters. */
+/** The three Tasas panels; single lenders are not indexed, since a lender's row depends on the filters. */
 export const RATES_PANEL_SEARCH_RESULTS: readonly RatesPanelSearchResult[] = [
   panelEntity("prestamos", "Tasas de préstamos personales", [
     "prestamo",
@@ -15,6 +15,15 @@ export const RATES_PANEL_SEARCH_RESULTS: readonly RatesPanelSearchResult[] = [
     "costo financiero total",
     "tea",
     "tasa de interes",
+  ]),
+  panelEntity("hipotecarios", "Tasas de préstamos hipotecarios UVA", [
+    "hipotecario",
+    "credito hipotecario",
+    "prestamo hipotecario",
+    "hipoteca",
+    "uva",
+    "vivienda",
+    "comprar casa",
   ]),
   panelEntity("tarjetas", "Tasas y comisiones de tarjetas de crédito", [
     "tarjeta",

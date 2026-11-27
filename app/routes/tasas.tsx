@@ -16,6 +16,8 @@ import {
   CardTable,
   LoanFilterForm,
   LoanTable,
+  MortgageFilterForm,
+  MortgageTable,
   RatesPanelSwitch,
 } from "~/components/features/RatesTables";
 import { RouteError } from "~/components/layout/RouteError";
@@ -30,9 +32,14 @@ import {
   isRatesPanel,
   parseCardFilters,
   parseLoanFilters,
+  parseMortgageFilters,
   ratesSearch,
 } from "~/lib/transparency-rates";
-import { getCardPage, getLoanPage } from "~/lib/transparency-rates.server";
+import {
+  getCardPage,
+  getLoanPage,
+  getMortgagePage,
+} from "~/lib/transparency-rates.server";
 import { useFailedDataRetry } from "~/lib/use-failed-data-retry";
 import { withUpstreamTimeout } from "~/lib/upstream-timeout.server";
 import { workerEnvContext } from "~/lib/worker-context";
@@ -46,7 +53,7 @@ export function meta() {
   return pageMeta({
     title: "Tasas y ahorro",
     description:
-      "Tasas de depósitos, BADLAR, TAMAR y préstamos, UVA, UVI, CER e ICL, costo financiero total de préstamos personales y tarjetas por entidad, y depósitos frente a la inflación.",
+      "Tasas de depósitos, BADLAR, TAMAR y préstamos, UVA, UVI, CER e ICL, costo financiero total de préstamos personales, hipotecarios UVA y tarjetas por entidad, y depósitos frente a la inflación.",
     path: "/tasas",
   });
 }
@@ -64,15 +71,21 @@ export function loader({ request, context }: Route.LoaderArgs) {
   const loanFilters =
     panel === "prestamos" ? parseLoanFilters(url.searchParams) : null;
 
+  const mortgageFilters =
+    panel === "hipotecarios" ? parseMortgageFilters(url.searchParams) : null;
+
   const cardFilters =
     panel === "tarjetas" ? parseCardFilters(url.searchParams) : null;
 
   const loans = loanFilters ? getLoanPage(loanFilters) : null;
+  const mortgages = mortgageFilters ? getMortgagePage(mortgageFilters) : null;
   const cards = cardFilters ? getCardPage(cardFilters) : null;
 
   const canonical = loanFilters
     ? ratesSearch(panel, { ...loanFilters, pagina: loans!.page })
-    : ratesSearch(panel, { ...cardFilters!, pagina: cards!.page });
+    : mortgageFilters
+      ? ratesSearch(panel, { ...mortgageFilters, pagina: mortgages!.page })
+      : ratesSearch(panel, { ...cardFilters!, pagina: cards!.page });
 
   // A client navigation requests `/tasas.data?_routes=…`; that parameter and path belong to React Router, not to the page's query.
   const query = new URLSearchParams(url.searchParams);
@@ -92,7 +105,15 @@ export function loader({ request, context }: Route.LoaderArgs) {
       `/tasas?${canonical}${passthrough.size ? `&${passthrough}` : ""}`,
     );
 
-  const panels = { panel, loanFilters, loans, cardFilters, cards };
+  const panels = {
+    panel,
+    loanFilters,
+    loans,
+    mortgageFilters,
+    mortgages,
+    cardFilters,
+    cards,
+  };
 
   if (isUnavailablePreview(url.searchParams))
     return {
@@ -152,8 +173,8 @@ const TasasHeader = () => (
     </h1>
     <p className="max-w-2xl text-body-lg text-text-200">
       Tasas de referencia y unidades de actualización, el costo de préstamos
-      personales y tarjetas de crédito por entidad, y el rendimiento de un
-      depósito frente a la inflación.
+      personales, préstamos hipotecarios en UVA y tarjetas de crédito por
+      entidad, y el rendimiento de un depósito frente a la inflación.
     </p>
   </header>
 );
@@ -165,7 +186,8 @@ const TasasFooter = () => (
 );
 
 export default function Tasas({ loaderData }: Route.ComponentProps) {
-  const { loanFilters, loans, cardFilters, cards } = loaderData;
+  const { loanFilters, loans, mortgageFilters, mortgages, cardFilters, cards } =
+    loaderData;
 
   const retryNeeded = useMemo(
     () =>
@@ -217,6 +239,13 @@ export default function Tasas({ loaderData }: Route.ComponentProps) {
           <>
             <LoanFilterForm filters={loanFilters} />
             <LoanTable data={loans} filters={loanFilters} />
+          </>
+        ) : null}
+
+        {mortgageFilters && mortgages ? (
+          <>
+            <MortgageFilterForm filters={mortgageFilters} />
+            <MortgageTable data={mortgages} filters={mortgageFilters} />
           </>
         ) : null}
 

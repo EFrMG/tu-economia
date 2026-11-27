@@ -32,6 +32,7 @@ describe("robots.txt", () => {
     expect(allowed("/tasas")).toBe(true);
     expect(allowed("/tasas?panel=prestamos")).toBe(true);
     expect(allowed("/tasas?panel=tarjetas")).toBe(true);
+    expect(allowed("/tasas?panel=hipotecarios")).toBe(true);
 
     expect(allowed("/tasas?panel=prestamos&pagina=10")).toBe(false);
     expect(allowed("/tasas?pagina=12&panel=prestamos")).toBe(false);
@@ -41,6 +42,10 @@ describe("robots.txt", () => {
     expect(allowed("/tasas?panel=prestamos&plazo=24&monto=2000000")).toBe(
       false,
     );
+    expect(allowed("/tasas?panel=hipotecarios&destino=vivienda-unica")).toBe(
+      false,
+    );
+    expect(allowed("/tasas?panel=hipotecarios&plazo=360&pagina=2")).toBe(false);
     expect(allowed("/tasas?panel=tarjetas&segmento=gold")).toBe(false);
     expect(allowed("/tasas?panel=tarjetas&provincia=cordoba")).toBe(false);
   });

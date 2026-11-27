@@ -57,6 +57,15 @@ export const LOAN_PROFILES = LOAN_BENEFICIARIES.filter(
 
 export type LoanProfileId = (typeof LOAN_PROFILES)[number]["id"];
 
+/** The build script's `DESTINATIONS` values: the mortgage purposes that buy a home. */
+export const MORTGAGE_DESTINATIONS = [
+  { id: "vivienda-unica", label: "Vivienda única" },
+  { id: "segunda-vivienda", label: "Segunda vivienda" },
+] as const;
+
+export type MortgageDestinationId =
+  (typeof MORTGAGE_DESTINATIONS)[number]["id"];
+
 /** The build script's `SEGMENTS` values. */
 export const CARD_SEGMENTS = [
   { id: "nacional", label: "Nacional" },
@@ -72,6 +81,11 @@ export type CardSegmentId = (typeof CARD_SEGMENTS)[number]["id"];
 export const LOAN_TERMS = [6, 12, 18, 24, 36, 48, 60] as const;
 
 export type LoanTerm = (typeof LOAN_TERMS)[number];
+
+/** Minimum mortgage terms offered in the filter, in months (10 to 30 years); a product matches when its maximum term reaches the one chosen. */
+export const MORTGAGE_TERMS = [120, 180, 240, 300, 360] as const;
+
+export type MortgageTerm = (typeof MORTGAGE_TERMS)[number];
 
 /** The largest amount the filter accepts, above any amount a lender reports. */
 export const MAX_LOAN_AMOUNT = 10_000_000_000;
@@ -96,6 +110,23 @@ export interface LoanProduct {
   provinces: ProvinceId[];
 }
 
+/** A UVA mortgage that buys a home. Its TEA and CFT are on top of the UVA adjustment. */
+export interface MortgageProduct {
+  entityCode: number;
+  entity: string;
+  product: string;
+  beneficiary: LoanBeneficiaryId;
+  destination: MortgageDestinationId;
+  rateType: "fija" | "variable" | "mixta" | null;
+  termMonths: number;
+  /** The largest share of the appraisal the loan finances, in percent; null when the lender reports none. */
+  financedShare: number | null;
+  tea: number;
+  cft: number;
+  date: string;
+  provinces: ProvinceId[];
+}
+
 export interface CardProduct {
   entityCode: number;
   entity: string;
@@ -114,6 +145,7 @@ export interface CardProduct {
 export interface TransparencyDataset {
   builtOn: string;
   loans: LoanProduct[];
+  mortgages: MortgageProduct[];
   cards: CardProduct[];
 }
 
@@ -125,6 +157,7 @@ export const isUnusuallyLowCft = (loan: LoanProduct) =>
 
 export const RATES_PANELS = [
   { id: "prestamos", label: "Préstamos personales" },
+  { id: "hipotecarios", label: "Hipotecarios UVA" },
   { id: "tarjetas", label: "Tarjetas de crédito" },
 ] as const;
 
@@ -140,6 +173,14 @@ export interface LoanFilters {
   pagina: number;
 }
 
+export interface MortgageFilters {
+  perfil: LoanProfileId | null;
+  destino: MortgageDestinationId | null;
+  plazo: MortgageTerm | null;
+  provincia: ProvinceId | null;
+  pagina: number;
+}
+
 export interface CardFilters {
   segmento: CardSegmentId | null;
   provincia: ProvinceId | null;
@@ -151,6 +192,13 @@ export const LOAN_PARAMS = [
   "perfil",
   "plazo",
   "monto",
+  "provincia",
+  "pagina",
+] as const;
+export const MORTGAGE_PARAMS = [
+  "perfil",
+  "destino",
+  "plazo",
   "provincia",
   "pagina",
 ] as const;
@@ -196,6 +244,21 @@ export function parseLoanFilters(params: URLSearchParams): LoanFilters {
   };
 }
 
+export function parseMortgageFilters(params: URLSearchParams): MortgageFilters {
+  const perfil = params.get("perfil");
+  const destino = params.get("destino");
+  const plazo = Number(params.get("plazo"));
+  const provincia = params.get("provincia");
+
+  return {
+    perfil: isOneOf(LOAN_PROFILES, perfil) ? perfil : null,
+    destino: isOneOf(MORTGAGE_DESTINATIONS, destino) ? destino : null,
+    plazo: MORTGAGE_TERMS.find((term) => term === plazo) ?? null,
+    provincia: isOneOf(PROVINCES, provincia) ? provincia : null,
+    pagina: parsePage(params.get("pagina")),
+  };
+}
+
 export function parseCardFilters(params: URLSearchParams): CardFilters {
   const segmento = params.get("segmento");
   const provincia = params.get("provincia");
@@ -207,10 +270,12 @@ export function parseCardFilters(params: URLSearchParams): CardFilters {
   };
 }
 
+export type RatesFilters = LoanFilters | MortgageFilters | CardFilters;
+
 /** The canonical query for a panel: the panel first, then each set filter in a fixed order; page 1 is omitted. */
 export function ratesSearch(
   panel: RatesPanelId,
-  filters: LoanFilters | CardFilters,
+  filters: RatesFilters,
 ): URLSearchParams {
   const params = new URLSearchParams({ panel });
 
@@ -234,6 +299,20 @@ export function loanMatches(row: LoanProduct, filters: LoanFilters): boolean {
     (filters.plazo === null || row.termMonths >= filters.plazo) &&
     (filters.monto === null ||
       (row.amountMin <= filters.monto && filters.monto <= row.amountMax)) &&
+    coversProvince(row.provinces, filters.provincia)
+  );
+}
+
+export function mortgageMatches(
+  row: MortgageProduct,
+  filters: MortgageFilters,
+): boolean {
+  return (
+    (filters.perfil === null ||
+      row.beneficiary === "todos" ||
+      row.beneficiary === filters.perfil) &&
+    (filters.destino === null || row.destination === filters.destino) &&
+    (filters.plazo === null || row.termMonths >= filters.plazo) &&
     coversProvince(row.provinces, filters.provincia)
   );
 }
@@ -326,6 +405,8 @@ const percent = new Intl.NumberFormat("es-AR", {
   maximumFractionDigits: 2,
 });
 
+const share = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
+
 const pesos = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 
 const day = new Intl.DateTimeFormat("es-AR", {
@@ -336,6 +417,15 @@ const day = new Intl.DateTimeFormat("es-AR", {
 });
 
 export const formatRate = (value: number) => `${percent.format(value)}%`;
+
+/** Mortgage terms in years when they are whole years, as lenders quote them. */
+export const formatTerm = (months: number) =>
+  months % 12 === 0
+    ? `${months / 12} ${months === 12 ? "año" : "años"}`
+    : `${months} meses`;
+
+/** A share of a whole, without trailing zeros: 75%, 99,99%. */
+export const formatShare = (value: number) => `${share.format(value)}%`;
 
 export const formatPesos = (value: number) => `$ ${pesos.format(value)}`;
 

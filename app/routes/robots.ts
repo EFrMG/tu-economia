@@ -1,13 +1,17 @@
 import { SITE_URL } from "~/lib/site";
-import { CARD_PARAMS, LOAN_PARAMS } from "~/lib/transparency-rates";
+import {
+  CARD_PARAMS,
+  LOAN_PARAMS,
+  MORTGAGE_PARAMS,
+} from "~/lib/transparency-rates";
 
 /**
  * Every filter and page of the Tasas panels is its own URL, each a full server render, while the page's canonical is the bare path.
- * Crawlers keep to the two panels (`?panel=` alone), which list the same lenders the filtered and later pages do.
+ * Crawlers keep to the three panels (`?panel=` alone), which list the same lenders the filtered and later pages do.
  */
-const TASAS_VARIANTS = [...new Set([...LOAN_PARAMS, ...CARD_PARAMS])].map(
-  (param) => `Disallow: /tasas?*${param}=`,
-);
+const TASAS_VARIANTS = [
+  ...new Set([...LOAN_PARAMS, ...MORTGAGE_PARAMS, ...CARD_PARAMS]),
+].map((param) => `Disallow: /tasas?*${param}=`);
 
 /**
  * Mi economía links each month to the one before and after it, so its `?month=` and `?tab=` variants have no end, and each is a full server render.

@@ -7,6 +7,7 @@ export const ACRONYMS = {
   IPC: "Índice de precios al consumidor",
   TEA: "Tasa efectiva anual",
   TNA: "Tasa nominal anual",
+  UVA: "Unidad de valor adquisitivo",
 } as const satisfies Record<string, string>;
 
 export type AcronymTerm = keyof typeof ACRONYMS;

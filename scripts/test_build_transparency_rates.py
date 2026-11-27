@@ -34,6 +34,30 @@ def loan(**overrides):
     return {**row, **overrides}
 
 
+def mortgage(**overrides):
+    row = {
+        "relacionMontoTasacion": 75.0,
+        "destinoFondos": "Vivienda propia, única y permanente",
+        "denominacion": "UVA",
+        "montoMaximoOtorgable": 150000000,
+        "plazoMaximoOtorgable": 300,
+        "ingresoMinimoMensual": 0,
+        "relacionCuotaIngreso": 25.0,
+        "beneficiario": "Clientes que acrediten sueldos en la entidad",
+        "tasaEfectivaAnualMaxima": 7.76,
+        "tipoTasa": "Fija",
+        "costoFinancieroEfectivoTotalMaximo": 7.79,
+        "cuotaInicial": 758.0,
+        "codigoEntidad": 29,
+        "descripcionEntidad": "BANCO DE LA CIUDAD DE BUENOS AIRES",
+        "fechaInformacion": "2026-10-15",
+        "nombreCompleto": "HIPOTECARIO UVA VIVIENDA UNICA",
+        "territorioValidez": "0",
+    }
+
+    return {**row, **overrides}
+
+
 def card(**overrides):
     row = {
         "comisionMaximaAdministracionMantenimiento": 27500.0,
@@ -123,6 +147,48 @@ class LoanTest(unittest.TestCase):
         rows, _ = build.build_loans([loan(), loan(costoFinancieroEfectivoTotalMaximo=120.0)], TODAY)
 
         self.assertEqual(len(rows), 2)
+
+
+class MortgageTest(unittest.TestCase):
+    def test_keeps_a_uva_home_purchase_with_its_figures(self):
+        rows, excluded = build.build_mortgages([mortgage(), mortgage(destinoFondos="Vivienda adicional o 2da vivienda")], TODAY)
+
+        self.assertEqual(excluded, {})
+        self.assertEqual(sorted(row["destination"] for row in rows), ["segunda-vivienda", "vivienda-unica"])
+        self.assertEqual(rows[0]["beneficiary"], "clientes-con-sueldo")
+        self.assertEqual(rows[0]["financedShare"], 75.0)
+        self.assertEqual(rows[0]["termMonths"], 300)
+        self.assertEqual(rows[0]["rateType"], "fija")
+
+    def test_counts_each_reason_for_leaving_a_row_out(self):
+        rows, excluded = build.build_mortgages(
+            [
+                mortgage(denominacion="Pesos"),
+                mortgage(denominacion="Dolares estadounidenses"),
+                mortgage(denominacion=None),
+                mortgage(destinoFondos="Construcción"),
+                mortgage(destinoFondos="Refacción o mejora"),
+                mortgage(fechaInformacion="2025-11-11"),
+                mortgage(tasaEfectivaAnualMaxima=0),
+                mortgage(beneficiario="Turistas"),
+                mortgage(relacionMontoTasacion=None),
+            ],
+            TODAY,
+        )
+
+        self.assertEqual(rows, [])
+        self.assertEqual(excluded, {"notUva": 3, "notHomePurchase": 2, "stale": 1, "outOfRange": 1, "invalid": 2})
+
+    def test_a_financed_share_that_cannot_be_a_percentage_reads_as_not_informed(self):
+        rows, _ = build.build_mortgages([mortgage(relacionMontoTasacion=0), mortgage(relacionMontoTasacion=120, nombreCompleto="OTRO")], TODAY)
+
+        self.assertEqual([row["financedShare"] for row in rows], [None, None])
+
+    def test_rows_differing_only_in_province_become_one(self):
+        rows, _ = build.build_mortgages([mortgage(territorioValidez="15"), mortgage(territorioValidez="1")], TODAY)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["provinces"], ["caba", "neuquen"])
 
 
 class CardTest(unittest.TestCase):

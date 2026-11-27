@@ -4,15 +4,21 @@ import {
   RATES_PAGE_SIZE,
   bestPerLender,
   cardMatches,
+  formatShare,
+  formatTerm,
   isUnusuallyLowCft,
   loanMatches,
+  mortgageMatches,
   paginate,
   parseCardFilters,
   parseLoanFilters,
+  parseMortgageFilters,
   ratesSearch,
   type CardProduct,
   type LoanFilters,
   type LoanProduct,
+  type MortgageFilters,
+  type MortgageProduct,
 } from "./transparency-rates";
 
 const loan = (overrides: Partial<LoanProduct> = {}): LoanProduct => ({
@@ -28,6 +34,24 @@ const loan = (overrides: Partial<LoanProduct> = {}): LoanProduct => ({
   tea: 70,
   cft: 95,
   date: "2026-10-01",
+  provinces: [],
+  ...overrides,
+});
+
+const mortgage = (
+  overrides: Partial<MortgageProduct> = {},
+): MortgageProduct => ({
+  entityCode: 29,
+  entity: "BANCO DE LA CIUDAD DE BUENOS AIRES",
+  product: "HIPOTECARIO UVA",
+  beneficiary: "todos",
+  destination: "vivienda-unica",
+  rateType: "fija",
+  termMonths: 240,
+  financedShare: 75,
+  tea: 7.76,
+  cft: 7.79,
+  date: "2026-10-15",
   provinces: [],
   ...overrides,
 });
@@ -50,6 +74,14 @@ const noFilters: LoanFilters = {
   perfil: null,
   plazo: null,
   monto: null,
+  provincia: null,
+  pagina: 1,
+};
+
+const noMortgageFilters: MortgageFilters = {
+  perfil: null,
+  destino: null,
+  plazo: null,
   provincia: null,
   pagina: 1,
 };
@@ -85,6 +117,26 @@ describe("rates filters in the URL", () => {
     expect(
       parseCardFilters(new URLSearchParams("segmento=gold&provincia=x")),
     ).toEqual({ segmento: "gold", provincia: null, pagina: 1 });
+
+    expect(
+      parseMortgageFilters(
+        new URLSearchParams(
+          "perfil=clientes-con-sueldo&destino=segunda-vivienda&plazo=360&provincia=neuquen&pagina=2",
+        ),
+      ),
+    ).toEqual({
+      perfil: "clientes-con-sueldo",
+      destino: "segunda-vivienda",
+      plazo: 360,
+      provincia: "neuquen",
+      pagina: 2,
+    });
+
+    expect(
+      parseMortgageFilters(
+        new URLSearchParams("destino=construccion&plazo=24&monto=1000"),
+      ),
+    ).toEqual(noMortgageFilters);
   });
 
   it("writes the panel first and omits unset filters and page 1", () => {
@@ -103,6 +155,17 @@ describe("rates filters in the URL", () => {
         pagina: 2,
       }).toString(),
     ).toBe("panel=tarjetas&provincia=salta&pagina=2");
+
+    expect(
+      ratesSearch("hipotecarios", {
+        ...noMortgageFilters,
+        plazo: 300,
+        destino: "vivienda-unica",
+        perfil: "empleados-publicos",
+      }).toString(),
+    ).toBe(
+      "panel=hipotecarios&perfil=empleados-publicos&destino=vivienda-unica&plazo=300",
+    );
   });
 });
 
@@ -127,6 +190,46 @@ describe("matching products", () => {
     expect(
       loanMatches(loan({ amountMax: 0 }), { ...noFilters, monto: 500 }),
     ).toBe(false);
+  });
+
+  it("matches a mortgage on profile, purpose, term and province", () => {
+    expect(mortgageMatches(mortgage(), noMortgageFilters)).toBe(true);
+
+    expect(
+      mortgageMatches(mortgage({ beneficiary: "clientes-con-sueldo" }), {
+        ...noMortgageFilters,
+        perfil: "monotributistas",
+      }),
+    ).toBe(false);
+
+    expect(
+      mortgageMatches(mortgage(), {
+        ...noMortgageFilters,
+        destino: "segunda-vivienda",
+      }),
+    ).toBe(false);
+
+    expect(
+      mortgageMatches(mortgage(), { ...noMortgageFilters, plazo: 240 }),
+    ).toBe(true);
+    expect(
+      mortgageMatches(mortgage(), { ...noMortgageFilters, plazo: 300 }),
+    ).toBe(false);
+
+    expect(
+      mortgageMatches(mortgage({ provinces: ["neuquen"] }), {
+        ...noMortgageFilters,
+        provincia: "salta",
+      }),
+    ).toBe(false);
+  });
+
+  it("writes whole-year terms in years", () => {
+    expect(formatTerm(240)).toBe("20 años");
+    expect(formatTerm(12)).toBe("1 año");
+    expect(formatTerm(150)).toBe("150 meses");
+    expect(formatShare(75)).toBe("75%");
+    expect(formatShare(99.99)).toBe("99,99%");
   });
 
   it("flags a loan CFT below 10% as unusually low", () => {

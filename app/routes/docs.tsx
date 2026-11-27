@@ -557,8 +557,9 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              La sección Tasas compara préstamos personales en pesos y tarjetas
-              de crédito por entidad, con los datos que cada entidad informa al{" "}
+              La sección Tasas compara préstamos personales en pesos, préstamos
+              hipotecarios en UVA y tarjetas de crédito por entidad, con los
+              datos que cada entidad informa al{" "}
               <a
                 className={sourceLinkClass}
                 href="https://www.bcra.gob.ar/apis-banco-central/"
@@ -569,8 +570,12 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               </a>{" "}
               en el Régimen de Transparencia. Para los préstamos se muestran el
               costo financiero total (CFT) y la tasa efectiva anual (TEA)
-              máximos, el plazo máximo y los montos; para las tarjetas, las
-              tasas efectivas anuales máximas de financiación y de adelanto en
+              máximos, el plazo máximo y los montos; para los hipotecarios, el
+              CFT y la TEA máximos que se suman al ajuste del capital por la
+              Unidad de Valor Adquisitivo (UVA), el destino (vivienda única o
+              segunda vivienda), el plazo máximo, la parte de la tasación que
+              financian y el tipo de tasa; para las tarjetas, las tasas
+              efectivas anuales máximas de financiación y de adelanto en
               efectivo y las comisiones de mantenimiento y renovación, sin
               bonificaciones.
             </p>
@@ -578,13 +583,14 @@ export default function Docs({ loaderData }: Route.ComponentProps) {
               Son valores máximos: la tasa que ofrece una entidad puede ser
               menor según el perfil de quien la solicita. Por eso la tabla
               compara solo los productos que cumplen los filtros elegidos
-              (perfil, plazo, monto, segmento y provincia) y muestra, por
-              entidad, el de menor costo. Cada fila indica la fecha en que la
-              entidad lo informó.
+              (perfil, plazo, monto, destino, segmento y provincia) y muestra,
+              por entidad, el de menor costo. Cada fila indica la fecha en que
+              la entidad lo informó.
             </p>
             <p>
               Los datos se consultan una vez por semana. Se muestran los
-              préstamos en pesos y los productos informados en los últimos doce
+              préstamos personales en pesos, los hipotecarios en UVA para
+              comprar vivienda y los productos informados en los últimos doce
               meses. Un CFT máximo menor al 10% se señala como valor
               inusualmente bajo, para confirmarlo con la entidad.
             </p>

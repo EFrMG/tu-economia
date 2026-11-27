@@ -1,4 +1,4 @@
-"""Builds the Tasas data from the BCRA Régimen de Transparencia: personal loans and credit cards, per lender.
+"""Builds the Tasas data from the BCRA Régimen de Transparencia: personal loans, UVA mortgages and credit cards, per lender.
 
 The BCRA publishes each lender's own figures at https://api.bcra.gob.ar/transparencia/v1.0/ (no key). See docs/transparency-rates.md for the rules and the refresh routine.
 The Worker cannot parse and validate the 1.7 MB personal-loan list within the Free plan's 10 ms of CPU, so this script does it ahead of time and writes a reduced file the server imports.
@@ -6,7 +6,7 @@ The Worker cannot parse and validate the 1.7 MB personal-loan list within the Fr
 Only the standard library is used. Run with `python3 -I` (3.11+); the responses are untrusted input and are only parsed.
 
     python3 -I scripts/build-transparency-rates.py
-    python3 -I scripts/build-transparency-rates.py --input-dir ~/transparencia   # reads saved PrestamosPersonales.json and TarjetasCredito.json instead of calling the API
+    python3 -I scripts/build-transparency-rates.py --input-dir ~/transparencia   # reads saved PrestamosPersonales.json, PrestamosHipotecarios.json and TarjetasCredito.json instead of calling the API
 """
 
 import argparse
@@ -25,8 +25,8 @@ REPO = Path(__file__).resolve().parent.parent
 OUTPUT = REPO / "app/lib/transparency-rates.generated.json"
 
 API_BASE = "https://api.bcra.gob.ar/transparencia/v1.0/"
-ENDPOINTS = {"loans": "Prestamos/Personales", "cards": "TarjetasCredito"}
-INPUT_FILES = {"loans": "PrestamosPersonales.json", "cards": "TarjetasCredito.json"}
+ENDPOINTS = {"loans": "Prestamos/Personales", "mortgages": "Prestamos/Hipotecarios", "cards": "TarjetasCredito"}
+INPUT_FILES = {"loans": "PrestamosPersonales.json", "mortgages": "PrestamosHipotecarios.json", "cards": "TarjetasCredito.json"}
 
 ALLOWED_HOSTS = {"api.bcra.gob.ar"}
 MAX_RESPONSE_BYTES = 20_000_000
@@ -44,6 +44,7 @@ FEE_PLACEHOLDERS = {999999.0, 999999.99}
 
 # A build that keeps fewer products than this is refused, so a broken response never replaces the committed file.
 MIN_LOANS = 200
+MIN_MORTGAGES = 50
 MIN_CARDS = 50
 
 # The 24 jurisdictions in the order of the personal-loan `territorioValidez` codes (1 to 24; 0 is the whole country).
@@ -102,6 +103,12 @@ SEGMENTS = {
 }
 
 RATE_TYPES = {"fija": "fija", "variable": "variable", "mixta": "mixta"}
+
+# The mortgage purposes that buy a home; must match MORTGAGE_DESTINATIONS in app/lib/transparency-rates.ts. Construction, refurbishment, land and the other purposes are left out.
+DESTINATIONS = {
+    "vivienda propia, unica y permanente": "vivienda-unica",
+    "vivienda adicional o 2da vivienda": "segunda-vivienda",
+}
 
 
 def fold(text: str) -> str:
@@ -303,6 +310,70 @@ def build_loans(results: list, today: dt.date) -> tuple[list[dict], dict]:
     return merge_provinces(rows), dict(excluded)
 
 
+def build_mortgages(results: list, today: dt.date) -> tuple[list[dict], dict]:
+    """UVA mortgages that buy a home. Their TEA and CFT are on top of the UVA adjustment, not peso rates."""
+
+    oldest = months_before(today, MAX_AGE_MONTHS)
+    excluded: Counter = Counter()
+    rows = []
+
+    for raw in results:
+        try:
+            if not isinstance(raw, dict):
+                raise InvalidRow("row")
+
+            currency = text(raw, "denominacion", required=False)
+
+            if currency is None or fold(currency) != "uva":
+                excluded["notUva"] += 1
+                continue
+
+            destination = DESTINATIONS.get(fold(text(raw, "destinoFondos")))
+
+            if destination is None:
+                excluded["notHomePurchase"] += 1
+                continue
+
+            date = report_date(raw)
+            tea = number(raw, "tasaEfectivaAnualMaxima")
+            cft = number(raw, "costoFinancieroEfectivoTotalMaximo")
+            financed_share = number(raw, "relacionMontoTasacion")
+            beneficiary = BENEFICIARIES.get(fold(text(raw, "beneficiario")))
+            provinces = loan_provinces(raw.get("territorioValidez"))
+            rate_type = text(raw, "tipoTasa", required=False)
+
+            if beneficiary is None or provinces is None:
+                raise InvalidRow("beneficiario o territorioValidez")
+
+            row = {
+                "entityCode": integer(raw, "codigoEntidad"),
+                "entity": text(raw, "descripcionEntidad"),
+                "product": text(raw, "nombreCompleto"),
+                "beneficiary": beneficiary,
+                "destination": destination,
+                "rateType": RATE_TYPES.get(fold(rate_type)) if rate_type else None,
+                "termMonths": integer(raw, "plazoMaximoOtorgable"),
+                # Reported as a percentage of the appraisal; 0 or above 100 cannot be a share.
+                "financedShare": financed_share if 0 < financed_share <= 100 else None,
+                "tea": tea,
+                "cft": cft,
+                "date": date.isoformat(),
+                "provinces": provinces,
+            }
+        except InvalidRow:
+            excluded["invalid"] += 1
+            continue
+
+        if date < oldest:
+            excluded["stale"] += 1
+        elif not (0 < tea <= MAX_RATE and 0 < cft <= MAX_RATE):
+            excluded["outOfRange"] += 1
+        else:
+            rows.append(row)
+
+    return merge_provinces(rows), dict(excluded)
+
+
 def build_cards(results: list, today: dt.date) -> tuple[list[dict], dict]:
     oldest = months_before(today, MAX_AGE_MONTHS)
     excluded: Counter = Counter()
@@ -400,20 +471,25 @@ def main():
     today = dt.datetime.now(ARGENTINA).date()
 
     loans, loans_excluded = build_loans(results_of(load("loans", args.input_dir), "Préstamos personales"), today)
+    mortgages, mortgages_excluded = build_mortgages(results_of(load("mortgages", args.input_dir), "Préstamos hipotecarios"), today)
     cards, cards_excluded = build_cards(results_of(load("cards", args.input_dir), "Tarjetas de crédito"), today)
 
-    if len(loans) < MIN_LOANS or len(cards) < MIN_CARDS:
-        raise SystemExit(f"Se conservaron {len(loans)} préstamos y {len(cards)} tarjetas; el mínimo es {MIN_LOANS} y {MIN_CARDS}. No se escribió el archivo.")
+    if len(loans) < MIN_LOANS or len(mortgages) < MIN_MORTGAGES or len(cards) < MIN_CARDS:
+        raise SystemExit(
+            f"Se conservaron {len(loans)} préstamos, {len(mortgages)} hipotecarios y {len(cards)} tarjetas; el mínimo es {MIN_LOANS}, {MIN_MORTGAGES} y {MIN_CARDS}. No se escribió el archivo."
+        )
 
     output = {
         "builtOn": today.isoformat(),
         "loans": sort_rows(loans, "cft"),
+        "mortgages": sort_rows(mortgages, "cft"),
         "cards": sort_rows(cards, "financingTea"),
     }
 
     OUTPUT.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
 
     print(f"Préstamos: {len(loans)} filas, omitidas {loans_excluded}.", file=sys.stderr)
+    print(f"Hipotecarios UVA: {len(mortgages)} filas, omitidas {mortgages_excluded}.", file=sys.stderr)
     print(f"Tarjetas: {len(cards)} filas, omitidas {cards_excluded}.", file=sys.stderr)
 
 
