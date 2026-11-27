@@ -37,7 +37,7 @@ The system uses a tiered background approach to create depth without relying on 
 
 - **Accent text:** each accent has a `*-text-*` ramp tuned for legibility against dark surfaces (`--color-primary-text-*`, `--color-secondary-text-*`, `--color-tertiary-text-*`, `--color-red-text-*`). Use these for coloured _text_; the plain ramps are for fills and strokes.
 
-- **Borders:** `--color-base-700` is the standard hairline. Eventually, we want to implement a transparent border that has a gradient that follows the mouse appear behind.
+- **Borders:** `--color-base-700` is the standard hairline.
 
 ---
 
@@ -60,23 +60,23 @@ The wordmark combines the Geist brand name with a geometric TE monogram. The fav
 The layout uses a **Fixed Grid Strategy** to instill architectural stability.
 
 - **Base Unit:** 4px (`--spacing`). All metrics are multiples of this unit; data-dense layouts step in multiples of 8px.
-- **Vertical rhythm (`stack`, `stack-*`):** Gap steps are multiples of 8px, even steps only. The canonical ladder: `stack-2` (8px) for tight label/value pairs and header title-with-subtitle groups, `stack-4` (16px) for card and panel internals, `stack-6` (24px, also the bare `stack` default) for loose panel internals, `stack-8` (32px) between sections inside a page, and `stack-10`/`stack-12` (40/48px) for page-level rhythm. Odd steps (`stack-1`, `stack-3`, `stack-5`, …) are not used, except `stack-1` (4px) in the mobile cells of `FinanceMonthBar.tsx`, where `stack-0` is too tight and `stack-2` makes the sticky header too tall. `stack-0` (Sidebar) and `stack-48` (marketing hero) are reserved special cases.
+- **Vertical rhythm (`stack`, `stack-*`):** Gap steps are multiples of 8px, even steps only. The canonical ladder: `stack-2` (8px) for tight label/value pairs and header title-with-subtitle groups, `stack-4` (16px) for card and panel internals, `stack-6` (24px, also the bare `stack` default) for loose panel internals, `stack-8` (32px) between sections inside a page, and `stack-10`/`stack-12` (40/48px) for page-level rhythm. Odd steps (`stack-1`, `stack-3`, `stack-5`, …) are not used, except `stack-1` (4px) in compact bars where `stack-0` is too tight and `stack-2` too tall. `stack-0` (tightly packed rows) and `stack-48` (the spacing between the marketing feature sections) are reserved special cases.
 - **Container Max:** 1200px, both the terminal canvas and marketing pages use `--container-terminal` through `.page-container`.
 - **Gutter:** 16px.
 - **Margins:**
   - Mobile: 16px.
   - Desktop: 32px.
-- **Grid:** 12-column grid on desktop.
+- **Grid:** Desktop layouts split into columns as their content needs, usually two or three.
 
 ---
 
 ## 5. Shape & Elevation
 
-- **Edges:** Strictly geometric. Terminal-shell surfaces (data cards, panels, inputs) are sharp, 0px. The marketing `.card` uses `rounded-sm`, the maximum radius anywhere in the system.
+- **Edges:** Strictly geometric. Terminal-shell surfaces (data cards, panels, inputs) are sharp, 0px. The marketing `.card` uses `rounded-sm`.
 - **Surfaces:** Marketing cards use translucent `surface-900`; terminal cards use `surface-950` with `surface-900` for raised controls and hover states. Popovers use `overlay-950`. Both layouts use `base-700` for their standard border.
 - **Depth:** Tonal layering and subtle outlines establish the base hierarchy. The marketing `.card` keeps its restrained primary-tinted shadow as an intentional accent; add no new drop shadows.
 - **Interactive Feedback:** Use the custom easing functions such as `--ease-in-swift`, or create new ones for high-performance transitions.
-- **Anchor highlight:** An element a link or search result opens at (its id is the URL hash) shows a bold `primary-500` border on arrival, then fades over one second to `primary-500/50`, the hover border of the terminal cards, and keeps it while the hash stays. Calls to act ("Crear cuenta", "Activar suscripción") hold the bold border for 5 s, search destinations for 2 s. When the id sits on a heading or a borderless wrapper, the nearest bordered frame carries it: the section around a heading, the table frame of a `TableFrame`. The terminal's scroll container has a 15vh scroll padding (`scroll-pt-[15vh]` on `main`), so the destination lands below the top edge with context above it rather than flush against the top bar. `useAnchorHighlight` (`app/lib/use-anchor-highlight.ts`) returns the classes; the timings live in `app/lib/anchor-highlight.ts`.
+- **Anchor highlight:** An element a link or search result opens at (its id is the URL hash) shows a bold `primary-500` border on arrival, then fades to `primary-500/50`, the hover border of the terminal cards, and keeps it while the hash stays. Calls to act ("Crear cuenta", "Activar suscripción") hold the bold border longer than search destinations. When the id sits on a heading or a borderless wrapper, the nearest bordered frame carries it: the section around a heading, the frame of a table. The destination lands below the top bar, with context above it. Use `useAnchorHighlight`; the timings live in `app/lib/anchor-highlight.ts`.
 - **Acronyms:** Wrap an acronym in `ui/Acronym` when its full name is not spelled out nearby: a dotted `text-400` underline, and the full name in an `overlay-950` popover on hover, keyboard focus and tap. The popover fades in briefly, without motion under reduced motion. Leave a term plain when the text beside it already spells it out, and inside buttons or links, which cannot hold a focusable element. The full names live in `app/lib/acronyms.ts`.
 - **Reduced motion:** Marketing entrance effects and feature scaling honor it. The anchor highlight skips its fade and steps straight to the baseline.
 - **Scrolling:** Marketing pages use Lenis for smooth scrolling except under `prefers-reduced-motion`. Sticky feature sections and their scale effect activate only on roomy desktop viewports; smaller screens keep the sections in normal flow.

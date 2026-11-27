@@ -72,8 +72,8 @@ const NoticiasHeader = ({ boletinEnabled }: { boletinEnabled: boolean }) => (
     </h1>
     <p className="max-w-2xl text-body-lg text-text-200">
       {boletinEnabled
-        ? "Titulares recientes de medios argentinos y resúmenes del Boletín Oficial, con acceso a cada publicación en su sitio de origen."
-        : "Titulares recientes de medios argentinos, con acceso a cada publicación en su sitio de origen."}
+        ? "Titulares recientes de medios argentinos y resúmenes del Boletín Oficial, con enlace a cada publicación original."
+        : "Titulares recientes de medios argentinos, con enlace a cada publicación original."}
     </p>
   </header>
 );

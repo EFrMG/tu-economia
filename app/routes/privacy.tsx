@@ -20,8 +20,8 @@ export default function Privacy() {
           Privacidad
         </h1>
         <p className="max-w-2xl text-body-lg text-text-300">
-          Esta página describe de forma transparente cómo se recopilan, usan,
-          conservan y protegen los datos personales en Tu Economía.
+          Cómo se recopilan, usan, conservan y protegen los datos personales en
+          Tu Economía.
         </p>
         <p className="font-mono text-data-label text-text-400">
           Última actualización: 27 de noviembre de 2026
@@ -62,8 +62,7 @@ export default function Privacy() {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              Las secciones públicas, las cotizaciones e indicadores de mercado
-              pueden utilizarse libremente sin necesidad de registrarse. Para
+              Las secciones públicas pueden utilizarse sin registrarse. Para
               guardar información en la sección Mi economía se requiere una
               cuenta y una suscripción activa.
             </p>
@@ -76,10 +75,12 @@ export default function Privacy() {
                 Al crear una cuenta se almacena su correo electrónico. Si accede
                 mediante Google, recibimos el nombre y la foto de perfil
                 compartidos por ese proveedor. Para gestionar las sesiones de
-                forma segura, se guarda la dirección IP y el navegador
+                forma segura, se guardan la dirección IP y el navegador
                 utilizado. Los enlaces de acceso por correo (magic links) se
                 almacenan como hash, sirven una sola vez y vencen tras cinco
-                minutos.
+                minutos. Para limitar los intentos de inicio de sesión, se
+                registra temporalmente la dirección IP de quien lo intenta, sin
+                vincularla a una cuenta.
               </p>
             </div>
 
@@ -106,7 +107,7 @@ export default function Privacy() {
                 débito. Únicamente conservamos los identificadores de la
                 suscripción y de los pagos, los importes, las fechas y el estado
                 de los cobros para habilitar el acceso a la cuenta y conciliar
-                las facturaciones.
+                los pagos.
               </p>
             </div>
           </div>
@@ -129,10 +130,9 @@ export default function Privacy() {
               El sitio no instala cookies de análisis, publicidad o seguimiento.
               Si utiliza la consulta de precios de consumo, sus selecciones de
               localidad y productos se guardan localmente en su navegador (
-              <code className="font-mono text-text-200">localStorage</code>)
-              para su conveniencia. Al consultar precios, esa selección se envía
-              a nuestro servidor para obtener las cotizaciones y no se vincula a
-              su cuenta.
+              <code className="font-mono text-text-200">localStorage</code>). Al
+              consultar precios, esa selección se envía a nuestro servidor para
+              obtener los precios y no se vincula a su cuenta.
             </p>
             <p>
               Los parámetros de la dirección web (como el período de un gráfico,
@@ -154,13 +154,12 @@ export default function Privacy() {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              Las consultas a fuentes públicas de mercado (Dólar API,
+              Las consultas a fuentes públicas de datos (Dólar API,
               ArgentinaDatos, la API del BCRA, la API del INDEC, Datos
               Argentina, SEC EDGAR, canales RSS de noticias, el sitio del
               Boletín Oficial de la República Argentina y la API no oficial de
-              Precios Claros) se efectúan de forma centralizada desde nuestro
-              servidor. Su navegador no se comunica directamente con esos
-              proveedores externos para cargar los paneles.
+              Precios Claros) se hacen desde nuestro servidor: su navegador no
+              se comunica con esos proveedores.
             </p>
             <p>
               Los resúmenes del Boletín Oficial se generan con Cloudflare
@@ -169,8 +168,8 @@ export default function Privacy() {
               referidas a personas determinadas.
             </p>
             <p>
-              Para operar la infraestructura del servicio, compartimos datos
-              estrictamente necesarios con los siguientes proveedores:
+              Para operar el servicio, compartimos solo los datos necesarios con
+              estos proveedores:
             </p>
             <dl className="grid gap-4 border border-base-700 bg-surface-950 p-4 sm:grid-cols-2">
               <div className="stack-2">
@@ -198,6 +197,10 @@ export default function Privacy() {
                 <dd>Google LLC (en inicio de sesión con Google)</dd>
               </div>
             </dl>
+            <p>
+              Cloudflare conserva por un tiempo breve registros técnicos de las
+              solicitudes, para operar el servicio y protegerlo.
+            </p>
           </div>
         </section>
 
@@ -214,19 +217,17 @@ export default function Privacy() {
               suscripción activa.
             </p>
             <p>
-              Si su suscripción finaliza, dispondrá de un período de tres meses
-              para consultar, exportar en formato JSON o eliminar sus registros.
-              Le enviaremos un aviso por correo electrónico a los dos meses. Si
-              la suscripción no se reactiva, los registros se eliminan un mes
+              Si su suscripción finaliza, dispondrá de tres meses para
+              consultar, exportar en formato JSON o eliminar sus registros. Le
+              enviaremos un aviso por correo electrónico a los dos meses. Si la
+              suscripción no se reactiva, los registros se eliminan un mes
               después de ese aviso, aunque el correo no haya podido entregarse.
             </p>
             <p>
-              Si decide eliminar su cuenta desde la sección Usuario de Mi
-              economía, se borrarán de forma inmediata la cuenta, sus sesiones
-              activas y la totalidad de sus registros financieros. Los registros
-              de suscripción e historial de pagos se conservan con posterioridad
-              únicamente para cumplir obligaciones contables y fiscales
-              aplicables.
+              Si elimina su cuenta desde la sección Usuario de Mi economía, se
+              borran de inmediato la cuenta, sus sesiones y todos sus registros
+              financieros. Los registros de la suscripción y de los pagos se
+              conservan solo para cumplir obligaciones contables y fiscales.
             </p>
           </div>
         </section>
@@ -240,7 +241,7 @@ export default function Privacy() {
           </h2>
           <div className="mt-4 stack-4 text-body-sm text-text-300">
             <p>
-              La normativa argentina (Ley N° 25.326 de Protección de Datos
+              La normativa argentina (Ley N.º 25.326 de Protección de Datos
               Personales) reconoce sus derechos de acceso, rectificación,
               actualización y supresión de sus datos personales.
             </p>

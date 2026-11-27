@@ -4,21 +4,9 @@ Automatic summaries of the household-relevant notices in the first section of th
 
 The whole feature sits behind `BOLETIN_DIGEST_ENABLED`, in `wrangler.jsonc`: while it is not `"true"` the cron does nothing, `/noticias` has no Boletín panel and Resumen has no Boletín card. The home page, `/docs`, `/privacy` and `/terms` describe the digest regardless of the flag; the `/noticias` and Resumen meta descriptions and the sidebar label follow it.
 
-## Code
-
-| File | Role |
-| --- | --- |
-| `app/lib/boletin-source.server.ts` | Parses the section page and the notice pages, selects notices, trims the text and detects personal data. |
-| `app/lib/boletin-summary.server.ts` | The prompt, the Workers AI call, validation of the answer and the figure and personal-data checks. |
-| `app/lib/boletin.server.ts` | The cron run, the D1 queue, the retention prune and the read for loaders. |
-| `app/lib/boletin.ts` | Client-safe types, the flag, the `/noticias` panels and presentation helpers. |
-| `app/lib/scheduled-tasks.ts` | Which job a run of the shared cron trigger does. |
-| `app/components/features/BoletinDigest.tsx` | The panel and the Resumen card. |
-| `migrations/0009_boletin_digest.sql` | `boletin_editions` and `boletin_notices`. |
-
 ## Source
 
-There is no API or feed. `https://www.boletinoficial.gob.ar/seccion/primera` is server-rendered HTML: rubro headings (`h5.seccion-rubro`: Decretos, Resoluciones, Resoluciones Conjuntas, Resoluciones Sintetizadas, Disposiciones, Avisos Oficiales, Convenciones Colectivas de Trabajo, Avisos Oficiales - Anterior) followed by one link per notice, `/detalleAviso/primera/<id>/<YYYYMMDD>`, whose `p.item` line is the issuing agency (for decrees, the subject) and whose `p.item-detalle` lines are the norm's number and official reference. A paperclip link with `?anexos=1` next to a notice marks that it has annexes. The notice page holds the text in `div#cuerpoDetalleAviso`. The edition of 2026-11-19 listed 67 notices, 22 with annexes.
+There is no API or feed. `https://www.boletinoficial.gob.ar/seccion/primera` is server-rendered HTML: rubro headings (`h5.seccion-rubro`: Decretos, Resoluciones, Resoluciones Conjuntas, Resoluciones Sintetizadas, Disposiciones, Avisos Oficiales, Convenciones Colectivas de Trabajo, Avisos Oficiales - Anterior) followed by one link per notice, `/detalleAviso/primera/<id>/<YYYYMMDD>`, whose `p.item` line is the issuing agency (for decrees, the subject) and whose `p.item-detalle` lines are the norm's number and official reference. A paperclip link with `?anexos=1` next to a notice marks that it has annexes. The notice page holds the text in `div#cuerpoDetalleAviso`.
 
 `robots.txt` disallows only the second section (`/seccion/segunda`, `/detalleAviso/segunda/*`), which the digest never reads. Requests identify the app (`TuEconomia/1.0 (+<site>)`).
 
@@ -39,8 +27,6 @@ Each run does one of two things:
 
 Pending notices come first so that a day without an edition, which reads the page on every run, still finishes the previous one. Collecting is always a run of its own.
 
-A notice costs about 4 s of wall time (the model call), which does not count as CPU, and three subrequests: its page, the model and the D1 write. A run with one notice measured 1 to 3 ms of CPU. A summarizing run makes 10 subrequests with the pending query, and 17 when it follows a refresh run that found nothing to refresh (that run's D1 reads of the saved copies); a collect run makes 4.
-
 A notice ends as:
 
 | Status | Meaning | Shown |
@@ -51,7 +37,7 @@ A notice ends as:
 
 `outcome` records why (`ok`, `invented-figures`, `personal-data`, `invalid-output`, `model-failed`, `fetch-failed`, `individual-act`, `edict`, ...), and `neurons` what the call costs, from the response's `usage.neurons`.
 
-Each step writes one JSON line to Workers Logs as it ends (`{"job":"boletin","step":…}`): a collect run writes one, a summarizing run one per notice, so up to three `processed` lines, or `processed` lines followed by the `retry` that stopped it. Workers Logs is also where the CPU time per invocation shows.
+Each step writes one JSON line to Workers Logs as it ends (`{"job":"boletin","step":…}`): a collect run writes one, a summarizing run one per notice, so up to three `processed` lines, or `processed` lines followed by the `retry` that stopped it.
 
 The site sometimes switches the section page to a contingency mode (first seen on 2026-11-23): the edition as a base64 PDF of several MB in an `iframeContingencia`, with no notice links, while the notice pages keep working. A collect step recognizes it from the page's first 64 KB, stops the download, records nothing and logs `"step":"contingency"`; the listing is read again on the next run. Any other page over 2 MB still fails the step.
 
@@ -103,11 +89,11 @@ Compared on 2026-11-19 on six notices of that day's edition, same prompt (Neuron
 
 ## Cost and limits
 
-At about 50 Neurons per notice, a typical day (7 to 15 summaries) uses 350 to 750 Neurons, and even 30 stays under 1,500. Local development and tests that reach the binding spend the same allocation.
+At about 50 Neurons per notice, a typical day (7 to 15 summaries) uses 350 to 750 Neurons, and even 30 stays under 1,500. Local runs with remote bindings spend the same allocation.
 
 ## Enabling and operating
 
-1. Deploy with `BOLETIN_DIGEST_ENABLED` set to `"true"` in `wrangler.jsonc` (setting it to anything else turns the cron and the pages off). The next morning's runs collect the edition; the panel fills as notices are summarized.
+1. Deploy with `BOLETIN_DIGEST_ENABLED` set to `"true"` in `wrangler.jsonc`. The next morning's runs collect the edition; the panel fills as notices are summarized.
 2. Check: Workers Logs show `collected`, then `processed` lines; `wrangler d1 execute tu-economia --remote --command "SELECT status, outcome, COUNT(*), SUM(neurons) FROM boletin_notices GROUP BY 1, 2"` shows how notices ended and what they cost.
 
 To run a step locally, start `CLOUDFLARE_REMOTE_BINDINGS=true pnpm dev` with the flag set in `.dev.vars` (`BOLETIN_DIGEST_ENABLED=true`) and fire the scheduled handler with the shared expression; each call is one run, and summarizing reaches the remote Workers AI with your Wrangler login.

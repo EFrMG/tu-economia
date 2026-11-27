@@ -52,8 +52,7 @@ export const Footer = () => {
         </nav>
 
         <p className="max-w-md border border-tertiary-500/20 bg-tertiary-500/5 p-4 font-mono text-label-caps text-tertiary-text-200 uppercase md:col-span-4 md:justify-self-end">
-          Atención: los datos provistos son referenciales y no constituyen
-          asesoría financiera.
+          Los datos son referenciales y no constituyen asesoría financiera.
         </p>
       </div>
     </footer>

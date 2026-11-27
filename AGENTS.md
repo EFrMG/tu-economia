@@ -2,7 +2,7 @@
 
 Operational rules for working in this repository.
 
-[README.md](README.md) has the product philosophy, setup and route overview; [docs/README.md](docs/README.md) indexes the feature and operations guides (deployment, accounts, billing, prices, news sources) and describes `docs/sources/`, the archived provider manuals; the full working design reference is [DESIGN.md](DESIGN.md).
+[README.md](README.md) has the product philosophy, setup and route overview; [docs/README.md](docs/README.md) indexes the feature and operations guides and describes `docs/sources/`, the archived provider manuals; the full working design reference is [DESIGN.md](DESIGN.md).
 
 ## Product and voice
 
@@ -19,10 +19,10 @@ Operational rules for working in this repository.
   - `app/components/layout/`: page chrome (Navbar, Sidebar, TopBar, Footer).
   - `app/lib/`: framework-agnostic logic and data access. Pairs like `indicators.ts` / `indicators.server.ts` split a module into a client-safe half and a server-only half; `*.test.ts` files are colocated next to the code they test. `~/*` imports map to `app/*`.
   - `app/css/`: the Tailwind CSS v4 files described under "Styling and design" below.
-- `workers/app.ts`: the Cloudflare Worker entry (the request handler and the shared cron trigger: the daily maintenance, the refresh of the saved source copies and the Boletín Oficial digest, dispatched by `app/lib/scheduled-tasks.ts`); `wrangler.jsonc` configures the runtime. The Free plan allows five cron triggers per account, so new scheduled work joins that trigger rather than adding one.
+- `workers/app.ts`: the Cloudflare Worker entry (the request handler and the shared cron trigger: the daily maintenance, the refresh of the saved source copies and the Boletín Oficial digest, dispatched by `app/lib/scheduled-tasks.ts`); `wrangler.jsonc` configures the runtime. New scheduled work reuses that one trigger instead of adding another.
 - `migrations/`: Cloudflare D1 SQL migrations (personal finance, auth, billing, Boletín Oficial digest, saved source copies).
-- `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`, and `refresh-prices.sh`, which runs the monthly refresh end to end; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`. Pyright type-checks them with `pyrightconfig.json` at the root.
-- `cla/`: `accepted/` holds the contributors' acceptance records and `versions/` the published CLA texts; see "License and CLA" below.
+- `scripts/`: the maintainer-run Python builds of the Precios data (`build-price-basket.py`, `price-basket.json`, and `refresh-prices.sh`, which runs the monthly refresh end to end; see `docs/product-price-feed.md`) and the Tasas data (`build-transparency-rates.py`; see `docs/transparency-rates.md`), the INDEC calendar download (`refresh-indec-calendar.py`), and the CLA tooling (`accept-cla.py`, `verify-cla.py`, the shared `cla.py`). The Python tests are `test_build_price_basket.py`, `test_build_transparency_rates.py` and `test_cla.py`. Pyright type-checks them with `pyrightconfig.json` at the root.
+- `cla/`: `versions/` holds the published CLA texts and `accepted/`, created with the first record, the contributors' acceptance records; see "License and CLA" below.
 - `docs/`: feature and operations guides, indexed in `docs/README.md`.
 - `build/client/assets/*.css`: generated CSS; the only place Tailwind reports unknown classes.
 
@@ -37,7 +37,7 @@ Operational rules for working in this repository.
 - Validate upstream responses with Zod at the boundary. Downstream code consumes typed values only.
 - Preserve the promise-per-key caching in `app/lib/promise-cache.server.ts`, shared by every upstream module; see [docs/market-data.md](docs/market-data.md#shared-behavior).
 - Data routes need explicit loading and error states, including an `ErrorBoundary` where applicable.
-- Every page route exports `meta` through `pageMeta` from `~/lib/meta`; do not hand-roll metadata. Placeholder routes set `noIndex: true`. `VITE_SITE_URL` provides absolute URLs.
+- Every page route exports `meta` through `pageMeta` from `~/lib/meta`; do not hand-roll metadata. Pages that should stay out of search results, such as `api-status` and `mi-economia`, set `noIndex: true`. `VITE_SITE_URL` provides absolute URLs.
 
 ## License and CLA
 

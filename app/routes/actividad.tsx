@@ -54,8 +54,7 @@ const ActividadHeader = () => (
   <header className="stack-2">
     <h1 className="font-heading text-headline-lg text-text-100">Actividad</h1>
     <p className="max-w-2xl text-body-lg text-text-200">
-      La evolución de la actividad económica y del dinero en circulación, con la
-      fecha de cada dato.
+      La evolución de la actividad económica y del dinero en circulación.
     </p>
   </header>
 );
